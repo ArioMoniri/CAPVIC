@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from variant_mcp.clients.base_client import BaseClient, ClientError
-from variant_mcp.constants import CIVIC_BASE_URL, CIVIC_GRAPHQL_URL, CIVIC_RATE_LIMIT
+from variant_mcp.constants import CIVIC_GRAPHQL_URL, CIVIC_RATE_LIMIT
 from variant_mcp.models.evidence import CIViCAssertion, CIViCEvidenceItem, SourceInfo
 from variant_mcp.queries.civic_graphql import CIViCQueries
 
@@ -71,8 +71,12 @@ class CIViCClient(BaseClient):
     ) -> list[CIViCEvidenceItem]:
         """Search and return parsed CIViC evidence items."""
         raw = await self.search_evidence(
-            disease=disease, gene=gene, variant=variant,
-            therapy=therapy, evidence_type=evidence_type, first=first,
+            disease=disease,
+            gene=gene,
+            variant=variant,
+            therapy=therapy,
+            evidence_type=evidence_type,
+            first=first,
         )
         items = []
         for node in raw.get("nodes", []):
@@ -124,9 +128,7 @@ class CIViCClient(BaseClient):
             results.append(self._parse_assertion_node(node))
         return results
 
-    async def search_typeahead(
-        self, entity_type: str, query_term: str
-    ) -> list[dict[str, Any]]:
+    async def search_typeahead(self, entity_type: str, query_term: str) -> list[dict[str, Any]]:
         """Autocomplete search for genes, diseases, or therapies."""
         query_map = {
             "gene": CIViCQueries.TYPEAHEAD_GENES,
@@ -151,12 +153,16 @@ class CIViCClient(BaseClient):
         phenotypes = node.get("phenotypes", []) or []
         source_data = node.get("source", {}) or {}
 
-        source = SourceInfo(
-            source_type=source_data.get("sourceType"),
-            citation=source_data.get("citation"),
-            source_url=source_data.get("sourceUrl"),
-            pmid=source_data.get("citationId"),
-        ) if source_data else None
+        source = (
+            SourceInfo(
+                source_type=source_data.get("sourceType"),
+                citation=source_data.get("citation"),
+                source_url=source_data.get("sourceUrl"),
+                pmid=source_data.get("citationId"),
+            )
+            if source_data
+            else None
+        )
 
         return CIViCEvidenceItem(
             id=node["id"],

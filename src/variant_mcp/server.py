@@ -9,7 +9,6 @@ from __future__ import annotations
 import asyncio
 import logging
 import sys
-from contextlib import asynccontextmanager
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
@@ -19,8 +18,8 @@ from variant_mcp.clients.base_client import ClientError
 from variant_mcp.clients.civic_client import CIViCClient
 from variant_mcp.clients.clinvar_client import ClinVarClient
 from variant_mcp.clients.metakb_client import MetaKBClient
-from variant_mcp.clients.oncokb_client import OncoKBClient, ONCOKB_NO_TOKEN_MSG
-from variant_mcp.constants import DISCLAIMER, VariantOrigin
+from variant_mcp.clients.oncokb_client import ONCOKB_NO_TOKEN_MSG, OncoKBClient
+from variant_mcp.constants import DISCLAIMER
 from variant_mcp.formatters.reports import ReportFormatter
 from variant_mcp.formatters.tables import TableFormatter
 from variant_mcp.models.evidence import EvidenceBundle
@@ -93,9 +92,8 @@ async def _gather_evidence(
         tasks["clinvar"] = clinvar_client.search_variants(
             gene=gene, variant_name=variant, disease=disease, limit=limit
         )
-    if query_all or "oncokb" in (sources or []):
-        if oncokb_client.is_available and variant:
-            tasks["oncokb"] = oncokb_client.annotate_mutation(gene, variant)
+    if (query_all or "oncokb" in (sources or [])) and oncokb_client.is_available and variant:
+        tasks["oncokb"] = oncokb_client.annotate_mutation(gene, variant)
     if query_all or "metakb" in (sources or []):
         tasks["metakb"] = metakb_client.search(gene=gene, variant=variant, disease=disease)
 
@@ -104,7 +102,7 @@ async def _gather_evidence(
         return_exceptions=True,
     )
 
-    for key, result in zip(tasks.keys(), results):
+    for key, result in zip(tasks.keys(), results, strict=False):
         if isinstance(result, Exception):
             bundle.errors[key] = f"{type(result).__name__}: {result}"
             logger.error("Error from %s: %s", key, result)
@@ -135,6 +133,7 @@ async def _gather_evidence(
 # ============================================================================
 # CATEGORY 1: Multi-Source Search Tools
 # ============================================================================
+
 
 @mcp.tool(
     annotations={
@@ -251,9 +250,8 @@ async def variant_compare_sources(
 # CATEGORY 2: CIViC-Specific Tools
 # ============================================================================
 
-@mcp.tool(
-    annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True}
-)
+
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})
 async def civic_search_evidence(
     gene: str | None = None,
     variant: str | None = None,
@@ -276,8 +274,12 @@ async def civic_search_evidence(
     """
     try:
         items = await civic_client.search_evidence_parsed(
-            gene=gene, variant=variant, disease=disease,
-            therapy=therapy, evidence_type=evidence_type, first=limit,
+            gene=gene,
+            variant=variant,
+            disease=disease,
+            therapy=therapy,
+            evidence_type=evidence_type,
+            first=limit,
         )
     except ClientError as e:
         return f"CIViC search error: {e}\n\n{DISCLAIMER}"
@@ -309,9 +311,7 @@ async def civic_search_evidence(
     return "\n".join(lines)
 
 
-@mcp.tool(
-    annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True}
-)
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})
 async def civic_search_assertions(
     gene: str | None = None,
     disease: str | None = None,
@@ -330,8 +330,11 @@ async def civic_search_assertions(
     """
     try:
         assertions = await civic_client.search_assertions(
-            gene=gene, disease=disease, therapy=therapy,
-            significance=significance, first=limit,
+            gene=gene,
+            disease=disease,
+            therapy=therapy,
+            significance=significance,
+            first=limit,
         )
     except ClientError as e:
         return f"CIViC assertions error: {e}\n\n{DISCLAIMER}"
@@ -364,9 +367,7 @@ async def civic_get_gene(name: str) -> str:
         return f"CIViC gene lookup error: {e}\n\n{DISCLAIMER}"
 
     if not data:
-        return (
-            f"Gene '{name}' not found in CIViC. Check spelling with lookup_gene.\n\n{DISCLAIMER}"
-        )
+        return f"Gene '{name}' not found in CIViC. Check spelling with lookup_gene.\n\n{DISCLAIMER}"
 
     variants = data.get("variants", {})
     variant_nodes = variants.get("nodes", [])
@@ -456,9 +457,8 @@ async def civic_get_evidence_item(evidence_id: int) -> str:
 # CATEGORY 3: ClinVar Tools
 # ============================================================================
 
-@mcp.tool(
-    annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True}
-)
+
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})
 async def clinvar_search(
     gene: str | None = None,
     variant: str | None = None,
@@ -480,9 +480,11 @@ async def clinvar_search(
 
     try:
         variants = await clinvar_client.search_variants(
-            gene=gene, variant_name=variant,
+            gene=gene,
+            variant_name=variant,
             clinical_significance=clinical_significance,
-            disease=disease, limit=limit,
+            disease=disease,
+            limit=limit,
         )
     except ClientError as e:
         return f"ClinVar search error: {e}\n\n{DISCLAIMER}"
@@ -550,8 +552,7 @@ async def clinvar_get_variant(
     lines = [f"# ClinVar Variant: {cv.title or 'Unknown'}\n"]
     lines.append(f"**Variation ID**: {cv.variation_id}")
     lines.append(
-        f"**Classification**: {cv.clinical_significance} "
-        f"({cv.review_stars} — {cv.review_status})"
+        f"**Classification**: {cv.clinical_significance} ({cv.review_stars} — {cv.review_status})"
     )
     if cv.genes:
         lines.append(f"**Genes**: {', '.join(cv.genes)}")
@@ -586,9 +587,8 @@ async def clinvar_get_variant(
 # CATEGORY 4: OncoKB Tools
 # ============================================================================
 
-@mcp.tool(
-    annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True}
-)
+
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})
 async def oncokb_annotate(
     gene: str,
     variant: str,
@@ -615,6 +615,7 @@ async def oncokb_annotate(
         return result + "\n\n" + DISCLAIMER
 
     from variant_mcp.constants import ONCOKB_LEVELS
+
     lines = [f"# OncoKB Annotation: {gene} {variant}\n"]
     lines.append(f"**Oncogenic**: {result.oncogenic or 'N/A'}")
     lines.append(f"**Mutation Effect**: {result.known_effect or 'N/A'}")
@@ -678,9 +679,8 @@ async def oncokb_cancer_genes() -> str:
 # CATEGORY 5: Classification Framework Tools
 # ============================================================================
 
-@mcp.tool(
-    annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True}
-)
+
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})
 async def classify_amp_tier(
     gene: str,
     variant: str,
@@ -700,9 +700,7 @@ async def classify_amp_tier(
     return report_fmt.format_amp_tier(result) + f"\n\n{DISCLAIMER}"
 
 
-@mcp.tool(
-    annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True}
-)
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})
 async def score_oncogenicity(
     gene: str,
     variant: str,
@@ -722,7 +720,10 @@ async def score_oncogenicity(
         bundle = await _gather_evidence(gene, variant)
 
     result = oncogenicity_scorer.score_variant(
-        gene, variant, evidence_codes=evidence_codes, evidence_bundle=bundle,
+        gene,
+        variant,
+        evidence_codes=evidence_codes,
+        evidence_bundle=bundle,
     )
     return report_fmt.format_oncogenicity(result) + f"\n\n{DISCLAIMER}"
 
@@ -746,23 +747,28 @@ async def explain_acmg_criteria(
         return acmg_helper.get_all_criteria() + f"\n\n{DISCLAIMER}"
     if query:
         # Try to find matching criteria
-        matches = []
-        for code, desc in acmg_helper.__class__.__mro__[0].__dict__.items():
-            pass
         from variant_mcp.constants import ACMG_CRITERIA
+
+        matches = []
         for code, desc in ACMG_CRITERIA.items():
             if query.lower() in desc.lower() or query.lower() in code.lower():
                 matches.append(f"**{code}**: {desc}")
         if matches:
-            return "\n".join(["# ACMG/AMP Criteria Matching Query\n"] + matches + [f"\n{DISCLAIMER}"])
+            return "\n".join(
+                ["# ACMG/AMP Criteria Matching Query\n"] + matches + [f"\n{DISCLAIMER}"]
+            )
         return f"No ACMG criteria matching '{query}'. Use criteria_code='PVS1' or query='all'.\n\n{DISCLAIMER}"
 
-    return "Provide criteria_code (e.g., 'PVS1') or query='all' for the complete reference.\n\n" + DISCLAIMER
+    return (
+        "Provide criteria_code (e.g., 'PVS1') or query='all' for the complete reference.\n\n"
+        + DISCLAIMER
+    )
 
 
 # ============================================================================
 # CATEGORY 6: Discovery Tools
 # ============================================================================
+
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})
 async def lookup_gene(query: str) -> str:
@@ -833,6 +839,7 @@ async def lookup_therapy(query: str) -> str:
 # CATEGORY 7: Utility Tools
 # ============================================================================
 
+
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})
 async def get_classification_frameworks_reference() -> str:
     """Get a comprehensive reference document explaining all classification frameworks.
@@ -843,9 +850,7 @@ async def get_classification_frameworks_reference() -> str:
     return table_fmt.format_frameworks_reference()
 
 
-@mcp.tool(
-    annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True}
-)
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})
 async def variant_pathogenicity_summary(
     gene: str,
     variant: str,
@@ -861,15 +866,14 @@ async def variant_pathogenicity_summary(
         disease: Disease context. Optional.
     """
     bundle = await _gather_evidence(gene, variant, disease)
-    oncogenicity = oncogenicity_scorer.score_variant(
-        gene, variant, evidence_bundle=bundle
-    )
+    oncogenicity = oncogenicity_scorer.score_variant(gene, variant, evidence_bundle=bundle)
     return report_fmt.format_pathogenicity_summary(bundle, oncogenicity)
 
 
 # ============================================================================
 # Entry point
 # ============================================================================
+
 
 def main() -> None:
     """Run the MCP server via stdio transport."""

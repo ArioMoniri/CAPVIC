@@ -67,9 +67,7 @@ class OncoKBClient(BaseClient):
             params["tumorType"] = tumor_type
 
         try:
-            data = await self.get_json(
-                "annotate/mutations/byProteinChange", params=params
-            )
+            data = await self.get_json("annotate/mutations/byProteinChange", params=params)
             return self._parse_annotation(data, gene, variant)
         except ClientError as e:
             logger.error("OncoKB annotate_mutation error: %s", e)
@@ -139,20 +137,21 @@ class OncoKBClient(BaseClient):
             level = treatment.get("level", "")
             drugs = [d.get("drugName", "") for d in treatment.get("drugs", [])]
             indications = []
-            for indication in treatment.get("levelAssociatedCancerType", {}).get(
-                "subtype", ""
-            ), treatment.get("levelAssociatedCancerType", {}).get("mainType", {}).get(
-                "name", ""
+            for indication in (
+                treatment.get("levelAssociatedCancerType", {}).get("subtype", ""),
+                treatment.get("levelAssociatedCancerType", {}).get("mainType", {}).get("name", ""),
             ):
                 if indication:
                     indications.append(indication)
 
-            treatments.append({
-                "level": level,
-                "level_description": ONCOKB_LEVELS.get(level, ""),
-                "drugs": drugs,
-                "indications": indications,
-            })
+            treatments.append(
+                {
+                    "level": level,
+                    "level_description": ONCOKB_LEVELS.get(level, ""),
+                    "drugs": drugs,
+                    "indications": indications,
+                }
+            )
 
         oncokb_url = None
         if gene and variant:

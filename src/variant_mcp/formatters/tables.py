@@ -24,32 +24,20 @@ class TableFormatter:
 
         # AMP/ASCO/CAP
         lines.append("## 1. AMP/ASCO/CAP 4-Tier Somatic Classification\n")
-        lines.append(
-            f"*Li et al., J Mol Diagn 2017. PMID: {REFERENCE_PMIDS['AMP_ASCO_CAP']}*\n"
-        )
+        lines.append(f"*Li et al., J Mol Diagn 2017. PMID: {REFERENCE_PMIDS['AMP_ASCO_CAP']}*\n")
         lines.append("**Use for**: Somatic (cancer) variant clinical significance\n")
         lines.append("| Tier | Name | Evidence Level | Description |")
         lines.append("|------|------|----------------|-------------|")
         for tier, info in AMP_TIER_DEFINITIONS.items():
             name = info["name"]
             if "level_A" in info:
-                lines.append(
-                    f"| {tier} | {name} | Level A | {info['level_A']} |"
-                )
-                lines.append(
-                    f"| {tier} | {name} | Level B | {info['level_B']} |"
-                )
+                lines.append(f"| {tier} | {name} | Level A | {info['level_A']} |")
+                lines.append(f"| {tier} | {name} | Level B | {info['level_B']} |")
             elif "level_C" in info:
-                lines.append(
-                    f"| {tier} | {name} | Level C | {info['level_C']} |"
-                )
-                lines.append(
-                    f"| {tier} | {name} | Level D | {info['level_D']} |"
-                )
+                lines.append(f"| {tier} | {name} | Level C | {info['level_C']} |")
+                lines.append(f"| {tier} | {name} | Level D | {info['level_D']} |")
             else:
-                lines.append(
-                    f"| {tier} | {name} | — | {info.get('description', '')} |"
-                )
+                lines.append(f"| {tier} | {name} | — | {info.get('description', '')} |")
         lines.append("")
 
         # ClinGen/CGC/VICC Oncogenicity SOP
@@ -63,8 +51,7 @@ class TableFormatter:
         lines.append("|------|----------|--------|-------------|")
         for code, info in ONCOGENICITY_EVIDENCE_CODES.items():
             lines.append(
-                f"| {code} | {info['strength']} | {info['points']:+d} | "
-                f"{info['description']} |"
+                f"| {code} | {info['strength']} | {info['points']:+d} | {info['description']} |"
             )
         lines.append("\n### Classification Thresholds\n")
         lines.append("| Classification | Points |")
@@ -78,12 +65,11 @@ class TableFormatter:
 
         # ACMG/AMP Germline
         lines.append("## 3. ACMG/AMP 5-Tier Germline Classification\n")
-        lines.append(
-            f"*Richards et al., Genet Med 2015. PMID: {REFERENCE_PMIDS['ACMG_AMP']}*\n"
-        )
+        lines.append(f"*Richards et al., Genet Med 2015. PMID: {REFERENCE_PMIDS['ACMG_AMP']}*\n")
         lines.append("**Use for**: Germline variant pathogenicity\n")
-        lines.append("**Classifications**: Pathogenic, Likely Pathogenic, VUS, "
-                      "Likely Benign, Benign\n")
+        lines.append(
+            "**Classifications**: Pathogenic, Likely Pathogenic, VUS, Likely Benign, Benign\n"
+        )
         lines.append("### Key Criteria\n")
         lines.append("| Code | Description |")
         lines.append("|------|-------------|")
@@ -116,18 +102,10 @@ class TableFormatter:
         lines.append("\n## Data Sources\n")
         lines.append("| Source | Data Type | Access |")
         lines.append("|--------|-----------|--------|")
-        lines.append(
-            "| CIViC | Expert-curated clinical evidence | Free, no auth |"
-        )
-        lines.append(
-            "| ClinVar | Aggregate pathogenicity from labs | Free, no auth |"
-        )
-        lines.append(
-            "| OncoKB | FDA-recognized oncogenicity | Free academic token |"
-        )
-        lines.append(
-            "| VICC MetaKB | Harmonized from 6 KBs | Free, no auth |"
-        )
+        lines.append("| CIViC | Expert-curated clinical evidence | Free, no auth |")
+        lines.append("| ClinVar | Aggregate pathogenicity from labs | Free, no auth |")
+        lines.append("| OncoKB | FDA-recognized oncogenicity | Free academic token |")
+        lines.append("| VICC MetaKB | Harmonized from 6 KBs | Free, no auth |")
 
         lines.append(f"\n---\n\n{DISCLAIMER}")
         return "\n".join(lines)

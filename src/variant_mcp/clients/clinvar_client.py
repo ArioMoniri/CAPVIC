@@ -80,9 +80,7 @@ class ClinVarClient(BaseClient):
         if self._api_key:
             params["api_key"] = self._api_key
 
-        response = await self._request(
-            "GET", CLINVAR_EFETCH_URL, params=params
-        )
+        response = await self._request("GET", CLINVAR_EFETCH_URL, params=params)
         return self._parse_efetch_xml(response.text, variation_id)
 
     async def get_variant_by_rsid(self, rsid: str) -> list[ClinVarVariant]:
@@ -157,9 +155,7 @@ class ClinVarClient(BaseClient):
             variation_type=doc.get("variation_type", ""),
             protein_change=doc.get("protein_change", ""),
             conditions=[
-                t.get("trait_name", "")
-                for t in doc.get("trait_set", [])
-                if t.get("trait_name")
+                t.get("trait_name", "") for t in doc.get("trait_set", []) if t.get("trait_name")
             ],
             last_evaluated=last_eval,
             clinvar_url=f"{CLINVAR_BASE_URL}/{variation_id}",
@@ -199,18 +195,14 @@ class ClinVarClient(BaseClient):
                 review = interp.find("ReviewStatus")
                 if review is not None and review.text:
                     variant.review_status = review.text
-                    variant.review_stars = CLINVAR_REVIEW_STARS.get(
-                        review.text.lower(), ""
-                    )
+                    variant.review_stars = CLINVAR_REVIEW_STARS.get(review.text.lower(), "")
                 last_eval_el = interp.find("DateLastEvaluated")
                 if last_eval_el is not None and last_eval_el.text:
                     variant.last_evaluated = last_eval_el.text
 
             # HGVS expressions
             hgvs_list = []
-            for hgvs_el in ir.findall(".//HGVSlist/HGVS") + ir.findall(
-                ".//HGVSExpression"
-            ):
+            for hgvs_el in ir.findall(".//HGVSlist/HGVS") + ir.findall(".//HGVSExpression"):
                 text = hgvs_el.text or hgvs_el.get("Expression", "")
                 if text:
                     hgvs_list.append(text)

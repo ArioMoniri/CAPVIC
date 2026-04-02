@@ -70,12 +70,10 @@ class MetaKBClient(BaseClient):
         except ClientError:
             # Try alternative endpoint format
             try:
-                data = await self.get_json(
-                    "api/search", params={"term": search_term}
-                )
+                data = await self.get_json("api/search", params={"term": search_term})
                 return data
-            except ClientError:
-                raise ClientError(METAKB_FALLBACK_MSG)
+            except ClientError as exc:
+                raise ClientError(METAKB_FALLBACK_MSG) from exc
 
     @staticmethod
     def _parse_results(data: dict[str, Any]) -> list[MetaKBInterpretation]:
@@ -95,10 +93,7 @@ class MetaKBClient(BaseClient):
 
             drugs = result.get("drugs", result.get("therapies", []))
             if isinstance(drugs, list):
-                drugs = [
-                    d.get("name", str(d)) if isinstance(d, dict) else str(d)
-                    for d in drugs
-                ]
+                drugs = [d.get("name", str(d)) if isinstance(d, dict) else str(d) for d in drugs]
             else:
                 drugs = []
 

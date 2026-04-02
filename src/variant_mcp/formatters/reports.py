@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from variant_mcp.constants import (
     CIVIC_EVIDENCE_LEVELS,
@@ -34,7 +34,7 @@ class ReportFormatter:
         if report.disease:
             lines.append(f"**Disease Context**: {report.disease}")
         lines.append(f"\n**Sources queried**: {', '.join(report.sources_queried)}")
-        lines.append(f"**Retrieved**: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
+        lines.append(f"**Retrieved**: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}")
         lines.append("\n---\n")
 
         # AMP/ASCO/CAP Classification
@@ -49,9 +49,7 @@ class ReportFormatter:
 
         # ACMG Interpretation
         if report.acmg_interpretation:
-            lines.append(
-                ReportFormatter.format_acmg_interpretation(report.acmg_interpretation)
-            )
+            lines.append(ReportFormatter.format_acmg_interpretation(report.acmg_interpretation))
             lines.append("\n---\n")
 
         # Citations
@@ -111,10 +109,7 @@ class ReportFormatter:
             lines.append("| Code | Points | Evidence |")
             lines.append("|------|--------|----------|")
             for code in result.applied_codes:
-                lines.append(
-                    f"| {code.code} | {code.points:+d} | "
-                    f"{code.description} |"
-                )
+                lines.append(f"| {code.code} | {code.points:+d} | {code.description} |")
             lines.append(
                 f"| **Total** | **{result.total_points:+d}** | "
                 f"**{result.classification} (threshold: >=10 Oncogenic, "
@@ -138,18 +133,11 @@ class ReportFormatter:
         """Format a multi-source evidence search report."""
         lines: list[str] = []
         lines.append("# Multi-Source Evidence Report\n")
-        lines.append(
-            f"**Gene**: {bundle.gene} | **Variant**: {bundle.variant or 'Any'}"
-        )
+        lines.append(f"**Gene**: {bundle.gene} | **Variant**: {bundle.variant or 'Any'}")
         if bundle.disease:
             lines.append(f"**Disease**: {bundle.disease}")
-        lines.append(
-            f"**Sources with data**: {', '.join(bundle.sources_queried) or 'None'}"
-        )
-        lines.append(
-            f"**Retrieved**: "
-            f"{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}"
-        )
+        lines.append(f"**Sources with data**: {', '.join(bundle.sources_queried) or 'None'}")
+        lines.append(f"**Retrieved**: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}")
         lines.append("\n---\n")
 
         # CIViC section
@@ -171,18 +159,13 @@ class ReportFormatter:
             )
             lines.append(
                 "**Evidence levels**: "
-                + ", ".join(
-                    f"Level {l} ({c})"
-                    for l, c in sorted(level_counts.items())
-                )
+                + ", ".join(f"Level {lvl} ({cnt})" for lvl, cnt in sorted(level_counts.items()))
             )
 
             # Top evidence items
             lines.append("\n**Top evidence items**:")
             for item in bundle.civic_evidence[:10]:
-                level_desc = CIVIC_EVIDENCE_LEVELS.get(
-                    item.evidence_level or "", ""
-                )
+                level_desc = CIVIC_EVIDENCE_LEVELS.get(item.evidence_level or "", "")
                 therapies_str = ", ".join(item.therapies) if item.therapies else "N/A"
                 lines.append(
                     f"- **EID{item.id}** [{item.evidence_type}] "
@@ -221,9 +204,7 @@ class ReportFormatter:
                 if cv.conflicting:
                     lines.append("**CONFLICTING** interpretations among submitters")
                 if cv.conditions:
-                    lines.append(
-                        f"**Conditions**: {', '.join(cv.conditions[:5])}"
-                    )
+                    lines.append(f"**Conditions**: {', '.join(cv.conditions[:5])}")
                 if cv.clinvar_url:
                     lines.append(f"**URL**: {cv.clinvar_url}")
                 lines.append("")
@@ -237,14 +218,12 @@ class ReportFormatter:
             if ann.highest_sensitive_level:
                 level_desc = ONCOKB_LEVELS.get(ann.highest_sensitive_level, "")
                 lines.append(
-                    f"**Highest Sensitive Level**: {ann.highest_sensitive_level} "
-                    f"({level_desc})"
+                    f"**Highest Sensitive Level**: {ann.highest_sensitive_level} ({level_desc})"
                 )
             if ann.highest_resistance_level:
                 level_desc = ONCOKB_LEVELS.get(ann.highest_resistance_level, "")
                 lines.append(
-                    f"**Highest Resistance Level**: {ann.highest_resistance_level} "
-                    f"({level_desc})"
+                    f"**Highest Resistance Level**: {ann.highest_resistance_level} ({level_desc})"
                 )
             if ann.treatments:
                 lines.append("**Treatments**:")
@@ -285,9 +264,7 @@ class ReportFormatter:
     ) -> str:
         """Format a pathogenic vs benign evidence summary."""
         lines: list[str] = []
-        lines.append(
-            f"# Pathogenicity Summary: {bundle.gene} {bundle.variant}\n"
-        )
+        lines.append(f"# Pathogenicity Summary: {bundle.gene} {bundle.variant}\n")
 
         # Pathogenic / Oncogenic Evidence
         lines.append("## Pathogenic/Oncogenic Evidence\n")
@@ -313,7 +290,8 @@ class ReportFormatter:
 
         if bundle.civic_evidence:
             oncogenic_items = [
-                e for e in bundle.civic_evidence
+                e
+                for e in bundle.civic_evidence
                 if (e.significance or "").lower()
                 in ("sensitivity", "oncogenic", "gain of function", "pathogenic")
             ]
@@ -323,7 +301,7 @@ class ReportFormatter:
                     lvl = item.evidence_level or "?"
                     level_breakdown[lvl] = level_breakdown.get(lvl, 0) + 1
                 breakdown_str = ", ".join(
-                    f"{c} Level {l}" for l, c in sorted(level_breakdown.items())
+                    f"{cnt} Level {lvl}" for lvl, cnt in sorted(level_breakdown.items())
                 )
                 lines.append(
                     f"- **CIViC**: {len(oncogenic_items)} evidence items support "
@@ -335,9 +313,7 @@ class ReportFormatter:
             ann = bundle.oncokb_annotation
             oncogenic = (ann.oncogenic or "").lower()
             if "oncogenic" in oncogenic:
-                lines.append(
-                    f"- **OncoKB**: {ann.oncogenic}, {ann.known_effect or 'N/A'}"
-                )
+                lines.append(f"- **OncoKB**: {ann.oncogenic}, {ann.known_effect or 'N/A'}")
                 has_pathogenic = True
 
         if oncogenicity and oncogenicity.total_points >= 6:
@@ -358,22 +334,18 @@ class ReportFormatter:
             for cv in bundle.clinvar_variants:
                 sig = (cv.clinical_significance or "").lower()
                 if "benign" in sig:
-                    lines.append(
-                        f"- **ClinVar**: {cv.clinical_significance} "
-                        f"({cv.review_stars})"
-                    )
+                    lines.append(f"- **ClinVar**: {cv.clinical_significance} ({cv.review_stars})")
                     has_benign = True
 
         if bundle.civic_evidence:
             benign_items = [
-                e for e in bundle.civic_evidence
-                if (e.significance or "").lower()
-                in ("benign", "likely benign", "neutral")
+                e
+                for e in bundle.civic_evidence
+                if (e.significance or "").lower() in ("benign", "likely benign", "neutral")
             ]
             if benign_items:
                 lines.append(
-                    f"- **CIViC**: {len(benign_items)} evidence items with benign "
-                    f"significance"
+                    f"- **CIViC**: {len(benign_items)} evidence items with benign significance"
                 )
                 has_benign = True
 
@@ -402,13 +374,10 @@ class ReportFormatter:
                 )
             else:
                 lines.append(
-                    "**PATHOGENIC/ONCOGENIC EVIDENCE** — Limited sources queried. "
-                    "Confidence: LOW"
+                    "**PATHOGENIC/ONCOGENIC EVIDENCE** — Limited sources queried. Confidence: LOW"
                 )
         elif has_benign and not has_pathogenic:
-            lines.append(
-                "**BENIGN** — Evidence supports benign classification."
-            )
+            lines.append("**BENIGN** — Evidence supports benign classification.")
         elif has_pathogenic and has_benign:
             lines.append(
                 "**CONFLICTING** — Both pathogenic and benign evidence exist. "
@@ -416,8 +385,7 @@ class ReportFormatter:
             )
         else:
             lines.append(
-                "**INSUFFICIENT DATA** — No strong evidence in either direction. "
-                "Classified as VUS."
+                "**INSUFFICIENT DATA** — No strong evidence in either direction. Classified as VUS."
             )
 
         lines.append(f"\n---\n\n{DISCLAIMER}")
@@ -427,21 +395,24 @@ class ReportFormatter:
     def format_source_comparison(bundle: EvidenceBundle) -> str:
         """Format a cross-database comparison for a variant."""
         lines: list[str] = []
-        lines.append(
-            f"# Cross-Database Comparison: {bundle.gene} {bundle.variant}\n"
-        )
-        lines.append(
-            f"**Retrieved**: "
-            f"{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}\n"
-        )
+        lines.append(f"# Cross-Database Comparison: {bundle.gene} {bundle.variant}\n")
+        lines.append(f"**Retrieved**: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}\n")
 
         lines.append("| Attribute | CIViC | ClinVar | OncoKB |")
         lines.append("|-----------|-------|---------|--------|")
 
         # Data availability
-        civic_status = f"{len(bundle.civic_evidence)} evidence items" if bundle.civic_evidence else "No data"
-        clinvar_status = bundle.clinvar_variants[0].clinical_significance if bundle.clinvar_variants else "No data"
-        oncokb_status = bundle.oncokb_annotation.oncogenic if bundle.has_oncokb_data else "No data / No token"
+        civic_status = (
+            f"{len(bundle.civic_evidence)} evidence items" if bundle.civic_evidence else "No data"
+        )
+        clinvar_status = (
+            bundle.clinvar_variants[0].clinical_significance
+            if bundle.clinvar_variants
+            else "No data"
+        )
+        oncokb_status = (
+            bundle.oncokb_annotation.oncogenic if bundle.has_oncokb_data else "No data / No token"
+        )
         lines.append(f"| Status | {civic_status} | {clinvar_status} | {oncokb_status} |")
 
         # Classification
@@ -477,7 +448,9 @@ class ReportFormatter:
         if bundle.has_oncokb_data and bundle.oncokb_annotation.highest_sensitive_level:
             oncokb_quality = bundle.oncokb_annotation.highest_sensitive_level
 
-        lines.append(f"| Evidence Quality | {civic_quality} | {clinvar_quality} | {oncokb_quality} |")
+        lines.append(
+            f"| Evidence Quality | {civic_quality} | {clinvar_quality} | {oncokb_quality} |"
+        )
 
         # Therapeutic info
         civic_therapies: set[str] = set()
@@ -507,8 +480,7 @@ class ReportFormatter:
 
         if len(classifications) >= 2:
             lines.append(
-                "**Sources compared**: "
-                + ", ".join(f"{s}: {c}" for s, c in classifications)
+                "**Sources compared**: " + ", ".join(f"{s}: {c}" for s, c in classifications)
             )
         else:
             lines.append("Insufficient data from multiple sources for comparison.")

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 
@@ -115,7 +115,7 @@ class EvidenceBundle(BaseModel):
     gene: str
     variant: str
     disease: str | None = None
-    retrieved_at: datetime = Field(default_factory=datetime.utcnow)
+    retrieved_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     civic_evidence: list[CIViCEvidenceItem] = Field(default_factory=list)
     civic_assertions: list[CIViCAssertion] = Field(default_factory=list)
     clinvar_variants: list[ClinVarVariant] = Field(default_factory=list)

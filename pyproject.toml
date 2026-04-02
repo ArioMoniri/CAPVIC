@@ -6,8 +6,7 @@ build-backend = "hatchling.build"
 name = "variant-mcp"
 version = "1.0.0"
 description = "Multi-source precision oncology and variant classification MCP server"
-readme = "README.md"
-license = "MIT"
+license = {text = "MIT"}
 requires-python = ">=3.11"
 dependencies = [
     "mcp[cli]>=1.0.0",

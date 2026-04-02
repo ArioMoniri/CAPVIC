@@ -12,8 +12,12 @@ class SearchEvidenceInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
-    gene: str = Field(..., min_length=1, max_length=20, description="Gene symbol (e.g., BRAF, KRAS)")
-    variant: str | None = Field(None, max_length=100, description="Variant name (e.g., V600E, G12C)")
+    gene: str = Field(
+        ..., min_length=1, max_length=20, description="Gene symbol (e.g., BRAF, KRAS)"
+    )
+    variant: str | None = Field(
+        None, max_length=100, description="Variant name (e.g., V600E, G12C)"
+    )
     disease: str | None = Field(None, max_length=200, description="Disease or cancer type")
     therapy: str | None = Field(None, max_length=200, description="Therapy or drug name")
     evidence_type: EvidenceType | None = Field(None, description="Filter by evidence type")
@@ -94,7 +98,9 @@ class LookupDiseaseInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
-    query: str = Field(..., min_length=1, max_length=100, description="Disease name or partial name")
+    query: str = Field(
+        ..., min_length=1, max_length=100, description="Disease name or partial name"
+    )
 
 
 class LookupTherapyInput(BaseModel):
@@ -102,7 +108,9 @@ class LookupTherapyInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
-    query: str = Field(..., min_length=1, max_length=100, description="Therapy/drug name or partial")
+    query: str = Field(
+        ..., min_length=1, max_length=100, description="Therapy/drug name or partial"
+    )
 
 
 class AMPTierInput(BaseModel):
@@ -123,7 +131,8 @@ class OncogenicityScoringInput(BaseModel):
     gene: str = Field(..., min_length=1, max_length=20, description="Gene symbol")
     variant: str = Field(..., min_length=1, max_length=100, description="Variant name")
     evidence_codes: list[str] | None = Field(
-        None, description="Explicit evidence codes (e.g., ['OVS1', 'OS3']). Auto-detected if omitted."
+        None,
+        description="Explicit evidence codes (e.g., ['OVS1', 'OS3']). Auto-detected if omitted.",
     )
 
 

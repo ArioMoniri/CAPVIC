@@ -22,9 +22,7 @@ class ACMGAMPHelper:
     and the evidence criteria framework.
     """
 
-    def explain_clinvar_classification(
-        self, clinvar_data: ClinVarVariant
-    ) -> ACMGInterpretation:
+    def explain_clinvar_classification(self, clinvar_data: ClinVarVariant) -> ACMGInterpretation:
         """Explain a ClinVar variant's classification in ACMG/AMP context.
 
         Covers: aggregate classification, review status stars, conflicting
@@ -45,9 +43,7 @@ class ACMGAMPHelper:
 
         # Review status
         review = clinvar_data.review_status or "Not provided"
-        stars = clinvar_data.review_stars or CLINVAR_REVIEW_STARS.get(
-            review.lower(), ""
-        )
+        stars = clinvar_data.review_stars or CLINVAR_REVIEW_STARS.get(review.lower(), "")
         explanation_parts.append(f"\n**Review Status**: {review} {stars}")
         explanation_parts.append(self._explain_review_status(review))
 
@@ -66,15 +62,11 @@ class ACMGAMPHelper:
                 "classification. This variant may warrant additional review."
             )
         else:
-            explanation_parts.append(
-                "\n**No conflicting interpretations** among submitters."
-            )
+            explanation_parts.append("\n**No conflicting interpretations** among submitters.")
 
         # Last evaluated
         if clinvar_data.last_evaluated:
-            explanation_parts.append(
-                f"\n**Last Evaluated**: {clinvar_data.last_evaluated}"
-            )
+            explanation_parts.append(f"\n**Last Evaluated**: {clinvar_data.last_evaluated}")
 
         return ACMGInterpretation(
             aggregate_classification=sig,
@@ -94,10 +86,7 @@ class ACMGAMPHelper:
 
         if not description:
             available = ", ".join(sorted(ACMG_CRITERIA.keys()))
-            return (
-                f"Unknown ACMG/AMP criteria code: '{code}'. "
-                f"Available codes: {available}"
-            )
+            return f"Unknown ACMG/AMP criteria code: '{code}'. Available codes: {available}"
 
         strength = self._get_strength(code)
         direction = "Pathogenic" if code.startswith(("P", "PM", "PP")) else "Benign"
@@ -123,9 +112,7 @@ class ACMGAMPHelper:
         }
 
         lines = ["# ACMG/AMP Germline Variant Classification Criteria\n"]
-        lines.append(
-            "*Richards et al., Genet Med 2015. PMID: 25741868*\n"
-        )
+        lines.append("*Richards et al., Genet Med 2015. PMID: 25741868*\n")
 
         for section, codes in sections.items():
             lines.append(f"\n## {section}\n")
@@ -134,8 +121,12 @@ class ACMGAMPHelper:
                 lines.append(f"- **{code}**: {desc}")
 
         lines.append("\n## Combining Criteria for Classification\n")
-        lines.append("- **Pathogenic**: PVS1 + >=1 Strong; OR >=2 Strong; OR 1 Strong + >=3 Moderate/Supporting")
-        lines.append("- **Likely Pathogenic**: PVS1 + 1 Moderate; OR 1 Strong + 1-2 Moderate; OR 1 Strong + >=2 Supporting; OR >=3 Moderate; OR 2 Moderate + >=2 Supporting")
+        lines.append(
+            "- **Pathogenic**: PVS1 + >=1 Strong; OR >=2 Strong; OR 1 Strong + >=3 Moderate/Supporting"
+        )
+        lines.append(
+            "- **Likely Pathogenic**: PVS1 + 1 Moderate; OR 1 Strong + 1-2 Moderate; OR 1 Strong + >=2 Supporting; OR >=3 Moderate; OR 2 Moderate + >=2 Supporting"
+        )
         lines.append("- **Likely Benign**: 1 Strong + 1 Supporting benign")
         lines.append("- **Benign**: BA1 standalone; OR >=2 Strong benign")
         lines.append("- **VUS**: Criteria not met for any other classification")
@@ -191,10 +182,7 @@ class ACMGAMPHelper:
                 "(e.g., ACMG, AMP, NCCN)."
             )
         if "expert panel" in review_lower:
-            return (
-                "High confidence — reviewed by an expert panel (e.g., ClinGen, "
-                "ENIGMA, InSiGHT)."
-            )
+            return "High confidence — reviewed by an expert panel (e.g., ClinGen, ENIGMA, InSiGHT)."
         if "multiple submitters, no conflicts" in review_lower:
             return (
                 "Moderate confidence — multiple independent laboratories agree "
@@ -206,10 +194,7 @@ class ACMGAMPHelper:
                 "classification with criteria."
             )
         if "no assertion criteria" in review_lower:
-            return (
-                "Lowest confidence — no standard criteria were provided with "
-                "the classification."
-            )
+            return "Lowest confidence — no standard criteria were provided with the classification."
         return "Review status not recognized."
 
     @staticmethod

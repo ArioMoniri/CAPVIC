@@ -78,9 +78,7 @@ class OncogenicityScorer:
                 lines.append(f"**{code}**: Unknown evidence code")
         return "\n".join(lines)
 
-    def _apply_explicit_codes(
-        self, codes: list[str]
-    ) -> list[AppliedEvidenceCode]:
+    def _apply_explicit_codes(self, codes: list[str]) -> list[AppliedEvidenceCode]:
         """Apply explicitly provided evidence codes."""
         applied = []
         for code in codes:
@@ -148,7 +146,9 @@ class OncogenicityScorer:
         if bundle and bundle.has_oncokb_data:
             effect = bundle.oncokb_annotation.known_effect or ""
             if effect.lower() in (
-                "gain-of-function", "loss-of-function", "switch-of-function",
+                "gain-of-function",
+                "loss-of-function",
+                "switch-of-function",
             ):
                 applied.append(
                     AppliedEvidenceCode(
@@ -160,32 +160,31 @@ class OncogenicityScorer:
                 )
 
         # OM1: Known functional domain (oncogene or TSG)
-        if gene_upper in KNOWN_ONCOGENES or gene_upper in KNOWN_TUMOR_SUPPRESSORS:
-            if not any(c.code in ("OVS1", "OS3") for c in applied):
-                applied.append(
-                    AppliedEvidenceCode(
-                        code="OM1",
-                        points=2,
-                        description="Located in critical/functional domain without benign variation",
-                        evidence=f"{gene} is a known {'oncogene' if gene_upper in KNOWN_ONCOGENES else 'tumor suppressor'}",
-                    )
+        if (gene_upper in KNOWN_ONCOGENES or gene_upper in KNOWN_TUMOR_SUPPRESSORS) and not any(
+            c.code in ("OVS1", "OS3") for c in applied
+        ):
+            applied.append(
+                AppliedEvidenceCode(
+                    code="OM1",
+                    points=2,
+                    description="Located in critical/functional domain without benign variation",
+                    evidence=f"{gene} is a known {'oncogene' if gene_upper in KNOWN_ONCOGENES else 'tumor suppressor'}",
                 )
+            )
 
         # OM4/OP4: Population frequency from ClinVar
         if bundle and bundle.has_clinvar_data:
             for cv in bundle.clinvar_variants:
                 sig = (cv.clinical_significance or "").lower()
-                if "benign" not in sig:
-                    # Variant not common in population databases
-                    if not any(c.code in ("OM4", "OP4") for c in applied):
-                        applied.append(
-                            AppliedEvidenceCode(
-                                code="OM4",
-                                points=2,
-                                description="Absent/extremely rare in population databases",
-                                evidence="Not classified as benign in ClinVar, suggesting rare in population",
-                            )
+                if "benign" not in sig and not any(c.code in ("OM4", "OP4") for c in applied):
+                    applied.append(
+                        AppliedEvidenceCode(
+                            code="OM4",
+                            points=2,
+                            description="Absent/extremely rare in population databases",
+                            evidence="Not classified as benign in ClinVar, suggesting rare in population",
                         )
+                    )
 
         # SBVS1/SBS1: Check for high population frequency (benign)
         if bundle and bundle.has_clinvar_data:
@@ -204,18 +203,19 @@ class OncogenicityScorer:
                     break
 
         # OP2: Somatic variant in gene with single cancer etiology
-        if gene_upper in KNOWN_ONCOGENES and not any(
-            c.code == "OP2" for c in applied
+        if (
+            gene_upper in KNOWN_ONCOGENES
+            and not any(c.code == "OP2" for c in applied)
+            and len(applied) < 4
         ):
-            if len(applied) < 4:  # Only add supporting if we don't already have enough
-                applied.append(
-                    AppliedEvidenceCode(
-                        code="OP2",
-                        points=1,
-                        description="Somatic variant in gene with single cancer etiology",
-                        evidence=f"{gene} is a known oncogene",
-                    )
+            applied.append(
+                AppliedEvidenceCode(
+                    code="OP2",
+                    points=1,
+                    description="Somatic variant in gene with single cancer etiology",
+                    evidence=f"{gene} is a known oncogene",
                 )
+            )
 
         return applied
 
@@ -228,17 +228,13 @@ class OncogenicityScorer:
             if null_type in variant_lower:
                 return True
         # Check for frameshift notation (e.g., "fs", "Ter", "*")
-        if re.search(r"(fs|ter\d*|\*\d+|x\d+)", variant_lower):
+        if re.search(r"(fs|ter\d*|\*\d*$|\*$|x\d+)", variant_lower):
             return True
         # Check for splice notation
-        if re.search(r"(splice|c\.\d+[+-]\d+)", variant_lower):
-            return True
-        return False
+        return bool(re.search(r"(splice|c\.\d+[+-]\d+)", variant_lower))
 
     @staticmethod
-    def _is_hotspot(
-        gene: str, variant: str, bundle: EvidenceBundle
-    ) -> bool:
+    def _is_hotspot(gene: str, variant: str, bundle: EvidenceBundle) -> bool:
         """Check if variant is in a known hotspot based on evidence volume."""
         # A variant with many CIViC evidence items likely represents a hotspot
         if len(bundle.civic_evidence) >= 5:
@@ -259,7 +255,8 @@ class OncogenicityScorer:
                 return True
         # Check CIViC for multiple accepted oncogenic evidence items
         oncogenic_count = sum(
-            1 for e in bundle.civic_evidence
+            1
+            for e in bundle.civic_evidence
             if (e.significance or "").lower() in ("oncogenic", "gain of function")
         )
         return oncogenic_count >= 3
@@ -278,9 +275,7 @@ class OncogenicityScorer:
         return "VUS"
 
     @staticmethod
-    def _assess_confidence(
-        applied: list[AppliedEvidenceCode], auto_detected: bool
-    ) -> str:
+    def _assess_confidence(applied: list[AppliedEvidenceCode], auto_detected: bool) -> str:
         """Assess confidence of the scoring."""
         if not applied:
             return "LOW"

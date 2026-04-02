@@ -47,7 +47,8 @@ class CIViCQueries:
         }
     """
 
-    SEARCH_EVIDENCE = """
+    SEARCH_EVIDENCE = (
+        """
     query SearchEvidence(
         $diseaseName: String,
         $geneName: String,
@@ -75,11 +76,14 @@ class CIViCQueries:
                 endCursor
             }
             nodes {
-                %s
+                """
+        + EVIDENCE_FIELDS
+        + """
             }
         }
     }
-    """ % EVIDENCE_FIELDS
+    """
+    )
 
     GET_GENE = """
     query GetGene($name: String!) {
@@ -126,13 +130,17 @@ class CIViCQueries:
     }
     """
 
-    GET_EVIDENCE_ITEM = """
+    GET_EVIDENCE_ITEM = (
+        """
     query GetEvidenceItem($id: Int!) {
         evidenceItem(id: $id) {
-            %s
+            """
+        + EVIDENCE_FIELDS
+        + """
         }
     }
-    """ % EVIDENCE_FIELDS
+    """
+    )
 
     SEARCH_ASSERTIONS = """
     query SearchAssertions(

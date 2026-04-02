@@ -9,7 +9,6 @@ import logging
 
 from variant_mcp.constants import (
     AMP_TIER_DEFINITIONS,
-    CIVIC_EVIDENCE_LEVELS,
     ONCOKB_LEVELS,
 )
 from variant_mcp.models.classification import AMPTierResult
@@ -56,9 +55,7 @@ class AMPTierClassifier:
             sources.append("OncoKB")
 
         # 2. Check CIViC assertions (higher confidence than evidence items)
-        civic_a_tier, civic_a_level, civic_a_trail = self._check_civic_assertions(
-            evidence_bundle
-        )
+        civic_a_tier, civic_a_level, civic_a_trail = self._check_civic_assertions(evidence_bundle)
         if civic_a_tier and self._tier_rank(civic_a_tier) < self._tier_rank(tier):
             tier = civic_a_tier
             level = civic_a_level
@@ -69,9 +66,7 @@ class AMPTierClassifier:
             sources.append("CIViC Assertions")
 
         # 3. Check CIViC evidence items
-        civic_e_tier, civic_e_level, civic_e_trail = self._check_civic_evidence(
-            evidence_bundle
-        )
+        civic_e_tier, civic_e_level, civic_e_trail = self._check_civic_evidence(evidence_bundle)
         if civic_e_tier and self._tier_rank(civic_e_tier) < self._tier_rank(tier):
             tier = civic_e_tier
             level = civic_e_level
@@ -94,9 +89,7 @@ class AMPTierClassifier:
         # Determine confidence
         confidence = self._assess_confidence(tier, level, trail, sources)
 
-        tier_name = AMP_TIER_DEFINITIONS.get(tier, {}).get(
-            "name", f"Tier {tier}"
-        )
+        tier_name = AMP_TIER_DEFINITIONS.get(tier, {}).get("name", f"Tier {tier}")
 
         return AMPTierResult(
             tier=f"Tier {tier}",
@@ -107,9 +100,7 @@ class AMPTierClassifier:
             sources_used=sources,
         )
 
-    def _check_oncokb(
-        self, bundle: EvidenceBundle
-    ) -> tuple[str | None, str | None, list[str]]:
+    def _check_oncokb(self, bundle: EvidenceBundle) -> tuple[str | None, str | None, list[str]]:
         """Check OncoKB therapeutic levels for AMP tier mapping."""
         if not bundle.has_oncokb_data:
             return None, None, []
@@ -125,33 +116,21 @@ class AMPTierClassifier:
         # Map OncoKB levels to AMP tiers
         if sensitive in ("LEVEL_1",):
             tier, level = "I", "A"
-            trail.append(
-                f"OncoKB Level 1: {ONCOKB_LEVELS.get(sensitive, sensitive)}"
-            )
+            trail.append(f"OncoKB Level 1: {ONCOKB_LEVELS.get(sensitive, sensitive)}")
         elif sensitive in ("LEVEL_2",):
             tier, level = "I", "B"
-            trail.append(
-                f"OncoKB Level 2: {ONCOKB_LEVELS.get(sensitive, sensitive)}"
-            )
+            trail.append(f"OncoKB Level 2: {ONCOKB_LEVELS.get(sensitive, sensitive)}")
         elif sensitive in ("LEVEL_3A",):
             tier, level = "II", "C"
-            trail.append(
-                f"OncoKB Level 3A: {ONCOKB_LEVELS.get(sensitive, sensitive)}"
-            )
+            trail.append(f"OncoKB Level 3A: {ONCOKB_LEVELS.get(sensitive, sensitive)}")
         elif sensitive in ("LEVEL_3B", "LEVEL_4"):
             tier, level = "II", "D"
-            trail.append(
-                f"OncoKB {sensitive}: {ONCOKB_LEVELS.get(sensitive, sensitive)}"
-            )
+            trail.append(f"OncoKB {sensitive}: {ONCOKB_LEVELS.get(sensitive, sensitive)}")
 
         if resistance in ("LEVEL_R1",):
-            trail.append(
-                f"OncoKB R1 resistance: {ONCOKB_LEVELS.get(resistance, resistance)}"
-            )
+            trail.append(f"OncoKB R1 resistance: {ONCOKB_LEVELS.get(resistance, resistance)}")
         elif resistance in ("LEVEL_R2",):
-            trail.append(
-                f"OncoKB R2 resistance: {ONCOKB_LEVELS.get(resistance, resistance)}"
-            )
+            trail.append(f"OncoKB R2 resistance: {ONCOKB_LEVELS.get(resistance, resistance)}")
 
         # Oncogenicity status
         if annotation.oncogenic:
@@ -185,8 +164,7 @@ class AMPTierClassifier:
                 amp_upper = amp.upper().replace(" ", "")
                 a_tier, a_level = self._parse_amp_level(amp_upper)
                 if a_tier and (
-                    best_tier is None
-                    or self._tier_rank(a_tier) < self._tier_rank(best_tier)
+                    best_tier is None or self._tier_rank(a_tier) < self._tier_rank(best_tier)
                 ):
                     best_tier = a_tier
                     best_level = a_level
@@ -197,8 +175,7 @@ class AMPTierClassifier:
                 )
             if assertion.nccn_guideline:
                 trail.append(
-                    f"CIViC Assertion {assertion.id}: NCCN guideline — "
-                    f"{assertion.nccn_guideline}"
+                    f"CIViC Assertion {assertion.id}: NCCN guideline — {assertion.nccn_guideline}"
                 )
 
         return best_tier, best_level, trail
@@ -227,24 +204,16 @@ class AMPTierClassifier:
         # Level D (Preclinical) -> Tier II/D
         if level_counts.get("A", 0) > 0:
             best_tier, best_level = "I", "A"
-            trail.append(
-                f"CIViC: {level_counts['A']} Level A (Validated) evidence items"
-            )
+            trail.append(f"CIViC: {level_counts['A']} Level A (Validated) evidence items")
         elif level_counts.get("B", 0) > 0:
             best_tier, best_level = "I", "B"
-            trail.append(
-                f"CIViC: {level_counts['B']} Level B (Clinical) evidence items"
-            )
+            trail.append(f"CIViC: {level_counts['B']} Level B (Clinical) evidence items")
         elif level_counts.get("C", 0) > 0:
             best_tier, best_level = "II", "D"
-            trail.append(
-                f"CIViC: {level_counts['C']} Level C (Case Study) evidence items"
-            )
+            trail.append(f"CIViC: {level_counts['C']} Level C (Case Study) evidence items")
         elif level_counts.get("D", 0) > 0:
             best_tier, best_level = "II", "D"
-            trail.append(
-                f"CIViC: {level_counts['D']} Level D (Preclinical) evidence items"
-            )
+            trail.append(f"CIViC: {level_counts['D']} Level D (Preclinical) evidence items")
 
         # Evidence type breakdown
         type_counts: dict[str, int] = {}
@@ -256,9 +225,7 @@ class AMPTierClassifier:
 
         return best_tier, best_level, trail
 
-    def _check_clinvar(
-        self, bundle: EvidenceBundle
-    ) -> tuple[str | None, list[str]]:
+    def _check_clinvar(self, bundle: EvidenceBundle) -> tuple[str | None, list[str]]:
         """Check ClinVar for benign/pathogenic signals."""
         if not bundle.has_clinvar_data:
             return None, []
@@ -272,8 +239,7 @@ class AMPTierClassifier:
             status = cv.review_status or ""
 
             trail.append(
-                f"ClinVar {cv.variation_id}: {cv.clinical_significance} "
-                f"({stars} — {status})"
+                f"ClinVar {cv.variation_id}: {cv.clinical_significance} ({stars} — {status})"
             )
 
             if "benign" in sig and "likely" not in sig:
@@ -281,14 +247,10 @@ class AMPTierClassifier:
                 trail.append("ClinVar classification supports Tier IV (Benign)")
             elif "likely benign" in sig:
                 tier = "IV"
-                trail.append(
-                    "ClinVar classification supports Tier IV (Likely Benign)"
-                )
+                trail.append("ClinVar classification supports Tier IV (Likely Benign)")
 
             if cv.conflicting:
-                trail.append(
-                    "ClinVar: CONFLICTING interpretations among submitters"
-                )
+                trail.append("ClinVar: CONFLICTING interpretations among submitters")
 
         return tier, trail
 

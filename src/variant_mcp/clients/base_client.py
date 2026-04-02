@@ -83,10 +83,14 @@ class BaseClient:
             except httpx.HTTPStatusError as e:
                 last_error = e
                 if e.response.status_code in (429, 500, 502, 503, 504):
-                    wait = RETRY_BACKOFF_BASE * (2 ** attempt)
+                    wait = RETRY_BACKOFF_BASE * (2**attempt)
                     logger.warning(
                         "HTTP %d from %s, retrying in %.1fs (attempt %d/%d)",
-                        e.response.status_code, url, wait, attempt + 1, max_retries,
+                        e.response.status_code,
+                        url,
+                        wait,
+                        attempt + 1,
+                        max_retries,
                     )
                     await asyncio.sleep(wait)
                     continue
@@ -96,14 +100,14 @@ class BaseClient:
             except httpx.TimeoutException as e:
                 last_error = e
                 if attempt < max_retries:
-                    wait = RETRY_BACKOFF_BASE * (2 ** attempt)
+                    wait = RETRY_BACKOFF_BASE * (2**attempt)
                     logger.warning("Timeout for %s, retrying in %.1fs", url, wait)
                     await asyncio.sleep(wait)
                     continue
             except httpx.RequestError as e:
                 last_error = e
                 if attempt < max_retries:
-                    wait = RETRY_BACKOFF_BASE * (2 ** attempt)
+                    wait = RETRY_BACKOFF_BASE * (2**attempt)
                     logger.warning("Request error for %s: %s, retrying", url, e)
                     await asyncio.sleep(wait)
                     continue
@@ -112,9 +116,7 @@ class BaseClient:
             f"Failed after {max_retries + 1} attempts to {url}: {last_error}"
         ) from last_error
 
-    async def get(
-        self, path: str, params: dict[str, Any] | None = None
-    ) -> httpx.Response:
+    async def get(self, path: str, params: dict[str, Any] | None = None) -> httpx.Response:
         url = f"{self.base_url}/{path.lstrip('/')}" if path else self.base_url
         return await self._request("GET", url, params=params)
 
@@ -127,15 +129,11 @@ class BaseClient:
         url = f"{self.base_url}/{path.lstrip('/')}" if path else self.base_url
         return await self._request("GET", url, params=params, json_body=json_body)
 
-    async def get_json(
-        self, path: str, params: dict[str, Any] | None = None
-    ) -> Any:
+    async def get_json(self, path: str, params: dict[str, Any] | None = None) -> Any:
         response = await self.get(path, params=params)
         return response.json()
 
-    async def post_json(
-        self, path: str, json_body: dict[str, Any] | None = None
-    ) -> Any:
+    async def post_json(self, path: str, json_body: dict[str, Any] | None = None) -> Any:
         url = f"{self.base_url}/{path.lstrip('/')}" if path else self.base_url
         response = await self._request("POST", url, json_body=json_body)
         return response.json()
