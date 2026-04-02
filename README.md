@@ -689,11 +689,14 @@ for gene, variant in your_dataset:
 | Tool | Default Build | Notes |
 |------|--------------|-------|
 | `lookup_gnomad_frequency` | **GRCh38** (gnomAD v4) | Pass `genome_version="GRCh37"` for gnomAD v2. Coordinates differ between builds. |
-| `predict_variant_effect` | **GRCh37** (hg19) | MyVariant.info uses hg19 by default. Gene+variant search is build-agnostic. |
-| `oncokb_annotate` | Build-agnostic | Uses protein-level queries (gene + variant name). |
-| All other tools | Build-agnostic | CIViC, ClinVar, UniProt, PubMed query by gene/variant name, not coordinates. |
+| `predict_variant_effect` | **GRCh37** (hg19) | `hgvs_id` parameter must use hg19 coordinates. Gene+variant search is build-agnostic. |
+| `clinvar_get_variant` | **GRCh38** | ClinVar returns GRCh38 coordinates by default. Queries by gene/variant name are build-agnostic. |
+| `oncokb_annotate` | Build-agnostic | Uses protein-level queries (gene + variant name). HGVSg annotation defaults to GRCh38. |
+| All other tools | Build-agnostic | CIViC, UniProt, PubMed query by gene/variant name, not coordinates. |
 
 > **Important**: When using `lookup_gnomad_frequency`, provide coordinates matching the genome build. BRAF V600E is `7-140753336-A-T` on GRCh38 and `7-140453136-A-T` on GRCh37.
+>
+> **Tip for classification**: For the most accurate oncogenicity scoring, first call `lookup_gnomad_frequency` to get population allele frequencies, then call `variant_classify`. Without gnomAD data, frequency-based evidence codes (SBVS1, SBS1, OM4, OP4) cannot be applied.
 
 ---
 

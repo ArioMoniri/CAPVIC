@@ -56,7 +56,7 @@ class MetaKBClient(BaseClient):
         try:
             data = await self._search_api(query_parts)
             return self._parse_results(data)
-        except (ClientError, Exception) as e:
+        except (ClientError, KeyError, TypeError, ValueError) as e:
             logger.warning("MetaKB search failed (falling back): %s", e)
             return []
 

@@ -2,6 +2,34 @@
 
 All notable changes to CAPVIC are documented in this file.
 
+## [1.0.1] — 2026-04-03
+
+### Fixed
+- **BaseClient.post()**: Was sending GET instead of POST (critical HTTP method bug)
+- **CIViC gene extraction**: Gene name was parsed from variant name instead of molecularProfile name (returned "V600E" as gene instead of "BRAF")
+- **CIViC GraphQL errors**: Error messages now extract individual message strings instead of dumping raw list
+- **ClinVar rsID search**: Fixed field tag from `[dbsnp_id]` to `[dbsnp id]` (NCBI uses space, not underscore)
+- **ClinVar efetch**: Added explicit `retmode=xml` parameter
+- **OncoKB HGVSg**: Default genome changed from GRCh37 to GRCh38; added try/except error handling
+- **MetaKB exception handling**: Narrowed from broad `Exception` catch to specific types
+- **Oncogenicity SOP**: OM4/OP4/SBVS1/SBS1 evidence codes now use actual gnomAD allele frequency data instead of incorrectly inferring from ClinVar classification (Horak et al. 2022)
+- **Oncogenicity SOP**: Added SBVS1 auto-detection (MAF >5% threshold) — was previously missing entirely
+- **Oncogenicity SOP**: Removed arbitrary `len(applied) < 4` limit on OP2 code application
+- **gnomAD AF computation**: Added explicit `an > 0` division-by-zero guards
+- **Constants**: Removed incorrect "2025 update" reference from AMP/ASCO/CAP comment
+
+### Added
+- `gnomad_frequency` field and `has_gnomad_data` property on EvidenceBundle model
+- gnomAD source listed in `sources_queried` when frequency data is present
+- Classification report now suggests fetching gnomAD data when missing for better SBVS1/SBS1/OM4/OP4 scoring
+- Pathogenicity summary notes when gnomAD data is unavailable
+- Genome build documentation in tool docstrings (gnomAD, MyVariant.info, OncoKB)
+- Updated Genome Build Reference table in README with ClinVar and tips
+
+### Changed
+- ROADMAP.md rewritten from build prompt to structured completed/planned roadmap
+- README updated with genome build guidance and classification workflow tips
+
 ## [1.0.0] — 2026-04-03
 
 ### Added

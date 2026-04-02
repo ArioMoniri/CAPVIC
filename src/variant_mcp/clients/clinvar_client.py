@@ -76,6 +76,7 @@ class ClinVarClient(BaseClient):
             "db": "clinvar",
             "id": str(variation_id),
             "rettype": "variation",
+            "retmode": "xml",
         }
         if self._api_key:
             params["api_key"] = self._api_key
@@ -86,7 +87,7 @@ class ClinVarClient(BaseClient):
     async def get_variant_by_rsid(self, rsid: str) -> list[ClinVarVariant]:
         """Search ClinVar by dbSNP rsID."""
         clean_rsid = rsid.lower().replace("rs", "")
-        ids = await self._esearch(f"rs{clean_rsid}[dbsnp_id]")
+        ids = await self._esearch(f"rs{clean_rsid}[dbsnp id]")
         if not ids:
             return []
         return await self._esummary_variants(ids)

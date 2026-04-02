@@ -77,9 +77,15 @@ class OncoKBClient(BaseClient):
         self,
         hgvsg: str,
         tumor_type: str | None = None,
-        ref_genome: str = "GRCh37",
+        ref_genome: str = "GRCh38",
     ) -> OncoKBAnnotation | str:
-        """Annotate a mutation by HGVSg notation."""
+        """Annotate a mutation by HGVSg notation.
+
+        Args:
+            hgvsg: HGVSg notation (e.g. "7:g.140753336A>T").
+            tumor_type: OncoTree tumor type code (e.g. "MEL").
+            ref_genome: Reference genome ("GRCh38" or "GRCh37").
+        """
         token_err = self._check_token()
         if token_err:
             return token_err
@@ -91,8 +97,12 @@ class OncoKBClient(BaseClient):
         if tumor_type:
             params["tumorType"] = tumor_type
 
-        data = await self.get_json("annotate/mutations/byHGVSg", params=params)
-        return self._parse_annotation(data)
+        try:
+            data = await self.get_json("annotate/mutations/byHGVSg", params=params)
+            return self._parse_annotation(data)
+        except ClientError as e:
+            logger.error("OncoKB annotate_by_hgvsg error: %s", e)
+            raise
 
     async def get_gene_info(self, gene: str) -> dict[str, Any] | str:
         """Get gene summary and oncogene/TSG status."""

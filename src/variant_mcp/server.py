@@ -250,7 +250,20 @@ async def variant_classify(
                 bundle.clinvar_variants[0]
             )
 
-    return report_fmt.format_classification_report(report)
+    result = report_fmt.format_classification_report(report)
+
+    # Suggest fetching gnomAD data if not in bundle (improves SBVS1/SBS1/OM4/OP4)
+    if not bundle.has_gnomad_data:
+        result += (
+            "\n\n---\n\n> **Tip**: For more accurate oncogenicity scoring "
+            "(SBVS1/SBS1/OM4/OP4 evidence codes), first fetch population frequency "
+            "data using `lookup_gnomad_frequency` with the genomic coordinate "
+            "(e.g., `7-140753336-A-T` for BRAF V600E on GRCh38), then re-run "
+            "classification. The scorer uses gnomAD allele frequencies to apply "
+            "frequency-based evidence codes per Horak et al. 2022."
+        )
+
+    return result
 
 
 @mcp.tool(
@@ -916,8 +929,10 @@ async def lookup_gnomad_frequency(
     and oncogenicity SOP codes SBVS1/SBS1/OM4/OP4.
 
     Args:
-        variant_id: gnomAD variant ID in chrom-pos-ref-alt format (e.g., "7-140453136-A-T").
-        genome_version: GRCh38 or GRCh37.
+        variant_id: gnomAD variant ID in chrom-pos-ref-alt format.
+            Use GRCh38 coordinates with GRCh38 (e.g., "7-140753336-A-T" for BRAF V600E).
+            Use GRCh37 coordinates with GRCh37 (e.g., "7-140453136-A-T" for BRAF V600E).
+        genome_version: "GRCh38" (default, gnomAD v4) or "GRCh37" (gnomAD v2.1).
     """
     try:
         freq = await gnomad_client.get_variant_frequency(variant_id, genome_version)
@@ -1180,7 +1195,9 @@ async def predict_variant_effect(
     Args:
         gene: Gene symbol. Required.
         variant: Variant name (e.g., V600E). Required.
-        hgvs_id: HGVS genomic ID for direct lookup (e.g., chr7:g.140453136A>T).
+        hgvs_id: Optional HGVS genomic ID for direct lookup (e.g., chr7:g.140453136A>T).
+            **Must use GRCh37/hg19 coordinates** — MyVariant.info indexes on hg19.
+            Without hgvs_id, searches by gene+protein change (build-agnostic).
     """
     try:
         preds = None

@@ -30,7 +30,8 @@ class CIViCClient(BaseClient):
             body["variables"] = {k: v for k, v in variables.items() if v is not None}
         result = await self.post_json("", json_body=body)
         if "errors" in result:
-            raise ClientError(f"CIViC GraphQL error: {result['errors']}")
+            msgs = [e.get("message", str(e)) for e in result["errors"]]
+            raise ClientError(f"CIViC GraphQL error: {'; '.join(msgs)}")
         return result.get("data", {})  # type: ignore[no-any-return]
 
     async def search_evidence(
@@ -193,7 +194,7 @@ class CIViCClient(BaseClient):
             significance=node.get("significance"),
             description=node.get("description"),
             therapy_interaction_type=node.get("therapyInteractionType"),
-            gene=variants[0].get("name", "").split()[0] if variants else None,
+            gene=mp.get("name", "").split()[0] if mp.get("name") else None,
             variant=variants[0].get("name") if variants else None,
             molecular_profile=mp.get("name"),
             disease=disease_data.get("name"),
@@ -222,7 +223,7 @@ class CIViCClient(BaseClient):
             summary=node.get("summary"),
             description=node.get("description"),
             amp_level=node.get("ampLevel"),
-            gene=variants[0].get("name", "").split()[0] if variants else None,
+            gene=mp.get("name", "").split()[0] if mp.get("name") else None,
             variant=variants[0].get("name") if variants else None,
             molecular_profile=mp.get("name"),
             disease=disease_data.get("name"),

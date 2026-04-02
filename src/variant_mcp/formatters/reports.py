@@ -428,8 +428,14 @@ class ReportFormatter:
                 )
                 has_benign = True
 
+        if not bundle.has_gnomad_data:
+            lines.append(
+                "- **gnomAD**: Not evaluated — use `lookup_gnomad_frequency` to fetch "
+                "population allele frequencies for SBVS1/SBS1/OM4/OP4 evidence codes"
+            )
+
         if not has_benign:
-            lines.append("- No benign evidence found")
+            lines.append("- No benign evidence found (excluding gnomAD, not yet queried)")
 
         # Consensus Assessment
         lines.append("\n## Consensus Assessment\n")
