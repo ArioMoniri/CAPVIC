@@ -225,9 +225,7 @@ class OncogenicityScorer:
 
         # SBVS1/SBS1: Population frequency thresholds from gnomAD
         if bundle and bundle.has_gnomad_data and bundle.gnomad_frequency:
-            max_pop_af = max(
-                bundle.gnomad_frequency.population_frequencies.values(), default=0.0
-            )
+            max_pop_af = max(bundle.gnomad_frequency.population_frequencies.values(), default=0.0)
             global_af = bundle.gnomad_frequency.allele_frequency or 0.0
             highest_af = max(max_pop_af, global_af)
             if highest_af > 0.05:
@@ -272,10 +270,7 @@ class OncogenicityScorer:
                 )
 
         # OP2: Somatic variant in gene with single cancer etiology
-        if (
-            gene_upper in KNOWN_ONCOGENES
-            and not any(c.code == "OP2" for c in applied)
-        ):
+        if gene_upper in KNOWN_ONCOGENES and not any(c.code == "OP2" for c in applied):
             applied.append(
                 AppliedEvidenceCode(
                     code="OP2",
