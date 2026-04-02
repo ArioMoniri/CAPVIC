@@ -59,7 +59,7 @@ CAPVIC turns any AI assistant (Claude, GPT, etc.) into a **virtual molecular tum
 | 🟢 [ClinVar](https://www.ncbi.nlm.nih.gov/clinvar/) | Aggregate pathogenicity from 2000+ labs | Free, no auth | Weekly |
 | 🟡 [OncoKB](https://www.oncokb.org) | FDA-recognized oncogenicity + therapy levels | Free academic token (requires [registration](https://www.oncokb.org/account/register)) | Continuously |
 | 🟢 [VICC MetaKB](https://search.cancervariants.org) | Harmonized from 6 knowledgebases | Free, no auth | Periodic |
-| 🟢 [gnomAD](https://gnomad.broadinstitute.org) | Population allele frequencies (152k genomes) | Free, no auth | Major releases |
+| 🟢 [gnomAD](https://gnomad.broadinstitute.org) | Population allele frequencies (76k genomes, 807k exomes) | Free, no auth | Major releases |
 | 🟢 [UniProt](https://www.uniprot.org) | Protein domains & functional annotation | Free, no auth | Monthly |
 | 🟢 [PubMed](https://pubmed.ncbi.nlm.nih.gov) | Biomedical literature (36M+ articles) | Free, no auth | Daily |
 | 🟢 [MyVariant.info](https://myvariant.info) | Aggregated in-silico predictions (dbNSFP) | Free, no auth | Periodic |
@@ -619,7 +619,7 @@ GitHub Actions runs on every push:
 | 4 | Griffith M, et al. (2017). "CIViC is a community knowledgebase for expert crowdsourcing the clinical interpretation of variants in cancer." *Nat Genet*, 49(2):170-174. | [28138153](https://pubmed.ncbi.nlm.nih.gov/28138153/) |
 | 5 | Wagner AH, et al. (2020). "A harmonized meta-knowledgebase of clinical interpretations of somatic genomic variants in cancer." *Nat Genet*, 52(4):448-457. | [32246132](https://pubmed.ncbi.nlm.nih.gov/32246132/) |
 | 6 | Chakravarty D, et al. (2017). "OncoKB: A Precision Oncology Knowledge Base." *JCO Precis Oncol*, 2017:PO.17.00011. | [28890946](https://pubmed.ncbi.nlm.nih.gov/28890946/) |
-| 7 | Chen S, et al. (2024). "A genomic mutational constraint map using variation in 76,156 human genomes." *Nature*, 625:92-100. | [38862018](https://pubmed.ncbi.nlm.nih.gov/38862018/) |
+| 7 | Chen S, et al. (2024). "A genomic mutational constraint map using variation in 76,156 human genomes." *Nature*, 625:92-100. | [38057664](https://pubmed.ncbi.nlm.nih.gov/38057664/) |
 | 8 | Ioannidis NM, et al. (2016). "REVEL: An Ensemble Method for Predicting the Pathogenicity of Rare Missense Variants." *Am J Hum Genet*, 99(4):877-885. | [27666373](https://pubmed.ncbi.nlm.nih.gov/27666373/) |
 | 9 | Cheng J, et al. (2023). "Accurate proteome-wide missense variant effect prediction with AlphaMissense." *Science*, 381(6664):eadg7492. | [37733863](https://pubmed.ncbi.nlm.nih.gov/37733863/) |
 | 10 | Pejaver V, et al. (2022). "Calibration of computational tools for missense variant pathogenicity classification." *Am J Hum Genet*, 109(12):2163-2177. | [36413997](https://pubmed.ncbi.nlm.nih.gov/36413997/) |
