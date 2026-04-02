@@ -125,7 +125,6 @@ class TestReportFormatter:
         assert "ClinVar" in report
         assert "OncoKB" in report
 
-
     def test_format_evidence_report_with_domains(self):
         """Evidence report should show UniProt protein domains."""
         bundle = EvidenceBundle(
@@ -178,7 +177,9 @@ class TestReportFormatter:
             gene="BRAF",
             variant="V600E",
             protein_domains=[
-                ProteinDomain(name="Protein kinase", domain_type="Domain", start_pos=457, end_pos=717),
+                ProteinDomain(
+                    name="Protein kinase", domain_type="Domain", start_pos=457, end_pos=717
+                ),
             ],
             in_silico_predictions=InSilicoPredictions(
                 consensus="Damaging",
@@ -215,7 +216,9 @@ class TestReportFormatter:
             gene="BRAF",
             variant="V600E",
             protein_domains=[
-                ProteinDomain(name="Protein kinase", domain_type="Domain", start_pos=457, end_pos=717),
+                ProteinDomain(
+                    name="Protein kinase", domain_type="Domain", start_pos=457, end_pos=717
+                ),
             ],
             in_silico_predictions=InSilicoPredictions(
                 consensus="Damaging",

@@ -252,9 +252,7 @@ class TestPubMedClient:
     async def test_search_no_results(self):
         client = PubMedClient()
         respx.get("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi").mock(
-            return_value=httpx.Response(
-                200, json={"esearchresult": {"idlist": [], "count": "0"}}
-            )
+            return_value=httpx.Response(200, json={"esearchresult": {"idlist": [], "count": "0"}})
         )
         result = await client.search_publications("FAKEGENE123")
         assert result.total_count == 0
@@ -266,9 +264,7 @@ class TestPubMedClient:
     async def test_esearch_error(self):
         client = PubMedClient()
         respx.get("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi").mock(
-            return_value=httpx.Response(
-                200, json={"esearchresult": {"ERROR": "Invalid query"}}
-            )
+            return_value=httpx.Response(200, json={"esearchresult": {"ERROR": "Invalid query"}})
         )
         with pytest.raises(ClientError, match="esearch error"):
             await client.search_publications("BRAF")
@@ -317,9 +313,7 @@ class TestUniProtClient:
                                         "start": {"value": 457},
                                         "end": {"value": 717},
                                     },
-                                    "evidences": [
-                                        {"source": {"name": "Pfam"}}
-                                    ],
+                                    "evidences": [{"source": {"name": "Pfam"}}],
                                 },
                                 {
                                     "type": "Region",
