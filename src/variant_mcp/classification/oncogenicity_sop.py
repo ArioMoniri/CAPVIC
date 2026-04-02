@@ -184,35 +184,70 @@ class OncogenicityScorer:
                     )
                 )
 
-        # OM4/OP4: Population frequency from ClinVar
-        if bundle and bundle.has_clinvar_data:
-            for cv in bundle.clinvar_variants:
-                sig = (cv.clinical_significance or "").lower()
-                if "benign" not in sig and not any(c.code in ("OM4", "OP4") for c in applied):
+        # OM4/OP4: Absent/extremely rare in population databases — use gnomAD data
+        if not any(c.code in ("OM4", "OP4") for c in applied):
+            if bundle and bundle.has_gnomad_data and bundle.gnomad_frequency:
+                af = bundle.gnomad_frequency.allele_frequency
+                if af is not None and af < 0.0001:
                     applied.append(
                         AppliedEvidenceCode(
                             code="OM4",
                             points=2,
                             description="Absent/extremely rare in population databases",
-                            evidence="Not classified as benign in ClinVar, suggesting rare in population",
+                            evidence=f"gnomAD allele frequency {af:.6g} < 0.01%",
                         )
                     )
-
-        # SBVS1/SBS1: Check for high population frequency (benign)
-        if bundle and bundle.has_clinvar_data:
-            for cv in bundle.clinvar_variants:
-                sig = (cv.clinical_significance or "").lower()
-                if "benign" in sig and "likely" not in sig:
-                    # Strong benign signal
+                elif af is None:
+                    # Variant absent from gnomAD entirely
                     applied.append(
                         AppliedEvidenceCode(
-                            code="SBS1",
-                            points=-4,
-                            description="MAF >1% in any general continental population in gnomAD",
-                            evidence=f"ClinVar classifies as Benign (variation ID {cv.variation_id})",
+                            code="OP4",
+                            points=1,
+                            description="Absent in population databases",
+                            evidence="Variant not found in gnomAD",
                         )
                     )
-                    break
+            elif bundle and not bundle.has_gnomad_data:
+                # Fallback: no gnomAD data available, use ClinVar as weak proxy
+                if bundle.has_clinvar_data:
+                    for cv in bundle.clinvar_variants:
+                        sig = (cv.clinical_significance or "").lower()
+                        if "benign" not in sig:
+                            applied.append(
+                                AppliedEvidenceCode(
+                                    code="OP4",
+                                    points=1,
+                                    description="Absent in population databases",
+                                    evidence="No gnomAD data available; ClinVar does not indicate common benign variant (weak proxy)",
+                                )
+                            )
+                            break
+
+        # SBVS1/SBS1: Population frequency thresholds from gnomAD
+        if bundle and bundle.has_gnomad_data and bundle.gnomad_frequency:
+            max_pop_af = max(
+                bundle.gnomad_frequency.population_frequencies.values(), default=0.0
+            )
+            global_af = bundle.gnomad_frequency.allele_frequency or 0.0
+            highest_af = max(max_pop_af, global_af)
+            if highest_af > 0.05:
+                applied.append(
+                    AppliedEvidenceCode(
+                        code="SBVS1",
+                        points=-8,
+                        description="MAF >5% in any general continental population in gnomAD",
+                        evidence=f"Highest population AF = {highest_af:.4f} (>5% threshold)",
+                    )
+                )
+            elif highest_af > 0.01:
+                applied.append(
+                    AppliedEvidenceCode(
+                        code="SBS1",
+                        points=-4,
+                        description="MAF >1% in any general continental population in gnomAD",
+                        evidence=f"Highest population AF = {highest_af:.4f} (>1% threshold)",
+                    )
+                )
 
         # OP1/SBP1: In-silico prediction consensus
         if bundle and bundle.has_prediction_data and bundle.in_silico_predictions:
@@ -240,7 +275,6 @@ class OncogenicityScorer:
         if (
             gene_upper in KNOWN_ONCOGENES
             and not any(c.code == "OP2" for c in applied)
-            and len(applied) < 4
         ):
             applied.append(
                 AppliedEvidenceCode(

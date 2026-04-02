@@ -44,9 +44,25 @@ class MyVariantClient(BaseClient):
         Args:
             gene: Gene symbol, e.g. ``BRAF``.
             variant: Protein change, e.g. ``V600E``.
+
+        Parses the variant string to extract ref AA, position, and alt AA,
+        then queries MyVariant.info using structured dbNSFP amino acid fields.
         """
+        from variant_mcp.utils.variant_normalizer import VariantNormalizer
+
+        normalizer = VariantNormalizer()
+        parsed = normalizer.normalize(variant)
+
+        if parsed.position and parsed.ref_aa and parsed.alt_aa:
+            q = (
+                f"dbnsfp.genename:{gene} AND dbnsfp.aa.pos:{parsed.position} "
+                f"AND dbnsfp.aa.ref:{parsed.ref_aa} AND dbnsfp.aa.alt:{parsed.alt_aa}"
+            )
+        else:
+            q = f"dbnsfp.genename:{gene} AND dbnsfp.hgvsp:*{variant}*"
+
         params = {
-            "q": f"dbnsfp.genename:{gene} AND dbnsfp.aa.change:{variant}",
+            "q": q,
             "fields": self._PREDICTION_FIELDS,
             "size": "1",
         }

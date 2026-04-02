@@ -21,27 +21,23 @@ query GnomadVariant($variantId: String!, $datasetId: DatasetId!) {
     genome {
       ac
       an
-      af
       ac_hom
       filters
       populations {
         id
         ac
         an
-        af
       }
     }
     exome {
       ac
       an
-      af
       ac_hom
       filters
       populations {
         id
         ac
         an
-        af
       }
     }
   }
@@ -113,25 +109,29 @@ class GnomADClient(BaseClient):
         genome = data.get("genome") or {}
         exome = data.get("exome") or {}
 
-        # Use genome AF if available, otherwise exome
-        primary = genome if genome.get("af") is not None else exome
+        # Use genome data if it has counts, otherwise exome
+        primary = genome if genome.get("an") else exome
 
-        af = primary.get("af")
         ac = primary.get("ac")
         an = primary.get("an")
         ac_hom = primary.get("ac_hom")
+        af = ac / an if ac is not None and an and an > 0 else None
 
-        # Combine population frequencies from genome and exome
+        # Combine population frequencies from genome and exome (compute AF)
         pop_freqs: dict[str, float] = {}
         for source in (genome, exome):
             for pop in source.get("populations", []):
                 pop_id = pop.get("id", "")
+                pop_ac = pop.get("ac")
+                pop_an = pop.get("an")
                 if (
                     pop_id in _POPULATION_IDS
-                    and pop.get("af") is not None
+                    and pop_ac is not None
+                    and pop_an
+                    and pop_an > 0
                     and pop_id not in pop_freqs
                 ):
-                    pop_freqs[pop_id] = pop.get("af")
+                    pop_freqs[pop_id] = pop_ac / pop_an
 
         # Collect filters
         filters = []

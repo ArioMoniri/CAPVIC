@@ -161,6 +161,7 @@ class EvidenceBundle(BaseModel):
     # Phase 10: scientific enhancement data
     protein_domains: list[ProteinDomain] = Field(default_factory=list)
     in_silico_predictions: InSilicoPredictions | None = None
+    gnomad_frequency: GnomADFrequency | None = None
     errors: dict[str, str] = Field(default_factory=dict)
 
     @property
@@ -174,6 +175,10 @@ class EvidenceBundle(BaseModel):
     @property
     def has_oncokb_data(self) -> bool:
         return self.oncokb_annotation is not None
+
+    @property
+    def has_gnomad_data(self) -> bool:
+        return self.gnomad_frequency is not None
 
     @property
     def has_domain_data(self) -> bool:
@@ -194,6 +199,8 @@ class EvidenceBundle(BaseModel):
             sources.append("OncoKB")
         if self.metakb_interpretations:
             sources.append("MetaKB")
+        if self.has_gnomad_data:
+            sources.append("gnomAD")
         if self.has_domain_data:
             sources.append("UniProt")
         if self.has_prediction_data:

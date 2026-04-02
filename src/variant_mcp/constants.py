@@ -73,7 +73,7 @@ class SourceDatabase(StrEnum):
     METAKB = "metakb"
 
 
-# === AMP/ASCO/CAP 4-Tier Classification (2017 + 2025 update) ===
+# === AMP/ASCO/CAP 4-Tier Classification (Li et al. 2017, PMID: 27993330) ===
 AMP_TIER_DEFINITIONS = {
     "I": {
         "name": "Tier I — Strong Clinical Significance",

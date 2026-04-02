@@ -928,7 +928,8 @@ async def lookup_gnomad_frequency(
         lines.append(f"**Genome version**: {freq.genome_version}")
         lines.append(f"**Source**: {freq.source}")
         lines.append(f"**Filter status**: {freq.filter_status or 'N/A'}\n")
-        lines.append(f"**Global allele frequency**: {freq.allele_frequency or 'N/A'}")
+        af_str = f"{freq.allele_frequency:.6g}" if freq.allele_frequency is not None else "N/A"
+        lines.append(f"**Global allele frequency**: {af_str}")
         lines.append(f"**Allele count**: {freq.allele_count or 'N/A'}")
         lines.append(f"**Allele number**: {freq.allele_number or 'N/A'}")
         lines.append(f"**Homozygote count**: {freq.homozygote_count or 'N/A'}\n")

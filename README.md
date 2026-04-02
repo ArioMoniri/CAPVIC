@@ -240,14 +240,13 @@ docker run --rm -i -e ONCOKB_API_TOKEN=your_token capvic:latest
   "mcpServers": {
     "variant_mcp": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", "capvic:latest"],
-      "env": {
-        "ONCOKB_API_TOKEN": "your_token_here"
-      }
+      "args": ["run", "--rm", "-i", "capvic:latest"]
     }
   }
 }
 ```
+
+> Works immediately without any tokens. Add `"env": {"ONCOKB_API_TOKEN": "..."}` to enable OncoKB features.
 
 ---
 
@@ -263,9 +262,7 @@ Add to your `claude_desktop_config.json`:
       "args": ["-m", "variant_mcp.server"],
       "cwd": "/path/to/CAPVIC",
       "env": {
-        "PYTHONPATH": "/path/to/CAPVIC/src",
-        "ONCOKB_API_TOKEN": "your_token_here",
-        "NCBI_API_KEY": "your_key_here"
+        "PYTHONPATH": "/path/to/CAPVIC/src"
       }
     }
   }
@@ -278,14 +275,13 @@ Or using the installed entry point:
 {
   "mcpServers": {
     "variant_mcp": {
-      "command": "variant-mcp",
-      "env": {
-        "ONCOKB_API_TOKEN": "your_token_here"
-      }
+      "command": "variant-mcp"
     }
   }
 }
 ```
+
+> Both configs work out of the box. OncoKB and NCBI API keys are **optional** — see [Environment Variables](#-environment-variables).
 
 ---
 
@@ -428,80 +424,67 @@ Or using the installed entry point:
 
 ## 💡 Example Workflows
 
-### 🧪 "Is BRAF V600E pathogenic in melanoma?"
+### 🧪 "Classify BRAF V600E in melanoma" — Full Classification
 
 ```python
-variant_classify(
-    gene="BRAF",
-    variant="V600E",
-    disease="Melanoma",
-    variant_origin="somatic"
-)
+variant_classify(gene="BRAF", variant="V600E", disease="Melanoma", variant_origin="somatic")
 ```
 
-Returns: AMP Tier I/A + Oncogenicity Score 14 (Oncogenic) with full evidence trail from CIViC, ClinVar, and OncoKB.
+<details>
+<summary>Real output (click to expand)</summary>
 
-### 💊 "What therapies work for KRAS G12C in NSCLC?"
+```
+# Variant Classification Report
 
-```python
-variant_search_evidence(
-    gene="KRAS",
-    variant="G12C",
-    disease="Non-small Cell Lung Cancer"
-)
+Gene: BRAF | Variant: V600E | Origin: Somatic
+Disease Context: Melanoma
+Sources queried: CIViC, ClinVar
+
+## AMP/ASCO/CAP Classification
+Tier I — Strong Clinical Significance (Level A)
+
+Evidence trail:
+- CIViC: 1 Level A (Validated) evidence items
+- CIViC evidence type: PREDICTIVE (23 items)
+- CIViC evidence type: PROGNOSTIC (2 items)
+
+## ClinGen/CGC/VICC Oncogenicity Assessment
+Classification: LIKELY ONCOGENIC (Score: 7 points)
+
+| Code | Points | Evidence                                                |
+|------|--------|---------------------------------------------------------|
+| OS3  | +4     | Located in hotspot with sufficient statistical evidence |
+| OM4  | +2     | Absent/extremely rare in population databases           |
+| OP2  | +1     | Somatic variant in gene with single cancer etiology     |
 ```
 
-Returns: Sotorasib (Lumakras) and adagrasib (Krazati) from OncoKB Level 1, plus CIViC clinical evidence items.
+</details>
 
-### 🧬 "Is BRCA1 R1699W pathogenic?"
-
-```python
-variant_classify(
-    gene="BRCA1",
-    variant="R1699W",
-    variant_origin="germline"
-)
-```
-
-Returns: ClinVar aggregate classification with review stars, submitter breakdown, ACMG/AMP criteria context, and conflicting interpretation analysis.
-
-### 📊 "Score TP53 R175H for oncogenicity"
-
-```python
-score_oncogenicity(
-    gene="TP53",
-    variant="R175H"
-)
-```
-
-Returns: Point breakdown (OVS1: +8, OS3: +4 = 12 points → **Oncogenic**) with evidence code explanations.
-
-### ⚖️ "Compare what all databases say about PIK3CA H1047R"
-
-```python
-variant_compare_sources(
-    gene="PIK3CA",
-    variant="H1047R"
-)
-```
-
-Returns: Side-by-side concordance across CIViC, ClinVar, OncoKB, and MetaKB showing agreements and discrepancies.
-
-### 🧬 "What is the gnomAD frequency of BRAF V600E?"
-
-```python
-lookup_gnomad_frequency(variant_id="7-140453136-A-T")
-```
-
-Returns: Global AF, per-population frequencies (7 populations), clinical interpretation (OM4/OP4/BA1/SBS1 applicability). Requires chrom-pos-ref-alt format (see [Limitations](#-known-limitations--future-work)).
-
-### 🤖 "Are computational predictors consistent for TP53 R175H?"
+### 🤖 "In-silico predictions for TP53 R175H"
 
 ```python
 predict_variant_effect(gene="TP53", variant="R175H")
 ```
 
-Returns: SIFT (0.0, deleterious), PolyPhen-2 (1.0, probably_damaging), REVEL (0.98 → **PP3_strong** per ClinGen SVI), CADD (35), AlphaMissense (0.99) → **Consensus: DAMAGING** → supports PP3 + OP1.
+<details>
+<summary>Real output (click to expand)</summary>
+
+```
+## In-Silico Predictions — TP53 R175H
+
+Consensus: Damaging (3/4 damaging, 0/4 benign)
+
+| Predictor     | Score  | Prediction | Threshold                          |
+|---------------|--------|------------|------------------------------------|
+| SIFT          | 0.0000 | D          | <0.05 = damaging                   |
+| PolyPhen-2    | 0.9990 | D          | >0.85 = prob. damaging             |
+| REVEL         | 0.9220 | → PP3_strong | ClinGen SVI: ≥0.773 PP3_strong  |
+| AlphaMissense | 0.9782 | P          | >0.564 = likely pathogenic         |
+
+ClinGen SVI REVEL assessment: PP3_strong (score 0.922, Pejaver et al. 2022)
+```
+
+</details>
 
 ### 🏗️ "Is BRAF V600E in a functional domain?"
 
@@ -509,51 +492,180 @@ Returns: SIFT (0.0, deleterious), PolyPhen-2 (1.0, probably_damaging), REVEL (0.
 lookup_protein_domains(gene="BRAF", variant="V600E")
 ```
 
-Returns: Position 600 falls in the Protein Kinase domain (457–717, Pfam) → supports **OM1** (+2 points in oncogenicity SOP).
+<details>
+<summary>Real output (click to expand)</summary>
 
-### 📚 "Find recent papers on EGFR T790M resistance"
+```
+## Domain Check — BRAF V600E
 
-```python
-search_literature(gene="EGFR", variant="T790M", disease="lung cancer", limit=5)
+Position: 600
+In functional domain: ✅ Yes
+Supports OM1: ✅ Yes
+
+| Domain         | Type   | Range   | Source         |
+|----------------|--------|---------|----------------|
+| Protein kinase | Domain | 457–717 | PROSITE-ProRule |
+
+OM1: Located in critical/functional domain (+2 points in oncogenicity SOP)
 ```
 
-Returns: Total publications, recent papers with titles/authors/PMIDs for osimertinib resistance.
+</details>
+
+### 📚 "Find papers on EGFR T790M resistance"
+
+```python
+search_literature(gene="EGFR", variant="T790M", disease="lung cancer", limit=3)
+```
+
+<details>
+<summary>Real output (click to expand)</summary>
+
+```
+## PubMed Literature Search
+
+Query: EGFR[gene] AND T790M AND lung cancer
+Total publications found: 3282
+
+1. Overcoming EGFR(T790M) and EGFR(C797S) resistance with mutant-selective
+   allosteric inhibitors.
+   Authors: Jia Y, Yun CH, Park E et al. | Nature (2016) | PMID: 27251290
+
+2. EGFR-TKI resistance promotes immune escape in lung cancer via increased
+   PD-L1 expression.
+   Authors: Peng S, Wang R, Zhang X et al. | Mol Cancer (2019) | PMID: 31747941
+
+3. Osimertinib and other third-generation EGFR TKI in EGFR-mutant NSCLC patients.
+   Authors: Remon J, Steuer CE, Ramalingam SS et al. | Ann Oncol (2018) | PMID: 29462255
+```
+
+</details>
+
+### 🧬 "CIViC evidence for BRAF V600E"
+
+```python
+civic_search_evidence(gene="BRAF", variant="V600E")
+```
+
+<details>
+<summary>Real output (click to expand)</summary>
+
+```
+# CIViC Evidence Search Results (25 items)
+
+- EID1409  [PREDICTIVE] Level A — SENSITIVITY | Skin Melanoma | Vemurafenib
+- EID9851  [PREDICTIVE] Level A — SENSITIVITY | Colorectal Cancer | Encorafenib, Cetuximab
+- EID12016 [PREDICTIVE] Level A — SENSITIVITY | Childhood Low-grade Glioma | Tovorafenib
+- EID3017  [PREDICTIVE] Level A — SENSITIVITY | Lung Non-small Cell Carcinoma | Dabrafenib, Trametinib
+- EID12161 [PREDICTIVE] Level A — SENSITIVITY | Solid Tumor | Dabrafenib, Trametinib
+- EID80    [DIAGNOSTIC] Level B — POSITIVE | Papillary Thyroid Carcinoma
+- EID95    [PREDICTIVE] Level B — SENSITIVITY | Melanoma | Dabrafenib, Trametinib
+- EID816   [PREDICTIVE] Level B — RESISTANCE | Colorectal Cancer | Cetuximab, Panitumumab
+  ... (25 total items across 6 cancer types)
+```
+
+</details>
+
+### 💊 "What therapies work for KRAS G12C in NSCLC?"
+
+```python
+variant_search_evidence(gene="KRAS", variant="G12C", disease="Non-small Cell Lung Cancer")
+```
+
+Returns: Sotorasib (Lumakras) and adagrasib (Krazati) from CIViC Level A evidence, plus resistance and combination therapy data.
+
+### ⚖️ "Compare databases for PIK3CA H1047R"
+
+```python
+variant_compare_sources(gene="PIK3CA", variant="H1047R")
+```
+
+Returns: Side-by-side concordance across CIViC, ClinVar, OncoKB, and MetaKB showing agreements and discrepancies.
+
+### 🧬 "gnomAD frequency for a variant"
+
+```python
+# GRCh38 (default) — BRAF V600E
+lookup_gnomad_frequency(variant_id="7-140753336-A-T")
+
+# GRCh37 — same variant, different coordinate
+lookup_gnomad_frequency(variant_id="7-140453136-A-T", genome_version="GRCh37")
+```
+
+Returns: Global AF, per-population frequencies, and clinical interpretation for BA1/PM2/SBVS1/OM4 criteria. Requires chrom-pos-ref-alt format (see [Limitations](#-known-limitations--future-work)).
 
 ---
 
 ## 🏆 For ML/AI Competition Teams
 
-CAPVIC is designed to help teams building ML models that predict variant pathogenicity (e.g., Kaggle competitions, CAGI challenges). Here's how to use it:
+CAPVIC is designed to help teams building ML models that predict variant pathogenicity (e.g., Kaggle competitions, CAGI challenges). Here's how:
 
-### Validate Predictions
+### 1. Build Training Data Features
 
-```
-Your model predicts EGFR L858R = Pathogenic (score 0.97)
+```python
+# For each variant in your dataset, extract features:
+predict_variant_effect(gene="BRAF", variant="V600E")
+#   → SIFT=0.0, PolyPhen2=0.971, REVEL=0.931, AlphaMissense=0.985
+#   → PP3_strong (ClinGen SVI calibrated)
 
-→ Use variant_pathogenicity_summary(gene="EGFR", variant="L858R")
-→ CAPVIC returns: ClinVar 30/30 Pathogenic (★★★), OncoKB Oncogenic Level 1,
-  CIViC 25+ evidence items — STRONG agreement with your prediction ✅
-```
+lookup_protein_domains(gene="BRAF", variant="V600E")
+#   → in_domain=True, domain="Protein kinase" (457-717)
+#   → Feature: is_in_functional_domain = 1
 
-### Find Edge Cases
-
-```
-Your model predicts VHL R167Q = VUS (score 0.52)
-
-→ Use variant_classify(gene="VHL", variant="R167Q", variant_origin="germline")
-→ CAPVIC returns: ClinVar has conflicting interpretations (3 Pathogenic, 2 VUS),
-  review status ★ — genuinely uncertain, your model captures the ambiguity ✅
+search_literature(gene="BRAF", variant="V600E", limit=1)
+#   → total_count=4500+ publications
+#   → Feature: log_publication_count = 3.65
 ```
 
-### Understand Failures
+### 2. Validate Predictions Against Expert Consensus
 
+```python
+# Your model predicts EGFR L858R = Pathogenic (score 0.97)
+variant_pathogenicity_summary(gene="EGFR", variant="L858R")
+#   → CIViC: 25+ evidence items, all SENSITIVITY or ONCOGENIC
+#   → ClinVar: Pathogenic (expert-reviewed)
+#   → Consensus: STRONG agreement with your prediction ✅
 ```
-Your model predicts IDH1 R132H = Benign (score 0.15) — WRONG!
 
-→ Use variant_compare_sources(gene="IDH1", variant="R132H")
-→ CAPVIC shows: Every source says Oncogenic/Pathogenic with high confidence.
-  Hotspot mutation, gain-of-function → investigate feature engineering 🔍
+### 3. Find & Understand Edge Cases
+
+```python
+# Your model predicts VHL R167Q = VUS (score 0.52)
+variant_classify(gene="VHL", variant="R167Q", variant_origin="germline")
+#   → ClinVar: conflicting interpretations (Pathogenic vs VUS)
+#   → Genuinely ambiguous — your model captures the uncertainty ✅
+
+# Your model predicts IDH1 R132H = Benign (score 0.15) — WRONG!
+variant_compare_sources(gene="IDH1", variant="R132H")
+#   → Every source: Oncogenic/Pathogenic with high confidence
+#   → Hotspot, gain-of-function → investigate feature engineering 🔍
 ```
+
+### 4. Batch Feature Extraction (for competitions)
+
+```python
+# Use the MCP tools programmatically to build feature vectors:
+for gene, variant in your_dataset:
+    # In-silico scores (SIFT, PolyPhen2, REVEL, CADD, AlphaMissense)
+    preds = predict_variant_effect(gene=gene, variant=variant)
+
+    # Domain context (binary: in functional domain or not)
+    domains = lookup_protein_domains(gene=gene, variant=variant)
+
+    # Literature signal (publication count as proxy for research interest)
+    lit = search_literature(gene=gene, variant=variant, limit=1)
+
+    # ClinVar consensus (if available — for labeled data validation)
+    clinvar = clinvar_search(gene=gene, variant=variant)
+```
+
+### 5. Use Cases by Competition Type
+
+| Competition Type | Useful CAPVIC Tools | Features You Get |
+|-----------------|-------------------|-----------------|
+| **Variant pathogenicity** (CAGI, Kaggle) | `predict_variant_effect`, `lookup_protein_domains` | SIFT, PP2, REVEL, CADD, AM scores + domain flags |
+| **Drug response prediction** | `civic_search_evidence`, `variant_search_evidence` | Therapy-variant associations, evidence levels |
+| **Variant prioritization** | `variant_classify`, `score_oncogenicity` | AMP tier, oncogenicity score, evidence codes |
+| **Literature-based NLP** | `search_literature`, `get_publication` | Abstracts, MeSH terms, citation counts |
 
 ---
 
@@ -571,6 +683,17 @@ Your model predicts IDH1 R132H = Benign (score 0.15) — WRONG!
 | **MyVariant.info** | Periodic | Aggregated dbNSFP | SIFT, PolyPhen, REVEL, CADD, AlphaMissense |
 
 > 📌 All API responses include retrieval timestamps. ClinVar data may be up to 7 days old; CIViC and OncoKB are near real-time.
+
+### 🧬 Genome Build Reference
+
+| Tool | Default Build | Notes |
+|------|--------------|-------|
+| `lookup_gnomad_frequency` | **GRCh38** (gnomAD v4) | Pass `genome_version="GRCh37"` for gnomAD v2. Coordinates differ between builds. |
+| `predict_variant_effect` | **GRCh37** (hg19) | MyVariant.info uses hg19 by default. Gene+variant search is build-agnostic. |
+| `oncokb_annotate` | Build-agnostic | Uses protein-level queries (gene + variant name). |
+| All other tools | Build-agnostic | CIViC, ClinVar, UniProt, PubMed query by gene/variant name, not coordinates. |
+
+> **Important**: When using `lookup_gnomad_frequency`, provide coordinates matching the genome build. BRAF V600E is `7-140753336-A-T` on GRCh38 and `7-140453136-A-T` on GRCh37.
 
 ---
 

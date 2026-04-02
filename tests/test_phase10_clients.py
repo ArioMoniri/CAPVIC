@@ -34,13 +34,12 @@ class TestGnomADClient:
                             "genome": {
                                 "ac": 3,
                                 "an": 152312,
-                                "af": 1.97e-05,
                                 "ac_hom": 0,
                                 "filters": [],
                                 "populations": [
-                                    {"id": "nfe", "ac": 2, "an": 100000, "af": 2e-05},
-                                    {"id": "afr", "ac": 1, "an": 40000, "af": 2.5e-05},
-                                    {"id": "eas", "ac": 0, "an": 10000, "af": 0.0},
+                                    {"id": "nfe", "ac": 2, "an": 100000},
+                                    {"id": "afr", "ac": 1, "an": 40000},
+                                    {"id": "eas", "ac": 0, "an": 10000},
                                 ],
                             },
                             "exome": None,
@@ -52,12 +51,12 @@ class TestGnomADClient:
         freq = await client.get_variant_frequency("7-140453136-A-T")
         assert freq.variant_id == "7-140453136-A-T"
         assert freq.rsid == "rs113488022"
-        assert freq.allele_frequency == pytest.approx(1.97e-05)
+        assert freq.allele_frequency == pytest.approx(3 / 152312)
         assert freq.allele_count == 3
         assert freq.allele_number == 152312
         assert freq.homozygote_count == 0
         assert "nfe" in freq.population_frequencies
-        assert freq.population_frequencies["nfe"] == pytest.approx(2e-05)
+        assert freq.population_frequencies["nfe"] == pytest.approx(2 / 100000)
         assert freq.genome_version == "GRCh38"
         assert freq.source == "gnomAD v4"
         assert freq.filter_status == "PASS"

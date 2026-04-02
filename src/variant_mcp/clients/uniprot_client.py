@@ -36,7 +36,7 @@ class UniProtClient(BaseClient):
         Only retrieves human (organism_id=9606) proteins.
         """
         params = {
-            "query": f"gene_exact:{gene} AND organism_id:9606",
+            "query": f"gene_exact:{gene} AND organism_id:9606 AND reviewed:true",
             "fields": (
                 "ft_domain,ft_region,ft_act_site,ft_binding,ft_site,"
                 "ft_mutagen,length,accession,gene_names"
@@ -112,9 +112,11 @@ class UniProtClient(BaseClient):
             source = None
             evidences = feat.get("evidences", [])
             for ev in evidences:
-                src = ev.get("source", {}).get("name")
+                src = ev.get("source")
+                if isinstance(src, dict):
+                    src = src.get("name")
                 if src:
-                    source = src
+                    source = str(src)
                     break
 
             domains.append(

@@ -127,7 +127,7 @@ class BaseClient:
         params: dict[str, Any] | None = None,
     ) -> httpx.Response:
         url = f"{self.base_url}/{path.lstrip('/')}" if path else self.base_url
-        return await self._request("GET", url, params=params, json_body=json_body)
+        return await self._request("POST", url, params=params, json_body=json_body)
 
     async def get_json(self, path: str, params: dict[str, Any] | None = None) -> Any:
         response = await self.get(path, params=params)
