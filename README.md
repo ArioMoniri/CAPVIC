@@ -57,7 +57,7 @@ CAPVIC turns any AI assistant (Claude, GPT, etc.) into a **virtual molecular tum
 |--------|------|--------|-----------------|
 | 🟢 [CIViC](https://civicdb.org) | Expert-curated clinical evidence | Free, no auth | Continuous (community-driven) |
 | 🟢 [ClinVar](https://www.ncbi.nlm.nih.gov/clinvar/) | Aggregate pathogenicity from 2000+ labs | Free, no auth | Weekly |
-| 🟡 [OncoKB](https://www.oncokb.org) | FDA-recognized oncogenicity + therapy levels | Free academic token | Continuously |
+| 🟡 [OncoKB](https://www.oncokb.org) | FDA-recognized oncogenicity + therapy levels | Free academic token (requires [registration](https://www.oncokb.org/account/register)) | Continuously |
 | 🟢 [VICC MetaKB](https://search.cancervariants.org) | Harmonized from 6 knowledgebases | Free, no auth | Periodic |
 | 🟢 [gnomAD](https://gnomad.broadinstitute.org) | Population allele frequencies (152k genomes) | Free, no auth | Major releases |
 | 🟢 [UniProt](https://www.uniprot.org) | Protein domains & functional annotation | Free, no auth | Monthly |
@@ -181,12 +181,72 @@ pytest tests/ -v --tb=short -m "not integration"
 ## 🐳 Docker
 
 ```bash
-# Build and run
-docker compose build
-docker compose up
+# Build the image
+docker build -t capvic:latest .
 
-# With API tokens
-ONCOKB_API_TOKEN=your_token NCBI_API_KEY=your_key docker compose up
+# Or using docker compose
+docker compose build
+```
+
+### Testing Locally via Docker
+
+The MCP server uses **stdio transport** (JSON-RPC over stdin/stdout). To test interactively:
+
+```bash
+# Quick health check — send initialize and list tools
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' \
+  | docker run --rm -i capvic:latest
+```
+
+To call a tool (pipe must stay open for API calls that take time):
+
+```bash
+# Write JSON-RPC messages to a file
+cat > /tmp/capvic_test.txt << 'EOF'
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
+{"jsonrpc":"2.0","method":"notifications/initialized"}
+{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"normalize_variant","arguments":{"variant":"V600E","gene":"BRAF"}}}
+EOF
+
+# Run (sleep keeps stdin open while the server processes)
+(cat /tmp/capvic_test.txt; sleep 5) | docker run --rm -i capvic:latest
+```
+
+### Example Test Commands
+
+| Test | JSON-RPC `params` |
+|------|-------------------|
+| **Normalize variant** | `{"name":"normalize_variant","arguments":{"variant":"V600E","gene":"BRAF"}}` |
+| **CIViC evidence** | `{"name":"civic_search_evidence","arguments":{"gene":"BRAF","variant":"V600E"}}` |
+| **ClinVar search** | `{"name":"clinvar_search","arguments":{"gene":"BRAF","variant":"V600E"}}` |
+| **Full classification** | `{"name":"variant_classify","arguments":{"gene":"BRAF","variant":"V600E","disease":"Melanoma","variant_origin":"somatic"}}` |
+| **Oncogenicity score** | `{"name":"score_oncogenicity","arguments":{"gene":"BRAF","variant":"V600E"}}` |
+| **Protein domains** | `{"name":"lookup_protein_domains","arguments":{"gene":"BRAF","variant":"V600E"}}` |
+| **In-silico predictions** | `{"name":"predict_variant_effect","arguments":{"gene":"BRAF","variant":"V600E"}}` |
+| **PubMed search** | `{"name":"search_literature","arguments":{"gene":"BRAF","variant":"V600E","limit":5}}` |
+| **gnomAD frequency** | `{"name":"lookup_gnomad_frequency","arguments":{"gene":"BRAF","variant":"V600E"}}` |
+
+### With OncoKB Token
+
+```bash
+# OncoKB requires a free academic API token from https://www.oncokb.org/account/register
+docker run --rm -i -e ONCOKB_API_TOKEN=your_token capvic:latest
+```
+
+### Claude Desktop Integration (Docker)
+
+```json
+{
+  "mcpServers": {
+    "variant_mcp": {
+      "command": "docker",
+      "args": ["run", "--rm", "-i", "capvic:latest"],
+      "env": {
+        "ONCOKB_API_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
 ```
 
 ---

@@ -2,11 +2,13 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# Copy source first, then install (hatchling needs src/ to build)
 COPY pyproject.toml .
-RUN pip install --no-cache-dir .
-
 COPY src/ src/
 
-ENV PYTHONPATH=/app/src
+RUN pip install --no-cache-dir .
 
-CMD ["python", "-m", "variant_mcp.server"]
+EXPOSE 8000
+
+# MCP stdio transport — the server reads JSON-RPC from stdin, writes to stdout
+CMD ["variant-mcp"]

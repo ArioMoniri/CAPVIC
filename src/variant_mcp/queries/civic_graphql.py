@@ -51,8 +51,7 @@ class CIViCQueries:
         """
     query SearchEvidence(
         $diseaseName: String,
-        $geneName: String,
-        $variantName: String,
+        $molecularProfileName: String,
         $therapyName: String,
         $evidenceType: EvidenceType,
         $significance: EvidenceSignificance,
@@ -61,8 +60,7 @@ class CIViCQueries:
     ) {
         evidenceItems(
             diseaseName: $diseaseName,
-            geneName: $geneName,
-            variantName: $variantName,
+            molecularProfileName: $molecularProfileName,
             therapyName: $therapyName,
             evidenceType: $evidenceType,
             significance: $significance,
@@ -145,7 +143,7 @@ class CIViCQueries:
     SEARCH_ASSERTIONS = """
     query SearchAssertions(
         $diseaseName: String,
-        $geneName: String,
+        $molecularProfileName: String,
         $therapyName: String,
         $significance: String,
         $first: Int,
@@ -153,7 +151,7 @@ class CIViCQueries:
     ) {
         assertions(
             diseaseName: $diseaseName,
-            geneName: $geneName,
+            molecularProfileName: $molecularProfileName,
             therapyName: $therapyName,
             significance: $significance,
             status: ACCEPTED,

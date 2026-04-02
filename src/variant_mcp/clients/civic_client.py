@@ -45,11 +45,15 @@ class CIViCClient(BaseClient):
         first: int = 25,
         after: str | None = None,
     ) -> dict[str, Any]:
-        """Search CIViC evidence items with filters."""
+        """Search CIViC evidence items with filters.
+
+        CIViC V2 API uses molecularProfileName to filter by gene/variant.
+        For example, gene="BRAF" variant="V600E" becomes molecularProfileName="BRAF V600E".
+        """
+        mp_name = self._build_molecular_profile_name(gene, variant)
         variables = {
             "diseaseName": disease,
-            "geneName": gene,
-            "variantName": variant,
+            "molecularProfileName": mp_name,
             "therapyName": therapy,
             "evidenceType": evidence_type,
             "significance": significance,
@@ -113,9 +117,10 @@ class CIViCClient(BaseClient):
         after: str | None = None,
     ) -> list[CIViCAssertion]:
         """Search CIViC curated assertions."""
+        mp_name = self._build_molecular_profile_name(gene, None)
         variables = {
             "diseaseName": disease,
-            "geneName": gene,
+            "molecularProfileName": mp_name,
             "therapyName": therapy,
             "significance": significance,
             "first": first,
@@ -143,6 +148,19 @@ class CIViCClient(BaseClient):
         data = await self._graphql(query, {"queryTerm": query_term})
         key = f"{entity_type.lower()}Typeahead"
         return data.get(key, [])  # type: ignore[no-any-return]
+
+    @staticmethod
+    def _build_molecular_profile_name(gene: str | None, variant: str | None) -> str | None:
+        """Build a CIViC molecular profile name from gene and variant.
+
+        CIViC V2 uses molecularProfileName (e.g. "BRAF V600E") instead of
+        separate geneName/variantName filters on evidenceItems/assertions.
+        """
+        if gene and variant:
+            return f"{gene} {variant}"
+        if gene:
+            return gene
+        return None
 
     @staticmethod
     def _parse_evidence_node(node: dict) -> CIViCEvidenceItem:
