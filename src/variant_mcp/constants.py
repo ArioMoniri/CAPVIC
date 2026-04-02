@@ -11,12 +11,23 @@ CLINVAR_EFETCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 CLINVAR_BASE_URL = "https://www.ncbi.nlm.nih.gov/clinvar/variation"
 ONCOKB_API_URL = "https://www.oncokb.org/api/v1"
 METAKB_SEARCH_URL = "https://search.cancervariants.org"
+GNOMAD_API_URL = "https://gnomad.broadinstitute.org/api"
+PUBMED_ESEARCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+PUBMED_EFETCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 
 # === Rate Limits (requests per second) ===
 CIVIC_RATE_LIMIT = 3
 CLINVAR_RATE_LIMIT = 3
 ONCOKB_RATE_LIMIT = 5
 METAKB_RATE_LIMIT = 3
+GNOMAD_RATE_LIMIT = 2
+PUBMED_RATE_LIMIT = 3
+UNIPROT_RATE_LIMIT = 1
+MYVARIANT_RATE_LIMIT = 3
+
+# === Additional API Endpoints ===
+UNIPROT_API_URL = "https://rest.uniprot.org"
+MYVARIANT_API_URL = "https://myvariant.info/v1"
 
 # === Timeouts ===
 REQUEST_TIMEOUT = 30

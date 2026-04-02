@@ -109,6 +109,43 @@ class MetaKBInterpretation(BaseModel):
     url: str | None = None
 
 
+class GnomADFrequency(BaseModel):
+    """gnomAD population allele frequency data."""
+
+    variant_id: str | None = None
+    rsid: str | None = None
+    allele_frequency: float | None = None
+    allele_count: int | None = None
+    allele_number: int | None = None
+    homozygote_count: int | None = None
+    population_frequencies: dict[str, float] = Field(default_factory=dict)
+    genome_version: str = "GRCh38"
+    filter_status: str | None = None
+    source: str = "gnomAD v4"
+
+
+class Publication(BaseModel):
+    """A PubMed publication."""
+
+    pmid: str
+    title: str | None = None
+    authors: list[str] = Field(default_factory=list)
+    journal: str | None = None
+    year: str | None = None
+    abstract: str | None = None
+    mesh_terms: list[str] = Field(default_factory=list)
+    doi: str | None = None
+    pubmed_url: str | None = None
+
+
+class PubMedSearchResult(BaseModel):
+    """PubMed search result with total count and publications."""
+
+    query: str
+    total_count: int = 0
+    publications: list[Publication] = Field(default_factory=list)
+
+
 class EvidenceBundle(BaseModel):
     """Aggregated evidence from all sources for a variant."""
 
@@ -147,3 +184,81 @@ class EvidenceBundle(BaseModel):
         if self.metakb_interpretations:
             sources.append("MetaKB")
         return sources
+
+
+# ---------------------------------------------------------------------------
+# Variant Normalizer models
+# ---------------------------------------------------------------------------
+
+
+class VariantNotation(BaseModel):
+    """Parsed variant notation."""
+
+    original: str
+    protein_1letter: str | None = None  # V600E
+    protein_3letter: str | None = None  # p.Val600Glu
+    cdna: str | None = None  # c.1799T>A
+    variant_type: str | None = None  # missense, nonsense, frameshift, splice, etc.
+    position: int | None = None  # 600
+    ref_aa: str | None = None  # V
+    alt_aa: str | None = None  # E
+
+
+# ---------------------------------------------------------------------------
+# UniProt / Protein domain models
+# ---------------------------------------------------------------------------
+
+
+class ProteinDomain(BaseModel):
+    """A protein functional domain."""
+
+    name: str
+    domain_type: str | None = None  # domain, region, active_site, binding, etc.
+    start_pos: int
+    end_pos: int
+    source: str | None = None  # Pfam, InterPro, PROSITE, etc.
+    description: str | None = None
+
+
+class ProteinFeatures(BaseModel):
+    """Protein features from UniProt."""
+
+    gene: str
+    uniprot_id: str | None = None
+    protein_length: int | None = None
+    domains: list[ProteinDomain] = Field(default_factory=list)
+
+
+class DomainCheckResult(BaseModel):
+    """Result of checking whether a variant falls in a functional domain."""
+
+    gene: str
+    variant: str
+    position: int | None = None
+    in_domain: bool = False
+    domains: list[ProteinDomain] = Field(default_factory=list)
+    evidence_for_om1: bool = False  # True if this supports OM1 evidence code
+
+
+# ---------------------------------------------------------------------------
+# In-silico prediction models
+# ---------------------------------------------------------------------------
+
+
+class InSilicoPredictions(BaseModel):
+    """Aggregated in-silico pathogenicity predictions."""
+
+    sift_score: float | None = None
+    sift_prediction: str | None = None  # tolerated / deleterious
+    polyphen2_score: float | None = None
+    polyphen2_prediction: str | None = None  # benign / possibly_damaging / probably_damaging
+    revel_score: float | None = None  # meta-predictor, >0.5 likely pathogenic
+    cadd_phred: float | None = None  # >20 = top 1% most deleterious
+    alphamissense_score: float | None = None
+    alphamissense_prediction: str | None = None  # likely_benign / ambiguous / likely_pathogenic
+    gerp_score: float | None = None  # >2 = conserved
+    phylop_score: float | None = None
+    consensus: str | None = None  # "Damaging" / "Benign" / "Mixed"
+    damaging_count: int = 0  # How many predictors say damaging
+    benign_count: int = 0  # How many say benign
+    total_predictors: int = 0

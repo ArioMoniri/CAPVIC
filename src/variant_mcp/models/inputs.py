@@ -172,3 +172,70 @@ class CIViCGetByIdInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     id: int = Field(..., ge=1, description="CIViC entity ID")
+
+
+class GnomADFrequencyInput(BaseModel):
+    """Input for gnomAD population frequency lookup."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    variant_id: str | None = Field(
+        None, max_length=100, description="gnomAD variant ID (chrom-pos-ref-alt) or rsID"
+    )
+    gene: str | None = Field(None, max_length=20, description="Gene symbol")
+    variant: str | None = Field(None, max_length=100, description="Variant name (e.g., V600E)")
+    genome_version: str = Field("GRCh38", description="Genome build: GRCh38 or GRCh37")
+
+
+class NormalizeVariantInput(BaseModel):
+    """Input for variant notation normalization."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    variant: str = Field(..., min_length=1, max_length=200, description="Variant notation to parse")
+    gene: str | None = Field(None, max_length=20, description="Gene symbol for context")
+
+
+class ProteinDomainInput(BaseModel):
+    """Input for protein domain lookup."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    gene: str = Field(..., min_length=1, max_length=20, description="Gene symbol")
+    variant: str | None = Field(
+        None, max_length=100, description="Variant name to check domain overlap"
+    )
+    position: int | None = Field(None, ge=1, description="Amino acid position to check")
+
+
+class SearchLiteratureInput(BaseModel):
+    """Input for PubMed literature search."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    gene: str = Field(..., min_length=1, max_length=20, description="Gene symbol")
+    variant: str | None = Field(None, max_length=100, description="Variant name")
+    disease: str | None = Field(None, max_length=200, description="Disease context")
+    limit: int = Field(10, ge=1, le=50, description="Max publications to return")
+
+
+class GetPublicationInput(BaseModel):
+    """Input for fetching a single publication by PMID."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    pmid: str = Field(..., min_length=1, max_length=20, description="PubMed ID")
+
+
+class PredictVariantEffectInput(BaseModel):
+    """Input for in-silico variant effect prediction."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    gene: str = Field(..., min_length=1, max_length=20, description="Gene symbol")
+    variant: str = Field(..., min_length=1, max_length=100, description="Variant name")
+    hgvs_id: str | None = Field(
+        None,
+        max_length=200,
+        description="HGVS ID for MyVariant.info (e.g., chr7:g.140453136A>T)",
+    )

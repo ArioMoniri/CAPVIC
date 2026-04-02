@@ -1,7 +1,7 @@
-"""FastMCP server with all 20 variant classification tools.
+"""FastMCP server with 26 variant classification tools.
 
 Multi-source precision oncology and variant classification MCP server.
-Integrates CIViC, ClinVar, OncoKB, and VICC MetaKB.
+Integrates CIViC, ClinVar, OncoKB, VICC MetaKB, gnomAD, UniProt, PubMed, and MyVariant.info.
 """
 
 from __future__ import annotations
@@ -17,12 +17,17 @@ from variant_mcp.classification import ACMGAMPHelper, AMPTierClassifier, Oncogen
 from variant_mcp.clients.base_client import ClientError
 from variant_mcp.clients.civic_client import CIViCClient
 from variant_mcp.clients.clinvar_client import ClinVarClient
+from variant_mcp.clients.gnomad_client import GnomADClient
 from variant_mcp.clients.metakb_client import MetaKBClient
+from variant_mcp.clients.myvariant_client import MyVariantClient
 from variant_mcp.clients.oncokb_client import ONCOKB_NO_TOKEN_MSG, OncoKBClient
+from variant_mcp.clients.pubmed_client import PubMedClient
+from variant_mcp.clients.uniprot_client import UniProtClient
 from variant_mcp.constants import DISCLAIMER
 from variant_mcp.formatters.reports import ReportFormatter
 from variant_mcp.formatters.tables import TableFormatter
 from variant_mcp.models.evidence import EvidenceBundle
+from variant_mcp.utils.variant_normalizer import VariantNormalizer
 
 logger = logging.getLogger("variant_mcp")
 handler = logging.StreamHandler(sys.stderr)
@@ -35,6 +40,13 @@ civic_client = CIViCClient()
 clinvar_client = ClinVarClient()
 oncokb_client = OncoKBClient()
 metakb_client = MetaKBClient()
+gnomad_client = GnomADClient()
+pubmed_client = PubMedClient()
+uniprot_client = UniProtClient()
+myvariant_client = MyVariantClient()
+
+# --- Utilities ---
+variant_normalizer = VariantNormalizer()
 
 # --- Classification engines ---
 amp_classifier = AMPTierClassifier()
@@ -869,6 +881,380 @@ async def variant_pathogenicity_summary(
     bundle = await _gather_evidence(gene, variant, disease)
     oncogenicity = oncogenicity_scorer.score_variant(gene, variant, evidence_bundle=bundle)
     return report_fmt.format_pathogenicity_summary(bundle, oncogenicity)
+
+
+# ============================================================================
+# Phase 10: Scientific Enhancement Tools
+# ============================================================================
+
+
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
+async def lookup_gnomad_frequency(
+    gene: str | None = None,
+    variant: str | None = None,
+    variant_id: str | None = None,
+    genome_version: str = "GRCh38",
+) -> str:
+    """Look up population allele frequencies from gnomAD.
+
+    Critical for ACMG BA1 (>5% = benign standalone), PM2 (absent from controls),
+    and oncogenicity SOP codes SBVS1/SBS1/OM4/OP4.
+
+    Args:
+        gene: Gene symbol. Use with variant for search.
+        variant: Variant name (e.g., V600E). Use with gene.
+        variant_id: gnomAD variant ID (chrom-pos-ref-alt) for direct lookup.
+        genome_version: GRCh38 or GRCh37.
+    """
+    try:
+        freq = None
+        if variant_id:
+            freq = await gnomad_client.get_variant_frequency(variant_id, genome_version)
+        elif gene and variant:
+            freq = await gnomad_client.search_by_gene_variant(gene, variant)
+        else:
+            return "Error: Provide either variant_id or both gene + variant.\n\n" + DISCLAIMER
+
+        if freq is None:
+            msg = f"No gnomAD data found for {gene or ''} {variant or variant_id or ''}."
+            msg += "\nThis may indicate the variant is absent from population databases "
+            msg += "(supports OM4/OP4 in oncogenicity SOP, PM2 in ACMG)."
+            return msg + "\n\n" + DISCLAIMER
+
+        lines = [f"## 🧬 gnomAD Population Frequency — {freq.variant_id or 'N/A'}\n"]
+        if freq.rsid:
+            lines.append(f"**rsID**: {freq.rsid}")
+        lines.append(f"**Genome version**: {freq.genome_version}")
+        lines.append(f"**Source**: {freq.source}")
+        lines.append(f"**Filter status**: {freq.filter_status or 'N/A'}\n")
+        lines.append(f"**Global allele frequency**: {freq.allele_frequency or 'N/A'}")
+        lines.append(f"**Allele count**: {freq.allele_count or 'N/A'}")
+        lines.append(f"**Allele number**: {freq.allele_number or 'N/A'}")
+        lines.append(f"**Homozygote count**: {freq.homozygote_count or 'N/A'}\n")
+
+        if freq.population_frequencies:
+            lines.append("### Per-Population Frequencies\n")
+            lines.append("| Population | Allele Frequency |")
+            lines.append("|-----------|-----------------|")
+            for pop, pop_af in sorted(freq.population_frequencies.items()):
+                lines.append(f"| {pop} | {pop_af:.6g} |")
+
+        af: float | None = freq.allele_frequency
+        lines.append("\n### Clinical Interpretation\n")
+        if af is not None:
+            if af > 0.05:
+                lines.append(
+                    "🟢 **AF > 5%** → Supports **BA1** (ACMG benign standalone) "
+                    "and **SBVS1** (oncogenicity SOP, −8 points)"
+                )
+            elif af > 0.01:
+                lines.append("🔵 **AF > 1%** → Supports **SBS1** (oncogenicity SOP, −4 points)")
+            elif af > 0.0001:
+                lines.append(
+                    "🟡 **AF 0.01–1%** → Does not meet benign frequency thresholds; "
+                    "VUS-supporting range"
+                )
+            else:
+                lines.append("🟠 **AF < 0.01%** → Supports **OM4** (rare in population, +2 points)")
+        else:
+            lines.append(
+                "🔴 **Absent from gnomAD** → Supports **OP4** (+1 point) and "
+                "**PM2** (ACMG absent from controls)"
+            )
+
+        lines.append(f"\n---\n\n{DISCLAIMER}")
+        return "\n".join(lines)
+    except ClientError as exc:
+        return f"gnomAD query error: {exc}\n\n{DISCLAIMER}"
+
+
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
+async def normalize_variant(
+    variant: str,
+    gene: str | None = None,
+) -> str:
+    """Parse and normalize variant notation between formats.
+
+    Converts between shorthand (V600E), 1-letter (p.V600E), 3-letter HGVS (p.Val600Glu),
+    and detects variant type (missense, nonsense, frameshift, splice, etc.).
+
+    Args:
+        variant: Variant notation to parse (e.g., V600E, p.Val600Glu, c.1799T>A).
+        gene: Gene symbol for context (optional).
+    """
+    notation = variant_normalizer.normalize(variant)
+
+    lines = ["## 🔀 Variant Notation\n"]
+    lines.append(f"**Input**: `{notation.original}`")
+    if gene:
+        lines.append(f"**Gene**: {gene}")
+    lines.append(f"**Variant type**: {notation.variant_type or 'Unknown'}")
+    if notation.position:
+        lines.append(f"**Position**: {notation.position}")
+    if notation.ref_aa:
+        lines.append(f"**Reference AA**: {notation.ref_aa}")
+    if notation.alt_aa:
+        lines.append(f"**Alternate AA**: {notation.alt_aa}")
+
+    lines.append("\n### Notation Formats\n")
+    lines.append("| Format | Notation |")
+    lines.append("|--------|----------|")
+    if notation.protein_1letter:
+        lines.append(f"| 1-letter protein | `{notation.protein_1letter}` |")
+    if notation.protein_3letter:
+        lines.append(f"| 3-letter HGVS protein | `{notation.protein_3letter}` |")
+    if notation.cdna:
+        lines.append(f"| cDNA | `{notation.cdna}` |")
+
+    lines.append(f"\n---\n\n{DISCLAIMER}")
+    return "\n".join(lines)
+
+
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
+async def lookup_protein_domains(
+    gene: str,
+    variant: str | None = None,
+    position: int | None = None,
+) -> str:
+    """Look up protein functional domains from UniProt/InterPro.
+
+    Maps amino acid positions to functional regions (kinase domains, DNA-binding,
+    active sites, etc.). Critical for oncogenicity SOP code OM1.
+
+    Args:
+        gene: Gene symbol. Required.
+        variant: Variant name — position will be extracted automatically.
+        position: Explicit amino acid position to check.
+    """
+    try:
+        if variant:
+            result = await uniprot_client.check_variant_in_domain(gene, variant)
+        elif position:
+            domains = await uniprot_client.get_domain_at_position(gene, position)
+            from variant_mcp.models.evidence import DomainCheckResult
+
+            result = DomainCheckResult(
+                gene=gene,
+                variant=f"position {position}",
+                position=position,
+                in_domain=bool(domains),
+                domains=domains,
+                evidence_for_om1=bool(domains),
+            )
+        else:
+            features = await uniprot_client.get_protein_features(gene)
+            lines = [f"## 🏗️ Protein Domains — {gene}\n"]
+            lines.append(f"**UniProt ID**: {features.uniprot_id or 'N/A'}")
+            lines.append(f"**Protein length**: {features.protein_length or 'N/A'} aa\n")
+            if features.domains:
+                lines.append("| Domain | Type | Start | End | Source |")
+                lines.append("|--------|------|-------|-----|--------|")
+                for d in features.domains:
+                    lines.append(
+                        f"| {d.name} | {d.domain_type or '—'} | {d.start_pos} | "
+                        f"{d.end_pos} | {d.source or '—'} |"
+                    )
+            else:
+                lines.append("No domains found in UniProt for this gene.")
+            lines.append(f"\n---\n\n{DISCLAIMER}")
+            return "\n".join(lines)
+
+        lines = [f"## 🏗️ Domain Check — {gene} {result.variant}\n"]
+        lines.append(f"**Position**: {result.position or 'N/A'}")
+        lines.append(f"**In functional domain**: {'✅ Yes' if result.in_domain else '❌ No'}")
+        lines.append(f"**Supports OM1**: {'✅ Yes' if result.evidence_for_om1 else '❌ No'}\n")
+
+        if result.domains:
+            lines.append("### Overlapping Domains\n")
+            lines.append("| Domain | Type | Range | Source |")
+            lines.append("|--------|------|-------|--------|")
+            for d in result.domains:
+                lines.append(
+                    f"| {d.name} | {d.domain_type or '—'} | "
+                    f"{d.start_pos}–{d.end_pos} | {d.source or '—'} |"
+                )
+            lines.append(
+                "\n**OM1**: Located in critical/functional domain without benign "
+                "variation (+2 points in oncogenicity SOP)"
+            )
+        else:
+            lines.append("No known functional domains overlap this position.")
+
+        lines.append(f"\n---\n\n{DISCLAIMER}")
+        return "\n".join(lines)
+    except ClientError as exc:
+        return f"UniProt query error: {exc}\n\n{DISCLAIMER}"
+
+
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
+async def search_literature(
+    gene: str,
+    variant: str | None = None,
+    disease: str | None = None,
+    limit: int = 10,
+) -> str:
+    """Search PubMed for publications about a gene/variant/disease combination.
+
+    Returns total publication count and recent papers with titles, authors, and PMIDs.
+
+    Args:
+        gene: Gene symbol. Required.
+        variant: Variant name (optional — narrows search).
+        disease: Disease context (optional — narrows search).
+        limit: Max publications to return (1–50, default 10).
+    """
+    try:
+        result = await pubmed_client.search_publications(gene, variant, disease, limit)
+
+        lines = ["## 📚 PubMed Literature Search\n"]
+        lines.append(f"**Query**: `{result.query}`")
+        lines.append(f"**Total publications found**: {result.total_count}\n")
+
+        if result.publications:
+            for i, pub in enumerate(result.publications, 1):
+                authors = ", ".join(pub.authors[:3])
+                if len(pub.authors) > 3:
+                    authors += " et al."
+                lines.append(f"### {i}. {pub.title or 'Untitled'}\n")
+                lines.append(f"**Authors**: {authors}")
+                lines.append(f"**Journal**: {pub.journal or 'N/A'} ({pub.year or 'N/A'})")
+                lines.append(f"**PMID**: [{pub.pmid}](https://pubmed.ncbi.nlm.nih.gov/{pub.pmid}/)")
+                if pub.doi:
+                    lines.append(f"**DOI**: {pub.doi}")
+                lines.append("")
+        else:
+            lines.append("No publications found matching this query.")
+
+        lines.append(f"\n---\n\n{DISCLAIMER}")
+        return "\n".join(lines)
+    except ClientError as exc:
+        return f"PubMed search error: {exc}\n\n{DISCLAIMER}"
+
+
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
+async def get_publication(pmid: str) -> str:
+    """Fetch full publication details by PubMed ID.
+
+    Returns title, all authors, abstract, journal, year, MeSH terms.
+
+    Args:
+        pmid: PubMed ID (e.g., 27993330).
+    """
+    try:
+        pub = await pubmed_client.get_publication(pmid)
+
+        lines = [f"## 📄 Publication — PMID {pub.pmid}\n"]
+        lines.append(f"**Title**: {pub.title or 'N/A'}")
+        lines.append(f"**Authors**: {', '.join(pub.authors) if pub.authors else 'N/A'}")
+        lines.append(f"**Journal**: {pub.journal or 'N/A'} ({pub.year or 'N/A'})")
+        lines.append(
+            f"**PubMed**: [https://pubmed.ncbi.nlm.nih.gov/{pub.pmid}/]"
+            f"(https://pubmed.ncbi.nlm.nih.gov/{pub.pmid}/)"
+        )
+        if pub.doi:
+            lines.append(f"**DOI**: {pub.doi}")
+        if pub.abstract:
+            lines.append(f"\n### Abstract\n\n{pub.abstract}")
+        if pub.mesh_terms:
+            lines.append(f"\n**MeSH Terms**: {', '.join(pub.mesh_terms)}")
+
+        lines.append(f"\n---\n\n{DISCLAIMER}")
+        return "\n".join(lines)
+    except ClientError as exc:
+        return f"PubMed fetch error: {exc}\n\n{DISCLAIMER}"
+
+
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
+async def predict_variant_effect(
+    gene: str,
+    variant: str,
+    hgvs_id: str | None = None,
+) -> str:
+    """Aggregate in-silico pathogenicity predictions for a variant.
+
+    Queries SIFT, PolyPhen-2, REVEL, CADD, AlphaMissense, GERP++, and phyloP
+    via MyVariant.info. Used for ACMG PP3/BP4 and oncogenicity OP1/SBP1.
+
+    Args:
+        gene: Gene symbol. Required.
+        variant: Variant name (e.g., V600E). Required.
+        hgvs_id: HGVS genomic ID for direct lookup (e.g., chr7:g.140453136A>T).
+    """
+    try:
+        preds = None
+        if hgvs_id:
+            preds = await myvariant_client.get_predictions(hgvs_id)
+        else:
+            preds = await myvariant_client.search_variant(gene, variant)
+
+        if preds is None:
+            return (
+                f"No in-silico predictions found for {gene} {variant}.\n\n"
+                "This may occur for non-coding variants, indels, or novel variants "
+                "not yet indexed in dbNSFP.\n\n" + DISCLAIMER
+            )
+
+        lines = [f"## 🤖 In-Silico Predictions — {gene} {variant}\n"]
+        lines.append(
+            f"**Consensus**: {preds.consensus or 'N/A'} "
+            f"({preds.damaging_count}/{preds.total_predictors} damaging, "
+            f"{preds.benign_count}/{preds.total_predictors} benign)\n"
+        )
+
+        lines.append("### Individual Predictor Scores\n")
+        lines.append("| Predictor | Score | Prediction | Threshold |")
+        lines.append("|-----------|-------|------------|-----------|")
+
+        if preds.sift_score is not None:
+            lines.append(
+                f"| SIFT | {preds.sift_score:.4f} | {preds.sift_prediction or '—'} | <0.05 = damaging |"
+            )
+        if preds.polyphen2_score is not None:
+            lines.append(
+                f"| PolyPhen-2 | {preds.polyphen2_score:.4f} | {preds.polyphen2_prediction or '—'} "
+                f"| >0.85 = prob. damaging |"
+            )
+        if preds.revel_score is not None:
+            lines.append(f"| REVEL | {preds.revel_score:.4f} | — | >0.5 = likely pathogenic |")
+        if preds.cadd_phred is not None:
+            lines.append(f"| CADD (phred) | {preds.cadd_phred:.1f} | — | >20 = top 1% |")
+        if preds.alphamissense_score is not None:
+            lines.append(
+                f"| AlphaMissense | {preds.alphamissense_score:.4f} | "
+                f"{preds.alphamissense_prediction or '—'} | >0.564 = likely pathogenic |"
+            )
+        if preds.gerp_score is not None:
+            lines.append(f"| GERP++ | {preds.gerp_score:.2f} | — | >2 = conserved |")
+        if preds.phylop_score is not None:
+            lines.append(f"| phyloP | {preds.phylop_score:.2f} | — | >0 = conserved |")
+
+        lines.append("\n### Clinical Interpretation\n")
+        if preds.consensus == "Damaging":
+            lines.append("🔴 **Most predictors agree: DAMAGING**")
+            lines.append(
+                "- Supports **PP3** (ACMG germline: computational evidence supports deleterious)"
+            )
+            lines.append(
+                "- Supports **OP1** (oncogenicity SOP: all computational evidence "
+                "supports oncogenic, +1 point)"
+            )
+        elif preds.consensus == "Benign":
+            lines.append("🟢 **Most predictors agree: BENIGN**")
+            lines.append(
+                "- Supports **BP4** (ACMG germline: computational evidence suggests no impact)"
+            )
+            lines.append(
+                "- Supports **SBP1** (oncogenicity SOP: all computational evidence "
+                "suggests benign, −1 point)"
+            )
+        else:
+            lines.append("🟡 **Mixed predictions** — no strong computational consensus")
+            lines.append("- PP3/BP4 and OP1/SBP1 should NOT be applied")
+
+        lines.append(f"\n---\n\n{DISCLAIMER}")
+        return "\n".join(lines)
+    except ClientError as exc:
+        return f"MyVariant.info query error: {exc}\n\n{DISCLAIMER}"
 
 
 # ============================================================================

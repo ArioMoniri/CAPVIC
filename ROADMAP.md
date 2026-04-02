@@ -771,3 +771,128 @@ Execute phases in this exact sequence:
 10. Verify: `python -c "from variant_mcp.server import mcp; print('Server OK')"` and `python -m py_compile src/variant_mcp/server.py`
 
 **After each phase, verify compilation. After all phases, run tests.**
+
+---
+
+## PHASE 10: Scientific Enhancements (Bioinformatics Deep Dive)
+
+*Added by a bioinformatics/genetics review of the codebase. These features address critical gaps that a molecular pathologist or genetic counselor would immediately notice.*
+
+### 10a. gnomAD Population Frequency Client 🧬
+
+**Why**: The oncogenicity SOP codes SBVS1 (MAF >5%), SBS1 (MAF >1%), OM4 (absent/rare), and OP4 (absent) all require population allele frequency data. ACMG PM2 (absent from controls) and BA1 (>5%) also depend on this. Currently the system guesses from ClinVar benign labels — a real clinical interpretation requires actual gnomAD frequencies.
+
+**Implementation**: `clients/gnomad_client.py`
+- Query gnomAD GraphQL API (`https://gnomad.broadinstitute.org/api`)
+- Fetch per-population allele frequencies (global, AFR, AMR, ASJ, EAS, FIN, NFE, SAS)
+- Return: allele count, allele number, allele frequency, homozygote count, filtering status
+- Parse both gnomAD v4 (GRCh38) and v2 (GRCh37) for backward compatibility
+
+**New model**: `GnomADFrequency` in `models/evidence.py`
+```python
+class GnomADFrequency(BaseModel):
+    allele_frequency: float | None = None       # Global AF
+    allele_count: int | None = None
+    allele_number: int | None = None
+    homozygote_count: int | None = None
+    population_frequencies: dict[str, float] = Field(default_factory=dict)  # Per-population AFs
+    genome_version: str = "GRCh38"
+    filter_status: str | None = None             # PASS, AC0, InbreedingCoeff, etc.
+    source: str = "gnomAD v4"
+```
+
+**Integration**: Update `OncogenicityScorer._auto_detect_codes()` and `ACMGAMPHelper` to use actual frequencies.
+
+### 10b. HGVS Notation Parser & Variant Normalizer 🔀
+
+**Why**: Clinicians type "BRAF V600E", databases need "NM_004333.6:c.1799T>A" (ClinVar) or "p.Val600Glu" (HGVS protein). Different databases use different naming conventions. Without normalization, cross-database matching fails silently.
+
+**Implementation**: `utils/variant_normalizer.py`
+- Parse protein change shorthand (V600E → p.Val600Glu) using amino acid code mapping
+- Parse common variant formats: cDNA (c.1799T>A), genomic (g.140453136A>T), protein (p.V600E)
+- Normalize variant names for cross-database querying (strip whitespace, standardize stop codon notation: * vs Ter vs X)
+- Provide HGVS validation for well-formed expressions
+
+**New tool**: `normalize_variant` — converts between variant notation formats
+
+### 10c. Functional Domain Awareness (UniProt/InterPro) 🏗️
+
+**Why**: Oncogenicity code OM1 requires the variant to be "located in critical/functional domain without benign variation." Currently we just check if the gene is a known oncogene/TSG — but the real question is whether amino acid position 600 falls within the BRAF kinase activation segment (it does). This is the difference between "BRAF is important" and "V600 is in the kinase domain."
+
+**Implementation**: `clients/uniprot_client.py`
+- Query UniProt REST API (`https://rest.uniprot.org/uniprotkb/search`)
+- Fetch protein features: domains, active sites, binding sites, PTM sites, mutagenesis annotations
+- Map amino acid position to functional regions
+- Check if variant falls in a PFAM/InterPro domain critical for protein function
+
+**New model**: `ProteinDomainInfo` with fields: domain_name, domain_type (kinase, DNA-binding, etc.), start_pos, end_pos, source (UniProt/InterPro), significance
+
+**Integration**: Enhance OM1 auto-detection in oncogenicity scorer with domain-level evidence.
+
+### 10d. PubMed/Entrez Literature Search 📚
+
+**Why**: The roadmap lists NCBI Entrez/PubMed as a data source, but no PubMed client was built. Literature co-occurrence (how many papers mention BRAF AND V600E AND melanoma) is fundamental for variant interpretation. PS4, PP4, and other ACMG criteria reference published studies. CIViC evidence items cite PMIDs — but there may be additional literature not yet curated.
+
+**Implementation**: `clients/pubmed_client.py`
+- Use NCBI E-utilities (esearch + efetch) to search PubMed
+- Gene + variant co-occurrence search (e.g., `BRAF[gene] AND V600E AND cancer`)
+- Return: total publication count, recent papers (title, authors, journal, year, PMID), MeSH terms
+- Rate limit: 3 req/sec without key, 10 with NCBI API key (reuse existing env var)
+
+**New tool**: `search_literature` — find publications for a gene/variant/disease combination
+**New tool**: `get_publication` — fetch details for a specific PMID
+
+### 10e. In-Silico Prediction Score Aggregation 🤖
+
+**Why**: ACMG criteria PP3 ("multiple computational evidence supports deleterious effect") and BP4 ("computational evidence suggests no impact") require aggregated in-silico prediction scores. Oncogenicity code OP1 ("all computational evidence supports oncogenic effect") and SBP1 ("all computational evidence suggests benign") also need this. These are standard columns in every clinical genomics pipeline.
+
+**Implementation**: `clients/dbnsfp_client.py` or integration via MyVariant.info
+- Query MyVariant.info API (`https://myvariant.info/v1/variant/`) which aggregates:
+  - **SIFT**: tolerated vs. damaging (score < 0.05 = damaging)
+  - **PolyPhen-2**: benign/possibly/probably damaging (score > 0.85 = probably damaging)
+  - **REVEL**: meta-predictor (>0.5 likely pathogenic, >0.75 likely disease-causing)
+  - **CADD**: Combined Annotation Dependent Depletion (phred > 20 = top 1%)
+  - **AlphaMissense**: DeepMind's structure-based pathogenicity (>0.564 likely pathogenic)
+  - **GERP++**: Conservation score (>2 = conserved)
+  - **phyloP**: Evolutionary conservation
+- Return aggregated consensus: how many predictors say deleterious vs. benign
+
+**New model**: `InSilicoPredictions` with per-tool scores and consensus
+
+**New tool**: `predict_variant_effect` — aggregate computational predictions for a variant
+
+### 10f. Enhanced Oncogenicity Auto-Detection 🧮
+
+**Why**: With gnomAD + in-silico + domain data, the auto-detection becomes dramatically more accurate:
+- **SBVS1**: gnomAD AF > 5% in any continental population → -8 points (currently not possible)
+- **SBS1**: gnomAD AF > 1% → -4 points (currently guessing)
+- **OM4**: gnomAD AF < 0.01% → +2 points (currently guessing from ClinVar labels)
+- **OP4**: Absent from gnomAD → +1 point (currently impossible)
+- **OP1**: All in-silico predictors agree → +1 point (currently not checked)
+- **SBP1**: All in-silico predictors benign → -1 point (currently not checked)
+- **OM1**: Variant in critical domain (UniProt) → +2 points (currently gene-level only)
+- **PP3/BP4** (ACMG): Computational evidence → now has actual scores
+
+### Summary: New Tools Added in Phase 10
+
+| # | Tool | Description |
+|---|------|-------------|
+| 21 | `lookup_gnomad_frequency` | Population allele frequencies from gnomAD |
+| 22 | `normalize_variant` | Convert between variant notation formats (V600E ↔ p.Val600Glu) |
+| 23 | `lookup_protein_domains` | Functional domain mapping from UniProt/InterPro |
+| 24 | `search_literature` | PubMed literature co-occurrence search |
+| 25 | `get_publication` | Fetch publication details by PMID |
+| 26 | `predict_variant_effect` | Aggregated in-silico pathogenicity predictions |
+
+### Key References for Phase 10
+
+| Feature | Reference | PMID |
+|---------|-----------|------|
+| gnomAD v4 | Chen et al. (2024). Nature. | 38862018 |
+| HGVS nomenclature | den Dunnen et al. (2016). Hum Mutat. | 26931183 |
+| UniProt domains | UniProt Consortium (2023). Nucleic Acids Res. | 36408920 |
+| REVEL | Ioannidis et al. (2016). Am J Hum Genet. | 27666373 |
+| CADD | Rentzsch et al. (2021). Nucleic Acids Res. | 33237323 |
+| AlphaMissense | Cheng et al. (2023). Science. | 37733863 |
+| MyVariant.info | Xin et al. (2016). Genome Biol. | 27154141 |
+| ClinGen SVI | Pejaver et al. (2022). Am J Hum Genet. | 36413997 |
