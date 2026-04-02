@@ -1,0 +1,8 @@
+version: "3.8"
+services:
+  variant-mcp:
+    build: .
+    stdin_open: true
+    environment:
+      - ONCOKB_API_TOKEN=${ONCOKB_API_TOKEN:-}
+      - NCBI_API_KEY=${NCBI_API_KEY:-}
