@@ -158,6 +158,9 @@ class EvidenceBundle(BaseModel):
     clinvar_variants: list[ClinVarVariant] = Field(default_factory=list)
     oncokb_annotation: OncoKBAnnotation | None = None
     metakb_interpretations: list[MetaKBInterpretation] = Field(default_factory=list)
+    # Phase 10: scientific enhancement data
+    protein_domains: list[ProteinDomain] = Field(default_factory=list)
+    in_silico_predictions: InSilicoPredictions | None = None
     errors: dict[str, str] = Field(default_factory=dict)
 
     @property
@@ -173,6 +176,14 @@ class EvidenceBundle(BaseModel):
         return self.oncokb_annotation is not None
 
     @property
+    def has_domain_data(self) -> bool:
+        return bool(self.protein_domains)
+
+    @property
+    def has_prediction_data(self) -> bool:
+        return self.in_silico_predictions is not None
+
+    @property
     def sources_queried(self) -> list[str]:
         sources = []
         if self.has_civic_data:
@@ -183,6 +194,10 @@ class EvidenceBundle(BaseModel):
             sources.append("OncoKB")
         if self.metakb_interpretations:
             sources.append("MetaKB")
+        if self.has_domain_data:
+            sources.append("UniProt")
+        if self.has_prediction_data:
+            sources.append("MyVariant.info")
         return sources
 
 

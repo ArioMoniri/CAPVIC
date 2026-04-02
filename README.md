@@ -134,7 +134,7 @@ CAPVIC/
 │   │   └── tables.py            # Framework reference table formatters
 │   └── queries/
 │       └── civic_graphql.py      # CIViC GraphQL query definitions
-├── tests/                        # 114 unit tests (all clients mock-tested)
+├── tests/                        # 123 unit tests (all clients mock-tested)
 ├── .github/workflows/ci.yml     # CI: lint, typecheck, test (3.11+3.12), build
 ├── Dockerfile
 ├── docker-compose.yml
@@ -331,6 +331,8 @@ Or using the installed entry point:
 
 **Use for**: Somatic variant oncogenicity assessment (point-based)
 
+> 🧪 **Integrated pipeline**: When auto-detecting evidence codes, the scorer automatically uses UniProt domain data for **OM1** and MyVariant.info in-silico predictions for **OP1/SBP1** — all 8 data sources feed into a single classification call.
+
 | Classification | Points | Oncogenic Codes | Benign Codes |
 |---------------|--------|-----------------|--------------|
 | 🔴 **Oncogenic** | ≥ 10 | OVS1 (+8), OS1-3 (+4 each) | — |
@@ -523,7 +525,7 @@ pip install -e ".[dev]"
 ### Commands
 
 ```bash
-# Run tests (114 unit tests)
+# Run tests (123 unit tests)
 pytest tests/ -v --tb=short -m "not integration"
 
 # Lint
@@ -588,6 +590,8 @@ From a clinical genomics perspective, the current tool covers the **core evidenc
 4. **In-silico predictions** ✅ — 7 predictors via MyVariant.info covers PP3/BP4 requirements
 5. **Protein domain context** ✅ — UniProt provides OM1 evidence
 6. **Literature context** ✅ — PubMed search supports evidence review
+7. **Integrated classification pipeline** ✅ — UniProt domain data (OM1) and in-silico predictions (OP1/SBP1) are **automatically fed** into the oncogenicity scorer when using `variant_classify`, `variant_pathogenicity_summary`, or `score_oncogenicity` with auto-detection — no manual tool chaining required
+8. **End-to-end report visibility** ✅ — Evidence reports, pathogenicity summaries, and source comparisons all display protein domain context and in-silico prediction tables when data is available
 
 The limitations above represent **advanced features** that typically require institutional infrastructure (reference genomes, local databases, licensed tools) and are beyond the scope of a lightweight MCP server.
 

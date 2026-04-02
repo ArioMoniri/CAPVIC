@@ -73,6 +73,11 @@ mcp = FastMCP(
         "- score_oncogenicity: ClinGen/CGC/VICC point-based scoring\n"
         "- classify_amp_tier: AMP/ASCO/CAP somatic tiering\n"
         "- civic_search_evidence / clinvar_search / oncokb_annotate: Source-specific\n"
+        "- lookup_gnomad_frequency: Population allele frequencies from gnomAD\n"
+        "- lookup_protein_domains: Protein domain mapping from UniProt\n"
+        "- predict_variant_effect: In-silico predictions (SIFT, PolyPhen-2, REVEL, etc.)\n"
+        "- search_literature / get_publication: PubMed literature search\n"
+        "- normalize_variant: HGVS notation parsing and conversion\n"
         "- lookup_gene / lookup_disease / lookup_therapy: Discovery/autocomplete\n"
         "- get_classification_frameworks_reference: Understand the guidelines\n\n"
         "IMPORTANT: All outputs are for research/education only, not clinical decisions.\n"
@@ -109,6 +114,12 @@ async def _gather_evidence(
     if query_all or "metakb" in (sources or []):
         tasks["metakb"] = metakb_client.search(gene=gene, variant=variant, disease=disease)
 
+    # Phase 10: UniProt domain + in-silico predictions (when variant is provided)
+    if variant and (query_all or "uniprot" in (sources or [])):
+        tasks["uniprot"] = uniprot_client.check_variant_in_domain(gene, variant)
+    if variant and (query_all or "myvariant" in (sources or [])):
+        tasks["myvariant"] = myvariant_client.search_variant(gene, variant)
+
     results = await asyncio.gather(
         *[tasks[k] for k in tasks],
         return_exceptions=True,
@@ -129,6 +140,12 @@ async def _gather_evidence(
                 bundle.oncokb_annotation = result  # type: ignore[assignment]
         elif key == "metakb":
             bundle.metakb_interpretations = result  # type: ignore[assignment]
+        elif key == "uniprot":
+            if hasattr(result, "domains"):
+                bundle.protein_domains = result.domains  # type: ignore[union-attr]
+        elif key == "myvariant":
+            if result is not None:
+                bundle.in_silico_predictions = result  # type: ignore[assignment]
 
     # Also fetch CIViC assertions for the gene
     if query_all or "civic" in (sources or []):

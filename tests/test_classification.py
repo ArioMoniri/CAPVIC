@@ -7,7 +7,9 @@ from variant_mcp.models.evidence import (
     CIViCEvidenceItem,
     ClinVarVariant,
     EvidenceBundle,
+    InSilicoPredictions,
     OncoKBAnnotation,
+    ProteinDomain,
 )
 
 
@@ -187,6 +189,73 @@ class TestOncogenicityScorer:
         """Unknown codes should be silently ignored."""
         result = self.scorer.score_variant("GENE1", "X123Y", evidence_codes=["INVALID_CODE"])
         assert result.total_points == 0
+
+    def test_auto_detect_om1_with_uniprot_domains(self):
+        """OM1 should use real UniProt domain data when available."""
+        bundle = EvidenceBundle(
+            gene="BRAF",
+            variant="V600E",
+            protein_domains=[
+                ProteinDomain(
+                    name="Protein kinase", domain_type="Domain", start_pos=457, end_pos=717
+                )
+            ],
+        )
+        result = self.scorer.score_variant("BRAF", "V600E", evidence_bundle=bundle)
+        codes = [c.code for c in result.applied_codes]
+        assert "OM1" in codes
+        om1 = next(c for c in result.applied_codes if c.code == "OM1")
+        assert "UniProt" in om1.evidence
+
+    def test_auto_detect_op1_with_damaging_predictions(self):
+        """OP1 should fire when in-silico consensus is Damaging."""
+        bundle = EvidenceBundle(
+            gene="BRAF",
+            variant="V600E",
+            in_silico_predictions=InSilicoPredictions(
+                sift_score=0.0,
+                polyphen2_score=1.0,
+                revel_score=0.95,
+                cadd_phred=33.0,
+                consensus="Damaging",
+                damaging_count=4,
+                benign_count=0,
+                total_predictors=4,
+            ),
+        )
+        result = self.scorer.score_variant("BRAF", "V600E", evidence_bundle=bundle)
+        codes = [c.code for c in result.applied_codes]
+        assert "OP1" in codes
+        op1 = next(c for c in result.applied_codes if c.code == "OP1")
+        assert "4/4" in op1.evidence
+
+    def test_auto_detect_sbp1_with_benign_predictions(self):
+        """SBP1 should fire when in-silico consensus is Benign."""
+        bundle = EvidenceBundle(
+            gene="SOMEGENE",
+            variant="A100T",
+            in_silico_predictions=InSilicoPredictions(
+                sift_score=0.5,
+                polyphen2_score=0.05,
+                revel_score=0.1,
+                consensus="Benign",
+                damaging_count=0,
+                benign_count=3,
+                total_predictors=3,
+            ),
+        )
+        result = self.scorer.score_variant("SOMEGENE", "A100T", evidence_bundle=bundle)
+        codes = [c.code for c in result.applied_codes]
+        assert "SBP1" in codes
+
+    def test_om1_fallback_without_domain_data(self):
+        """OM1 should fall back to gene-level classification when no domain data."""
+        bundle = EvidenceBundle(gene="BRAF", variant="V600E")
+        result = self.scorer.score_variant("BRAF", "V600E", evidence_bundle=bundle)
+        codes = [c.code for c in result.applied_codes]
+        assert "OM1" in codes
+        om1 = next(c for c in result.applied_codes if c.code == "OM1")
+        assert "gene-level" in om1.evidence
 
 
 class TestACMGAMPHelper:

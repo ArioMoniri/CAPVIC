@@ -248,6 +248,50 @@ class ReportFormatter:
                 )
             lines.append("")
 
+        # UniProt Protein Domains
+        if bundle.has_domain_data:
+            lines.append("## UniProt Protein Domains\n")
+            for domain in bundle.protein_domains:
+                dtype = f" ({domain.domain_type})" if domain.domain_type else ""
+                lines.append(
+                    f"- **{domain.name}**{dtype}: positions {domain.start_pos}–{domain.end_pos}"
+                )
+            lines.append("")
+
+        # In-Silico Predictions
+        if bundle.has_prediction_data and bundle.in_silico_predictions:
+            preds = bundle.in_silico_predictions
+            lines.append("## In-Silico Predictions (MyVariant.info / dbNSFP)\n")
+            lines.append("| Predictor | Score | Prediction |")
+            lines.append("|-----------|-------|------------|")
+            if preds.sift_score is not None:
+                lines.append(
+                    f"| SIFT | {preds.sift_score:.3f} | {preds.sift_prediction or 'N/A'} |"
+                )
+            if preds.polyphen2_score is not None:
+                lines.append(
+                    f"| PolyPhen-2 | {preds.polyphen2_score:.3f} | "
+                    f"{preds.polyphen2_prediction or 'N/A'} |"
+                )
+            if preds.revel_score is not None:
+                lines.append(f"| REVEL | {preds.revel_score:.3f} | — |")
+            if preds.cadd_phred is not None:
+                lines.append(f"| CADD (phred) | {preds.cadd_phred:.1f} | — |")
+            if preds.alphamissense_score is not None:
+                lines.append(
+                    f"| AlphaMissense | {preds.alphamissense_score:.3f} | "
+                    f"{preds.alphamissense_prediction or 'N/A'} |"
+                )
+            if preds.gerp_score is not None:
+                lines.append(f"| GERP++ | {preds.gerp_score:.2f} | — |")
+            if preds.phylop_score is not None:
+                lines.append(f"| phyloP | {preds.phylop_score:.2f} | — |")
+            lines.append(
+                f"\n**Consensus**: {preds.consensus or 'N/A'} "
+                f"({preds.damaging_count}/{preds.total_predictors} damaging)"
+            )
+            lines.append("")
+
         # Errors
         if bundle.errors:
             lines.append("## Data Source Errors\n")
@@ -325,6 +369,23 @@ class ReportFormatter:
             )
             has_pathogenic = True
 
+        if bundle.has_domain_data:
+            domain_names = [d.name for d in bundle.protein_domains]
+            lines.append(
+                f"- **UniProt**: Variant in functional domain(s): {', '.join(domain_names)} "
+                f"(supports OM1)"
+            )
+            has_pathogenic = True
+
+        if bundle.has_prediction_data and bundle.in_silico_predictions:
+            preds = bundle.in_silico_predictions
+            if preds.consensus == "Damaging":
+                lines.append(
+                    f"- **In-silico**: {preds.damaging_count}/{preds.total_predictors} "
+                    f"predictors agree: Damaging (supports OP1/PP3)"
+                )
+                has_pathogenic = True
+
         if not has_pathogenic:
             lines.append("- No pathogenic/oncogenic evidence found")
 
@@ -356,6 +417,15 @@ class ReportFormatter:
             assert ann is not None
             if (ann.oncogenic or "").lower() in ("likely neutral", "inconclusive"):
                 lines.append(f"- **OncoKB**: {ann.oncogenic}")
+                has_benign = True
+
+        if bundle.has_prediction_data and bundle.in_silico_predictions:
+            preds = bundle.in_silico_predictions
+            if preds.consensus == "Benign":
+                lines.append(
+                    f"- **In-silico**: {preds.benign_count}/{preds.total_predictors} "
+                    f"predictors agree: Benign (supports SBP1/BP4)"
+                )
                 has_benign = True
 
         if not has_benign:
@@ -480,6 +550,25 @@ class ReportFormatter:
             oncokb_tx = ", ".join(drugs[:3]) if drugs else "N/A"
 
         lines.append(f"| Therapies | {civic_tx} | N/A | {oncokb_tx} |")
+
+        # Protein domain context
+        if bundle.has_domain_data:
+            lines.append("\n## Protein Domain Context (UniProt)\n")
+            for domain in bundle.protein_domains:
+                lines.append(
+                    f"- **{domain.name}**: positions {domain.start_pos}–{domain.end_pos} "
+                    f"(supports OM1)"
+                )
+
+        # In-silico prediction summary
+        if bundle.has_prediction_data and bundle.in_silico_predictions:
+            preds = bundle.in_silico_predictions
+            lines.append("\n## In-Silico Prediction Consensus (MyVariant.info)\n")
+            lines.append(
+                f"**{preds.consensus or 'N/A'}** — "
+                f"{preds.damaging_count} damaging, {preds.benign_count} benign "
+                f"out of {preds.total_predictors} predictors"
+            )
 
         # Concordance assessment
         lines.append("\n## Concordance Assessment\n")

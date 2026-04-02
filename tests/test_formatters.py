@@ -12,7 +12,9 @@ from variant_mcp.models.evidence import (
     CIViCEvidenceItem,
     ClinVarVariant,
     EvidenceBundle,
+    InSilicoPredictions,
     OncoKBAnnotation,
+    ProteinDomain,
 )
 
 
@@ -122,6 +124,111 @@ class TestReportFormatter:
         assert "CIViC" in report
         assert "ClinVar" in report
         assert "OncoKB" in report
+
+
+    def test_format_evidence_report_with_domains(self):
+        """Evidence report should show UniProt protein domains."""
+        bundle = EvidenceBundle(
+            gene="BRAF",
+            variant="V600E",
+            protein_domains=[
+                ProteinDomain(
+                    name="Protein kinase",
+                    domain_type="Domain",
+                    start_pos=457,
+                    end_pos=717,
+                ),
+            ],
+        )
+        report = ReportFormatter.format_evidence_report(bundle)
+        assert "UniProt Protein Domains" in report
+        assert "Protein kinase" in report
+        assert "457" in report
+        assert "717" in report
+
+    def test_format_evidence_report_with_predictions(self):
+        """Evidence report should show in-silico prediction table."""
+        bundle = EvidenceBundle(
+            gene="BRAF",
+            variant="V600E",
+            in_silico_predictions=InSilicoPredictions(
+                sift_score=0.0,
+                sift_prediction="deleterious",
+                polyphen2_score=1.0,
+                polyphen2_prediction="probably_damaging",
+                revel_score=0.95,
+                cadd_phred=33.0,
+                consensus="Damaging",
+                damaging_count=4,
+                total_predictors=4,
+            ),
+        )
+        report = ReportFormatter.format_evidence_report(bundle)
+        assert "In-Silico Predictions" in report
+        assert "SIFT" in report
+        assert "PolyPhen-2" in report
+        assert "REVEL" in report
+        assert "CADD" in report
+        assert "Damaging" in report
+        assert "4/4" in report
+
+    def test_format_pathogenicity_summary_with_domains_and_predictions(self):
+        """Pathogenicity summary should include domain and prediction context."""
+        bundle = EvidenceBundle(
+            gene="BRAF",
+            variant="V600E",
+            protein_domains=[
+                ProteinDomain(name="Protein kinase", domain_type="Domain", start_pos=457, end_pos=717),
+            ],
+            in_silico_predictions=InSilicoPredictions(
+                consensus="Damaging",
+                damaging_count=5,
+                total_predictors=5,
+            ),
+        )
+        report = ReportFormatter.format_pathogenicity_summary(bundle)
+        assert "UniProt" in report
+        assert "Protein kinase" in report
+        assert "OM1" in report
+        assert "5/5" in report
+        assert "OP1" in report or "PP3" in report
+
+    def test_format_pathogenicity_summary_benign_predictions(self):
+        """Pathogenicity summary should show benign prediction evidence."""
+        bundle = EvidenceBundle(
+            gene="SOMEGENE",
+            variant="A100T",
+            in_silico_predictions=InSilicoPredictions(
+                consensus="Benign",
+                benign_count=3,
+                total_predictors=3,
+            ),
+        )
+        report = ReportFormatter.format_pathogenicity_summary(bundle)
+        assert "Benign" in report
+        assert "3/3" in report
+        assert "SBP1" in report or "BP4" in report
+
+    def test_format_source_comparison_with_domains(self):
+        """Source comparison should show protein domain context."""
+        bundle = EvidenceBundle(
+            gene="BRAF",
+            variant="V600E",
+            protein_domains=[
+                ProteinDomain(name="Protein kinase", domain_type="Domain", start_pos=457, end_pos=717),
+            ],
+            in_silico_predictions=InSilicoPredictions(
+                consensus="Damaging",
+                damaging_count=4,
+                benign_count=0,
+                total_predictors=4,
+            ),
+        )
+        report = ReportFormatter.format_source_comparison(bundle)
+        assert "Protein Domain Context" in report
+        assert "Protein kinase" in report
+        assert "In-Silico Prediction Consensus" in report
+        assert "Damaging" in report
 
 
 class TestTableFormatter:

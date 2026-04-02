@@ -160,18 +160,29 @@ class OncogenicityScorer:
                     )
                 )
 
-        # OM1: Known functional domain (oncogene or TSG)
-        if (gene_upper in KNOWN_ONCOGENES or gene_upper in KNOWN_TUMOR_SUPPRESSORS) and not any(
-            c.code in ("OVS1", "OS3") for c in applied
-        ):
-            applied.append(
-                AppliedEvidenceCode(
-                    code="OM1",
-                    points=2,
-                    description="Located in critical/functional domain without benign variation",
-                    evidence=f"{gene} is a known {'oncogene' if gene_upper in KNOWN_ONCOGENES else 'tumor suppressor'}",
+        # OM1: Critical/functional domain — prefer real UniProt domain data
+        if not any(c.code in ("OVS1", "OS3") for c in applied):
+            if bundle and bundle.has_domain_data:
+                # Real domain data from UniProt — strongest OM1 evidence
+                domain_names = [d.name for d in bundle.protein_domains]
+                applied.append(
+                    AppliedEvidenceCode(
+                        code="OM1",
+                        points=2,
+                        description="Located in critical/functional domain without benign variation",
+                        evidence=f"UniProt confirms variant in domain(s): {', '.join(domain_names)}",
+                    )
                 )
-            )
+            elif gene_upper in KNOWN_ONCOGENES or gene_upper in KNOWN_TUMOR_SUPPRESSORS:
+                # Fallback: gene-level classification (weaker but valid)
+                applied.append(
+                    AppliedEvidenceCode(
+                        code="OM1",
+                        points=2,
+                        description="Located in critical/functional domain without benign variation",
+                        evidence=f"{gene} is a known {'oncogene' if gene_upper in KNOWN_ONCOGENES else 'tumor suppressor'} (gene-level; domain not confirmed)",
+                    )
+                )
 
         # OM4/OP4: Population frequency from ClinVar
         if bundle and bundle.has_clinvar_data:
@@ -202,6 +213,28 @@ class OncogenicityScorer:
                         )
                     )
                     break
+
+        # OP1/SBP1: In-silico prediction consensus
+        if bundle and bundle.has_prediction_data and bundle.in_silico_predictions:
+            preds = bundle.in_silico_predictions
+            if preds.consensus == "Damaging" and preds.total_predictors >= 3:
+                applied.append(
+                    AppliedEvidenceCode(
+                        code="OP1",
+                        points=1,
+                        description="All computational evidence supports oncogenic effect",
+                        evidence=f"{preds.damaging_count}/{preds.total_predictors} in-silico predictors agree: Damaging",
+                    )
+                )
+            elif preds.consensus == "Benign" and preds.total_predictors >= 3:
+                applied.append(
+                    AppliedEvidenceCode(
+                        code="SBP1",
+                        points=-1,
+                        description="All computational evidence suggests benign",
+                        evidence=f"{preds.benign_count}/{preds.total_predictors} in-silico predictors agree: Benign",
+                    )
+                )
 
         # OP2: Somatic variant in gene with single cancer etiology
         if (
