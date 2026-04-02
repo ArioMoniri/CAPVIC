@@ -277,3 +277,26 @@ class InSilicoPredictions(BaseModel):
     damaging_count: int = 0  # How many predictors say damaging
     benign_count: int = 0  # How many say benign
     total_predictors: int = 0
+
+    @property
+    def revel_acmg_strength(self) -> str | None:
+        """ClinGen SVI-calibrated PP3/BP4 evidence strength from REVEL score.
+
+        Reference: Pejaver et al. 2022, Am J Hum Genet. PMID: 36413997
+        Thresholds calibrated by ClinGen Sequence Variant Interpretation WG.
+        """
+        if self.revel_score is None:
+            return None
+        if self.revel_score >= 0.773:
+            return "PP3_strong"
+        if self.revel_score >= 0.644:
+            return "PP3_moderate"
+        if self.revel_score >= 0.5:
+            return "PP3_supporting"
+        if self.revel_score <= 0.183:
+            return "BP4_strong"
+        if self.revel_score <= 0.290:
+            return "BP4_moderate"
+        if self.revel_score <= 0.4:
+            return "BP4_supporting"
+        return None  # 0.4 < score < 0.5 — indeterminate

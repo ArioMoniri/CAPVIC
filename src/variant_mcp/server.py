@@ -1216,7 +1216,11 @@ async def predict_variant_effect(
                 f"| >0.85 = prob. damaging |"
             )
         if preds.revel_score is not None:
-            lines.append(f"| REVEL | {preds.revel_score:.4f} | — | >0.5 = likely pathogenic |")
+            svi_str = f" **→ {preds.revel_acmg_strength}**" if preds.revel_acmg_strength else ""
+            lines.append(
+                f"| REVEL | {preds.revel_score:.4f} | —{svi_str} "
+                f"| ClinGen SVI: ≥0.773 PP3_strong, ≥0.644 PP3_mod |"
+            )
         if preds.cadd_phred is not None:
             lines.append(f"| CADD (phred) | {preds.cadd_phred:.1f} | — | >20 = top 1% |")
         if preds.alphamissense_score is not None:
@@ -1251,6 +1255,13 @@ async def predict_variant_effect(
         else:
             lines.append("🟡 **Mixed predictions** — no strong computational consensus")
             lines.append("- PP3/BP4 and OP1/SBP1 should NOT be applied")
+
+        # ClinGen SVI-calibrated REVEL strength (Pejaver et al. 2022)
+        if preds.revel_acmg_strength:
+            lines.append(
+                f"\n**ClinGen SVI REVEL assessment**: {preds.revel_acmg_strength} "
+                f"(score {preds.revel_score:.3f}, Pejaver et al. 2022, PMID: 36413997)"
+            )
 
         lines.append(f"\n---\n\n{DISCLAIMER}")
         return "\n".join(lines)

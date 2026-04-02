@@ -251,6 +251,46 @@ class TestInSilicoPredictions:
         )
         assert preds.consensus == "Benign"
 
+    def test_revel_acmg_strength_pp3_strong(self) -> None:
+        """REVEL >= 0.773 should yield PP3_strong per ClinGen SVI."""
+        preds = InSilicoPredictions(revel_score=0.95)
+        assert preds.revel_acmg_strength == "PP3_strong"
+
+    def test_revel_acmg_strength_pp3_moderate(self) -> None:
+        """REVEL >= 0.644 should yield PP3_moderate."""
+        preds = InSilicoPredictions(revel_score=0.7)
+        assert preds.revel_acmg_strength == "PP3_moderate"
+
+    def test_revel_acmg_strength_pp3_supporting(self) -> None:
+        """REVEL >= 0.5 should yield PP3_supporting."""
+        preds = InSilicoPredictions(revel_score=0.55)
+        assert preds.revel_acmg_strength == "PP3_supporting"
+
+    def test_revel_acmg_strength_bp4_strong(self) -> None:
+        """REVEL <= 0.183 should yield BP4_strong."""
+        preds = InSilicoPredictions(revel_score=0.1)
+        assert preds.revel_acmg_strength == "BP4_strong"
+
+    def test_revel_acmg_strength_bp4_moderate(self) -> None:
+        """REVEL <= 0.290 should yield BP4_moderate."""
+        preds = InSilicoPredictions(revel_score=0.25)
+        assert preds.revel_acmg_strength == "BP4_moderate"
+
+    def test_revel_acmg_strength_bp4_supporting(self) -> None:
+        """REVEL <= 0.4 should yield BP4_supporting."""
+        preds = InSilicoPredictions(revel_score=0.35)
+        assert preds.revel_acmg_strength == "BP4_supporting"
+
+    def test_revel_acmg_strength_indeterminate(self) -> None:
+        """REVEL between 0.4 and 0.5 should be indeterminate."""
+        preds = InSilicoPredictions(revel_score=0.45)
+        assert preds.revel_acmg_strength is None
+
+    def test_revel_acmg_strength_none(self) -> None:
+        """No REVEL score should return None."""
+        preds = InSilicoPredictions()
+        assert preds.revel_acmg_strength is None
+
 
 # ============================================================================
 # New input model tests

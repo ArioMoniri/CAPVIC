@@ -49,7 +49,7 @@ CAPVIC turns any AI assistant (Claude, GPT, etc.) into a **virtual molecular tum
 | 🔀 **Variant normalization** | HGVS notation parsing (V600E ↔ p.Val600Glu) |
 | 🏗️ **Protein domain mapping** | UniProt/InterPro domain lookup for OM1 evidence |
 | 📚 **Literature search** | PubMed co-occurrence for gene/variant/disease |
-| 🤖 **In-silico predictions** | SIFT, PolyPhen-2, REVEL, CADD, AlphaMissense aggregation |
+| 🤖 **In-silico predictions** | SIFT, PolyPhen-2, REVEL, CADD, AlphaMissense + ClinGen SVI-calibrated PP3/BP4 |
 
 ### Data Sources
 
@@ -134,7 +134,7 @@ CAPVIC/
 │   │   └── tables.py            # Framework reference table formatters
 │   └── queries/
 │       └── civic_graphql.py      # CIViC GraphQL query definitions
-├── tests/                        # 123 unit tests (all clients mock-tested)
+├── tests/                        # 131 unit tests (all clients mock-tested)
 ├── .github/workflows/ci.yml     # CI: lint, typecheck, test (3.11+3.12), build
 ├── Dockerfile
 ├── docker-compose.yml
@@ -304,7 +304,7 @@ Or using the installed entry point:
 | 23 | `lookup_protein_domains` | 🏗️ Protein functional domains from UniProt/InterPro (OM1) | `gene`\*, `variant`, `position` |
 | 24 | `search_literature` | 📚 PubMed literature co-occurrence search | `gene`\*, `variant`, `disease`, `limit` |
 | 25 | `get_publication` | 📄 Fetch full publication details by PMID | `pmid`\* |
-| 26 | `predict_variant_effect` | 🤖 SIFT/PolyPhen-2/REVEL/CADD/AlphaMissense predictions (PP3/BP4) | `gene`\*, `variant`\*, `hgvs_id` |
+| 26 | `predict_variant_effect` | 🤖 SIFT/PolyPhen-2/REVEL/CADD/AlphaMissense + ClinGen SVI PP3/BP4 strength | `gene`\*, `variant`\*, `hgvs_id` |
 
 \* = required parameter
 
@@ -441,7 +441,7 @@ Returns: Global AF, per-population frequencies (7 populations), clinical interpr
 predict_variant_effect(gene="TP53", variant="R175H")
 ```
 
-Returns: SIFT (0.0, deleterious), PolyPhen-2 (1.0, probably_damaging), REVEL (0.98), CADD (35), AlphaMissense (0.99) → **Consensus: DAMAGING** → supports PP3 + OP1.
+Returns: SIFT (0.0, deleterious), PolyPhen-2 (1.0, probably_damaging), REVEL (0.98 → **PP3_strong** per ClinGen SVI), CADD (35), AlphaMissense (0.99) → **Consensus: DAMAGING** → supports PP3 + OP1.
 
 ### 🏗️ "Is BRAF V600E in a functional domain?"
 
@@ -525,7 +525,7 @@ pip install -e ".[dev]"
 ### Commands
 
 ```bash
-# Run tests (123 unit tests)
+# Run tests (131 unit tests)
 pytest tests/ -v --tb=short -m "not integration"
 
 # Lint
@@ -587,7 +587,7 @@ From a clinical genomics perspective, the current tool covers the **core evidenc
 1. **Evidence aggregation** ✅ — CIViC, ClinVar, OncoKB, MetaKB provide the primary sources used in clinical reporting
 2. **Somatic classification** ✅ — AMP/ASCO/CAP + oncogenicity SOP cover the standard-of-care frameworks
 3. **Population frequency** ✅ — gnomAD direct lookup handles the most common BA1/PM2 queries
-4. **In-silico predictions** ✅ — 7 predictors via MyVariant.info covers PP3/BP4 requirements
+4. **In-silico predictions** ✅ — 7 predictors via MyVariant.info with ClinGen SVI-calibrated REVEL thresholds for PP3/BP4 evidence strength (Pejaver et al. 2022)
 5. **Protein domain context** ✅ — UniProt provides OM1 evidence
 6. **Literature context** ✅ — PubMed search supports evidence review
 7. **Integrated classification pipeline** ✅ — UniProt domain data (OM1) and in-silico predictions (OP1/SBP1) are **automatically fed** into the oncogenicity scorer when using `variant_classify`, `variant_pathogenicity_summary`, or `score_oncogenicity` with auto-detection — no manual tool chaining required
