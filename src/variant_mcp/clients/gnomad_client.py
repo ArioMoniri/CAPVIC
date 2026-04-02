@@ -48,15 +48,6 @@ query GnomadVariant($variantId: String!, $datasetId: DatasetId!) {
 }
 """
 
-_SEARCH_QUERY = """
-query GnomadSearch($query: String!, $datasetId: DatasetId!) {
-  searchResults(query: $query, dataset: $datasetId) {
-    label
-    url
-  }
-}
-"""
-
 # Map genome version to gnomAD dataset ID
 _DATASET_MAP = {
     "GRCh38": "gnomad_r4",
@@ -114,47 +105,6 @@ class GnomADClient(BaseClient):
             raise ClientError(f"Variant {variant_id} not found in gnomAD ({genome_version}).")
 
         return self._parse_variant(variant_data, genome_version)
-
-    async def search_by_gene_variant(self, gene: str, variant: str) -> GnomADFrequency | None:
-        """Search by gene + protein change via the gnomAD search endpoint.
-
-        Args:
-            gene: Gene symbol, e.g. "BRAF".
-            variant: Protein change, e.g. "V600E".
-
-        Returns:
-            GnomADFrequency if found, None otherwise.
-        """
-        query_str = f"{gene} {variant}"
-        dataset_id = _DATASET_MAP["GRCh38"]
-
-        payload = {
-            "query": _SEARCH_QUERY,
-            "variables": {"query": query_str, "datasetId": dataset_id},
-        }
-
-        data = await self.post_json("", json_body=payload)
-        errors = data.get("errors")
-        if errors:
-            logger.warning("gnomAD search error: %s", errors[0].get("message"))
-            return None
-
-        results = (data.get("data") or {}).get("searchResults", [])
-        if not results:
-            return None
-
-        # Extract variant ID from the first matching URL
-        # gnomAD search returns URLs like "/variant/1-55505647-T-C?dataset=gnomad_r4"
-        for result in results:
-            url = result.get("url", "")
-            if "/variant/" in url:
-                vid = url.split("/variant/")[1].split("?")[0]
-                try:
-                    return await self.get_variant_frequency(vid)
-                except ClientError:
-                    continue
-
-        return None
 
     @staticmethod
     def _parse_variant(data: dict[str, Any], genome_version: str) -> GnomADFrequency:

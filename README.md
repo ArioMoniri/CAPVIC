@@ -25,6 +25,7 @@
 - [Data Sources & Freshness](#-data-sources--freshness)
 - [Development](#-development)
 - [Key References](#-key-references)
+- [Known Limitations & Future Work](#-known-limitations--future-work)
 - [Disclaimer](#%EF%B8%8F-disclaimer)
 
 ---
@@ -78,25 +79,27 @@ CAPVIC turns any AI assistant (Claude, GPT, etc.) into a **virtual molecular tum
 │                  (FastMCP · Python 3.11+)                       │
 │                                                                │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐ │
-│  │  20 MCP Tools    │  │  Classification   │  │  Formatters  │ │
+│  │  26 MCP Tools    │  │  Classification   │  │  Formatters  │ │
 │  │                  │  │  Engines          │  │              │ │
 │  │  • Search        │  │  • AMP/ASCO/CAP   │  │  • Reports   │ │
 │  │  • Classify      │  │  • Oncogenicity   │  │  • Tables    │ │
 │  │  • Compare       │  │    SOP            │  │  • Evidence  │ │
 │  │  • Annotate      │  │  • ACMG/AMP       │  │    summaries │ │
 │  │  • Discover      │  │    helper         │  │              │ │
+│  │  • Predict       │  │                   │  │              │ │
+│  │  • Normalize     │  │                   │  │              │ │
 │  └──────┬───────────┘  └──────────────────┘  └──────────────┘ │
 │         │                                                      │
 │  ┌──────▼───────────────────────────────────────────────────┐  │
 │  │              Async API Clients (httpx)                    │  │
 │  │   Rate-limited · Retry with backoff · Graceful fallback  │  │
-│  └──┬──────────┬──────────────┬──────────────┬──────────────┘  │
-└─────┼──────────┼──────────────┼──────────────┼─────────────────┘
-      │          │              │              │
-┌─────▼────┐ ┌──▼─────────┐ ┌─▼──────────┐ ┌▼────────────┐
-│  CIViC   │ │  ClinVar   │ │  OncoKB    │ │ VICC MetaKB │
-│ GraphQL  │ │ E-utilities │ │  REST API  │ │  REST API   │
-└──────────┘ └────────────┘ └────────────┘ └─────────────┘
+│  └──┬───────┬──────────┬───────────┬─────────┬─────────────┘  │
+└─────┼───────┼──────────┼───────────┼─────────┼────────────────┘
+      │       │          │           │         │
+┌─────▼──┐ ┌─▼────────┐ ┌▼────────┐ ┌▼──────┐ ┌▼───────────────┐
+│ CIViC  │ │ ClinVar  │ │ OncoKB │ │MetaKB│ │gnomAD/UniProt/ │
+│GraphQL │ │E-utility │ │REST API│ │ REST │ │PubMed/MyVar   │
+└────────┘ └──────────┘ └────────┘ └──────┘ └───────────────┘
 ```
 
 ### Project Structure
@@ -104,14 +107,20 @@ CAPVIC turns any AI assistant (Claude, GPT, etc.) into a **virtual molecular tum
 ```
 CAPVIC/
 ├── src/variant_mcp/
-│   ├── server.py                  # FastMCP server + 20 tool registrations
+│   ├── server.py                  # FastMCP server + 26 tool registrations
 │   ├── constants.py               # URLs, enums, evidence codes, disclaimers
 │   ├── clients/
 │   │   ├── base_client.py         # Async HTTP + rate limiting + retry
 │   │   ├── civic_client.py        # CIViC V2 GraphQL client
 │   │   ├── clinvar_client.py      # NCBI E-utilities (ClinVar)
 │   │   ├── oncokb_client.py       # OncoKB REST API
-│   │   └── metakb_client.py       # VICC MetaKB search
+│   │   ├── metakb_client.py       # VICC MetaKB search
+│   │   ├── gnomad_client.py       # gnomAD GraphQL (population frequencies)
+│   │   ├── pubmed_client.py       # PubMed E-utilities (literature search)
+│   │   ├── uniprot_client.py      # UniProt REST (protein domains)
+│   │   └── myvariant_client.py    # MyVariant.info (in-silico predictions)
+│   ├── utils/
+│   │   └── variant_normalizer.py  # Pure Python HGVS notation parser
 │   ├── classification/
 │   │   ├── amp_asco_cap.py        # AMP/ASCO/CAP 4-tier somatic classifier
 │   │   ├── oncogenicity_sop.py    # ClinGen/CGC/VICC oncogenicity scorer
@@ -125,7 +134,7 @@ CAPVIC/
 │   │   └── tables.py            # Framework reference table formatters
 │   └── queries/
 │       └── civic_graphql.py      # CIViC GraphQL query definitions
-├── tests/                        # 93 unit tests
+├── tests/                        # 114 unit tests (all clients mock-tested)
 ├── .github/workflows/ci.yml     # CI: lint, typecheck, test (3.11+3.12), build
 ├── Dockerfile
 ├── docker-compose.yml
@@ -290,7 +299,7 @@ Or using the installed entry point:
 
 | # | Tool | Description | Key Inputs |
 |---|------|-------------|------------|
-| 21 | `lookup_gnomad_frequency` | 🧬 Population allele frequencies from gnomAD (BA1/PM2/SBVS1) | `gene`, `variant`, `variant_id`, `genome_version` |
+| 21 | `lookup_gnomad_frequency` | 🧬 Population allele frequencies from gnomAD (BA1/PM2/SBVS1) | `variant_id`\*, `genome_version` |
 | 22 | `normalize_variant` | 🔀 Parse & convert variant notation (V600E ↔ p.Val600Glu) | `variant`\*, `gene` |
 | 23 | `lookup_protein_domains` | 🏗️ Protein functional domains from UniProt/InterPro (OM1) | `gene`\*, `variant`, `position` |
 | 24 | `search_literature` | 📚 PubMed literature co-occurrence search | `gene`\*, `variant`, `disease`, `limit` |
@@ -419,10 +428,10 @@ Returns: Side-by-side concordance across CIViC, ClinVar, OncoKB, and MetaKB show
 ### 🧬 "What is the gnomAD frequency of BRAF V600E?"
 
 ```python
-lookup_gnomad_frequency(gene="BRAF", variant="V600E")
+lookup_gnomad_frequency(variant_id="7-140453136-A-T")
 ```
 
-Returns: Global AF, per-population frequencies, clinical interpretation (OM4/OP4/BA1/SBS1 applicability).
+Returns: Global AF, per-population frequencies (7 populations), clinical interpretation (OM4/OP4/BA1/SBS1 applicability). Requires chrom-pos-ref-alt format (see [Limitations](#-known-limitations--future-work)).
 
 ### 🤖 "Are computational predictors consistent for TP53 R175H?"
 
@@ -514,7 +523,7 @@ pip install -e ".[dev]"
 ### Commands
 
 ```bash
-# Run tests (93 unit tests)
+# Run tests (114 unit tests)
 pytest tests/ -v --tb=short -m "not integration"
 
 # Lint
@@ -552,6 +561,35 @@ GitHub Actions runs on every push:
 | 8 | Ioannidis NM, et al. (2016). "REVEL: An Ensemble Method for Predicting the Pathogenicity of Rare Missense Variants." *Am J Hum Genet*, 99(4):877-885. | [27666373](https://pubmed.ncbi.nlm.nih.gov/27666373/) |
 | 9 | Cheng J, et al. (2023). "Accurate proteome-wide missense variant effect prediction with AlphaMissense." *Science*, 381(6664):eadg7492. | [37733863](https://pubmed.ncbi.nlm.nih.gov/37733863/) |
 | 10 | Pejaver V, et al. (2022). "Calibration of computational tools for missense variant pathogenicity classification." *Am J Hum Genet*, 109(12):2163-2177. | [36413997](https://pubmed.ncbi.nlm.nih.gov/36413997/) |
+
+---
+
+## 🚧 Known Limitations & Future Work
+
+The following integrations were evaluated but **intentionally excluded** or scoped down to maintain production-readiness. Each would require substantial new code, external service dependencies, or complex parsing that cannot be reliably unit-tested:
+
+| Limitation | Reason | Impact | Workaround |
+|-----------|--------|--------|------------|
+| **gnomAD gene+variant search** | gnomAD's search API returns HTML URLs that require fragile string parsing to extract variant IDs. No stable API for protein-change → genomic-coordinate mapping exists. | Users must provide `variant_id` in chrom-pos-ref-alt format (e.g., `7-140453136-A-T`) rather than gene+protein change. | Use ClinVar's HGVS expressions or external tools like [Ensembl VEP](https://www.ensembl.org/vep) to convert protein changes to genomic coordinates. |
+| **Automated HGVS → genomic coordinate mapping** | Requires a reference genome + transcript database (e.g., UTA, SeqRepo) — heavy infrastructure not suitable for an MCP server. Libraries like `hgvs` (biocommons) need PostgreSQL + 20GB+ of sequence data. | Cannot auto-convert `p.Val600Glu` to `chr7:g.140453136A>T` for gnomAD/MyVariant.info lookups. | Provide genomic HGVS IDs directly, or use the variant normalizer for protein-level notation and then look up genomic coordinates externally. |
+| **ClinGen Allele Registry integration** | Would provide canonical allele IDs for cross-database linking. Requires complex registration workflows and the API has no stable versioning. | No canonical allele ID cross-linking between databases. | Use gene+variant name search (works for CIViC, ClinVar, OncoKB) or provide database-specific IDs. |
+| **Functional assay databases (MAVE, DMS)** | Multiplexed Assay of Variant Effect data (e.g., from MaveDB) would strengthen OS2 evidence code. API is experimental and data format varies per assay. | No direct functional assay score integration for OS2 evidence. | Cite functional studies found via `search_literature` tool. |
+| **SpliceAI / splice prediction** | Would strengthen PVS1 and splice-site variant assessment. Requires either a 10GB+ model or a paid API, and splice prediction is computationally intensive. | Splice-site variants are detected but not scored for splicing impact. | Use external splice predictors (SpliceAI, MaxEntScan) and feed results into oncogenicity assessment manually. |
+| **Automated ACMG/AMP germline classification scoring** | Full ACMG/AMP requires combining 28 evidence criteria with complex combination rules (PVS1 decision trees, segregation data, de novo confirmation). Building a validated, rule-complete implementation is a multi-month effort. | ACMG criteria are explained and referenced, but not auto-scored. Germline classification relies on ClinVar's aggregate expert consensus. | Use `explain_acmg_criteria` for criteria reference, and `clinvar_search` for expert-reviewed germline classifications. |
+| **PharmGKB / CPIC pharmacogenomics** | Would add drug-gene interaction annotations. Different data model from somatic classification; would require a separate classification framework. | No pharmacogenomic annotations for germline drug metabolism variants. | Use OncoKB for somatic therapeutic levels, which covers FDA-approved biomarkers. |
+
+### 🔬 Bioinformatician's Assessment
+
+From a clinical genomics perspective, the current tool covers the **core evidence gathering and classification workflow** used in molecular tumor boards:
+
+1. **Evidence aggregation** ✅ — CIViC, ClinVar, OncoKB, MetaKB provide the primary sources used in clinical reporting
+2. **Somatic classification** ✅ — AMP/ASCO/CAP + oncogenicity SOP cover the standard-of-care frameworks
+3. **Population frequency** ✅ — gnomAD direct lookup handles the most common BA1/PM2 queries
+4. **In-silico predictions** ✅ — 7 predictors via MyVariant.info covers PP3/BP4 requirements
+5. **Protein domain context** ✅ — UniProt provides OM1 evidence
+6. **Literature context** ✅ — PubMed search supports evidence review
+
+The limitations above represent **advanced features** that typically require institutional infrastructure (reference genomes, local databases, licensed tools) and are beyond the scope of a lightweight MCP server.
 
 ---
 

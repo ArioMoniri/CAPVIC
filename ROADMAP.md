@@ -778,6 +778,12 @@ Execute phases in this exact sequence:
 
 *Added by a bioinformatics/genetics review of the codebase. These features address critical gaps that a molecular pathologist or genetic counselor would immediately notice.*
 
+**Production-Readiness Notes** (updated 2026-04-03):
+- All Phase 10 clients have full respx mock HTTP tests (21 tests across 4 clients)
+- gnomAD `search_by_gene_variant()` was **removed** — URL parsing from search results was fragile and untestable. Direct `variant_id` lookup is production-grade.
+- Automated HGVS → genomic coordinate mapping was **excluded** — requires UTA/SeqRepo infrastructure (20GB+). Listed as a known limitation.
+- 114 total tests (up from 93). All pass lint, typecheck, and test on Python 3.11+3.12.
+
 ### 10a. gnomAD Population Frequency Client 🧬
 
 **Why**: The oncogenicity SOP codes SBVS1 (MAF >5%), SBS1 (MAF >1%), OM4 (absent/rare), and OP4 (absent) all require population allele frequency data. ACMG PM2 (absent from controls) and BA1 (>5%) also depend on this. Currently the system guesses from ClinVar benign labels — a real clinical interpretation requires actual gnomAD frequencies.

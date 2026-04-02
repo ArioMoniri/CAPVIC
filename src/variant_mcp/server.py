@@ -890,9 +890,7 @@ async def variant_pathogenicity_summary(
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
 async def lookup_gnomad_frequency(
-    gene: str | None = None,
-    variant: str | None = None,
-    variant_id: str | None = None,
+    variant_id: str,
     genome_version: str = "GRCh38",
 ) -> str:
     """Look up population allele frequencies from gnomAD.
@@ -901,25 +899,11 @@ async def lookup_gnomad_frequency(
     and oncogenicity SOP codes SBVS1/SBS1/OM4/OP4.
 
     Args:
-        gene: Gene symbol. Use with variant for search.
-        variant: Variant name (e.g., V600E). Use with gene.
-        variant_id: gnomAD variant ID (chrom-pos-ref-alt) for direct lookup.
+        variant_id: gnomAD variant ID in chrom-pos-ref-alt format (e.g., "7-140453136-A-T").
         genome_version: GRCh38 or GRCh37.
     """
     try:
-        freq = None
-        if variant_id:
-            freq = await gnomad_client.get_variant_frequency(variant_id, genome_version)
-        elif gene and variant:
-            freq = await gnomad_client.search_by_gene_variant(gene, variant)
-        else:
-            return "Error: Provide either variant_id or both gene + variant.\n\n" + DISCLAIMER
-
-        if freq is None:
-            msg = f"No gnomAD data found for {gene or ''} {variant or variant_id or ''}."
-            msg += "\nThis may indicate the variant is absent from population databases "
-            msg += "(supports OM4/OP4 in oncogenicity SOP, PM2 in ACMG)."
-            return msg + "\n\n" + DISCLAIMER
+        freq = await gnomad_client.get_variant_frequency(variant_id, genome_version)
 
         lines = [f"## 🧬 gnomAD Population Frequency — {freq.variant_id or 'N/A'}\n"]
         if freq.rsid:
