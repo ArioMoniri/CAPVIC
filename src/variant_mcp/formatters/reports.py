@@ -212,6 +212,7 @@ class ReportFormatter:
         # OncoKB section
         if bundle.has_oncokb_data:
             ann = bundle.oncokb_annotation
+            assert ann is not None
             lines.append("## OncoKB (oncokb.org)\n")
             lines.append(f"**Oncogenic**: {ann.oncogenic or 'N/A'}")
             lines.append(f"**Mutation Effect**: {ann.known_effect or 'N/A'}")
@@ -296,7 +297,7 @@ class ReportFormatter:
                 in ("sensitivity", "oncogenic", "gain of function", "pathogenic")
             ]
             if oncogenic_items:
-                level_breakdown = {}
+                level_breakdown: dict[str, int] = {}
                 for item in oncogenic_items:
                     lvl = item.evidence_level or "?"
                     level_breakdown[lvl] = level_breakdown.get(lvl, 0) + 1
@@ -311,6 +312,7 @@ class ReportFormatter:
 
         if bundle.has_oncokb_data:
             ann = bundle.oncokb_annotation
+            assert ann is not None
             oncogenic = (ann.oncogenic or "").lower()
             if "oncogenic" in oncogenic:
                 lines.append(f"- **OncoKB**: {ann.oncogenic}, {ann.known_effect or 'N/A'}")
@@ -351,6 +353,7 @@ class ReportFormatter:
 
         if bundle.has_oncokb_data:
             ann = bundle.oncokb_annotation
+            assert ann is not None
             if (ann.oncogenic or "").lower() in ("likely neutral", "inconclusive"):
                 lines.append(f"- **OncoKB**: {ann.oncogenic}")
                 has_benign = True
@@ -410,8 +413,10 @@ class ReportFormatter:
             if bundle.clinvar_variants
             else "No data"
         )
-        oncokb_status = (
-            bundle.oncokb_annotation.oncogenic if bundle.has_oncokb_data else "No data / No token"
+        oncokb_status: str | None = (
+            bundle.oncokb_annotation.oncogenic
+            if bundle.has_oncokb_data and bundle.oncokb_annotation
+            else "No data / No token"
         )
         lines.append(f"| Status | {civic_status} | {clinvar_status} | {oncokb_status} |")
 
@@ -427,7 +432,7 @@ class ReportFormatter:
             clinvar_class = bundle.clinvar_variants[0].clinical_significance or "N/A"
 
         oncokb_class = "N/A"
-        if bundle.has_oncokb_data:
+        if bundle.has_oncokb_data and bundle.oncokb_annotation:
             oncokb_class = bundle.oncokb_annotation.oncogenic or "N/A"
 
         lines.append(f"| Classification | {civic_class} | {clinvar_class} | {oncokb_class} |")
@@ -445,7 +450,11 @@ class ReportFormatter:
             clinvar_quality = bundle.clinvar_variants[0].review_stars or "N/A"
 
         oncokb_quality = "N/A"
-        if bundle.has_oncokb_data and bundle.oncokb_annotation.highest_sensitive_level:
+        if (
+            bundle.has_oncokb_data
+            and bundle.oncokb_annotation
+            and bundle.oncokb_annotation.highest_sensitive_level
+        ):
             oncokb_quality = bundle.oncokb_annotation.highest_sensitive_level
 
         lines.append(
@@ -460,7 +469,11 @@ class ReportFormatter:
         civic_tx = ", ".join(list(civic_therapies)[:3]) if civic_therapies else "N/A"
 
         oncokb_tx = "N/A"
-        if bundle.has_oncokb_data and bundle.oncokb_annotation.treatments:
+        if (
+            bundle.has_oncokb_data
+            and bundle.oncokb_annotation
+            and bundle.oncokb_annotation.treatments
+        ):
             drugs = []
             for tx in bundle.oncokb_annotation.treatments[:3]:
                 drugs.extend(tx.get("drugs", []))

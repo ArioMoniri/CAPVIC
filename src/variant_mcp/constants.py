@@ -103,7 +103,7 @@ AMP_TIER_DEFINITIONS = {
 
 # === ClinGen/CGC/VICC Oncogenicity SOP Evidence Codes ===
 # Reference: Horak et al., Genetics in Medicine 2022
-ONCOGENICITY_EVIDENCE_CODES = {
+ONCOGENICITY_EVIDENCE_CODES: dict[str, dict[str, str | int]] = {
     # Oncogenic codes (positive evidence)
     "OVS1": {
         "strength": "very_strong",

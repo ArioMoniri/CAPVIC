@@ -103,7 +103,7 @@ class OncoKBClient(BaseClient):
         data = await self.get_json("genes", params={"hugoSymbol": gene})
         if isinstance(data, list) and data:
             data = data[0]
-        return data
+        return data  # type: ignore[no-any-return]
 
     async def get_cancer_gene_list(self) -> list[dict[str, Any]] | str:
         """Get all OncoKB cancer genes."""

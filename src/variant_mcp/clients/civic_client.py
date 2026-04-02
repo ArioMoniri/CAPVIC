@@ -31,7 +31,7 @@ class CIViCClient(BaseClient):
         result = await self.post_json("", json_body=body)
         if "errors" in result:
             raise ClientError(f"CIViC GraphQL error: {result['errors']}")
-        return result.get("data", {})
+        return result.get("data", {})  # type: ignore[no-any-return]
 
     async def search_evidence(
         self,
@@ -57,7 +57,7 @@ class CIViCClient(BaseClient):
             "after": after,
         }
         data = await self._graphql(CIViCQueries.SEARCH_EVIDENCE, variables)
-        return data.get("evidenceItems", {})
+        return data.get("evidenceItems", {})  # type: ignore[no-any-return]
 
     async def search_evidence_parsed(
         self,
@@ -92,7 +92,7 @@ class CIViCClient(BaseClient):
     async def get_variant(self, variant_id: int) -> dict[str, Any]:
         """Get variant details by CIViC ID."""
         data = await self._graphql(CIViCQueries.GET_VARIANT, {"id": variant_id})
-        return data.get("variant", {})
+        return data.get("variant", {})  # type: ignore[no-any-return]
 
     async def get_evidence_item(self, evidence_id: int) -> CIViCEvidenceItem | None:
         """Get a single evidence item by ID."""
@@ -142,7 +142,7 @@ class CIViCClient(BaseClient):
             )
         data = await self._graphql(query, {"queryTerm": query_term})
         key = f"{entity_type.lower()}Typeahead"
-        return data.get(key, [])
+        return data.get(key, [])  # type: ignore[no-any-return]
 
     @staticmethod
     def _parse_evidence_node(node: dict) -> CIViCEvidenceItem:

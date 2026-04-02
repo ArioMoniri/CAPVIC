@@ -106,6 +106,7 @@ class AMPTierClassifier:
             return None, None, []
 
         annotation = bundle.oncokb_annotation
+        assert annotation is not None
         trail: list[str] = []
         tier: str | None = None
         level: str | None = None

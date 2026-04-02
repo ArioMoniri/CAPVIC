@@ -107,7 +107,7 @@ class ClinVarClient(BaseClient):
         result = data.get("esearchresult", {})
         if "ERROR" in result:
             raise ClientError(f"ClinVar esearch error: {result['ERROR']}")
-        return result.get("idlist", [])
+        return result.get("idlist", [])  # type: ignore[no-any-return]
 
     async def _esummary_variants(self, ids: list[str]) -> list[ClinVarVariant]:
         """Run esummary for given IDs and parse to ClinVarVariant list."""

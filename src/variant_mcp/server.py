@@ -107,16 +107,16 @@ async def _gather_evidence(
             bundle.errors[key] = f"{type(result).__name__}: {result}"
             logger.error("Error from %s: %s", key, result)
         elif key == "civic":
-            bundle.civic_evidence = result
+            bundle.civic_evidence = result  # type: ignore[assignment]
         elif key == "clinvar":
-            bundle.clinvar_variants = result
+            bundle.clinvar_variants = result  # type: ignore[assignment]
         elif key == "oncokb":
             if isinstance(result, str):
                 bundle.errors["oncokb"] = result
             else:
-                bundle.oncokb_annotation = result
+                bundle.oncokb_annotation = result  # type: ignore[assignment]
         elif key == "metakb":
-            bundle.metakb_interpretations = result
+            bundle.metakb_interpretations = result  # type: ignore[assignment]
 
     # Also fetch CIViC assertions for the gene
     if query_all or "civic" in (sources or []):
@@ -136,7 +136,7 @@ async def _gather_evidence(
 
 
 @mcp.tool(
-    annotations={
+    annotations={  # type: ignore[arg-type]
         "readOnlyHint": True,
         "destructiveHint": False,
         "idempotentHint": True,
@@ -170,7 +170,7 @@ async def variant_search_evidence(
 
 
 @mcp.tool(
-    annotations={
+    annotations={  # type: ignore[arg-type]
         "readOnlyHint": True,
         "destructiveHint": False,
         "idempotentHint": True,
@@ -225,7 +225,7 @@ async def variant_classify(
 
 
 @mcp.tool(
-    annotations={
+    annotations={  # type: ignore[arg-type]
         "readOnlyHint": True,
         "destructiveHint": False,
         "idempotentHint": True,
@@ -251,7 +251,7 @@ async def variant_compare_sources(
 # ============================================================================
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
 async def civic_search_evidence(
     gene: str | None = None,
     variant: str | None = None,
@@ -311,7 +311,7 @@ async def civic_search_evidence(
     return "\n".join(lines)
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
 async def civic_search_assertions(
     gene: str | None = None,
     disease: str | None = None,
@@ -354,7 +354,7 @@ async def civic_search_assertions(
     return "\n".join(lines)
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def civic_get_gene(name: str) -> str:
     """Get gene details and associated variants from CIViC.
 
@@ -389,7 +389,7 @@ async def civic_get_gene(name: str) -> str:
     return "\n".join(lines)
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def civic_get_variant(variant_id: int) -> str:
     """Get variant details from CIViC by variant ID.
 
@@ -418,7 +418,7 @@ async def civic_get_variant(variant_id: int) -> str:
     return "\n".join(lines)
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def civic_get_evidence_item(evidence_id: int) -> str:
     """Get full details for a single CIViC evidence item.
 
@@ -458,7 +458,7 @@ async def civic_get_evidence_item(evidence_id: int) -> str:
 # ============================================================================
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
 async def clinvar_search(
     gene: str | None = None,
     variant: str | None = None,
@@ -516,7 +516,7 @@ async def clinvar_search(
     return "\n".join(lines)
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def clinvar_get_variant(
     variation_id: int | None = None,
     rsid: str | None = None,
@@ -541,6 +541,7 @@ async def clinvar_get_variant(
         elif rsid:
             variants = await clinvar_client.get_variant_by_rsid(rsid)
         else:
+            assert hgvs is not None
             variants = await clinvar_client.get_variant_by_hgvs(hgvs)
     except ClientError as e:
         return f"ClinVar lookup error: {e}\n\n{DISCLAIMER}"
@@ -588,7 +589,7 @@ async def clinvar_get_variant(
 # ============================================================================
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
 async def oncokb_annotate(
     gene: str,
     variant: str,
@@ -642,7 +643,7 @@ async def oncokb_annotate(
     return "\n".join(lines)
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def oncokb_cancer_genes() -> str:
     """Get the OncoKB cancer gene list with oncogene/TSG classification.
 
@@ -680,7 +681,7 @@ async def oncokb_cancer_genes() -> str:
 # ============================================================================
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
 async def classify_amp_tier(
     gene: str,
     variant: str,
@@ -700,7 +701,7 @@ async def classify_amp_tier(
     return report_fmt.format_amp_tier(result) + f"\n\n{DISCLAIMER}"
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
 async def score_oncogenicity(
     gene: str,
     variant: str,
@@ -728,7 +729,7 @@ async def score_oncogenicity(
     return report_fmt.format_oncogenicity(result) + f"\n\n{DISCLAIMER}"
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def explain_acmg_criteria(
     criteria_code: str | None = None,
     query: str | None = None,
@@ -770,7 +771,7 @@ async def explain_acmg_criteria(
 # ============================================================================
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def lookup_gene(query: str) -> str:
     """Gene name autocomplete/lookup across CIViC.
 
@@ -791,7 +792,7 @@ async def lookup_gene(query: str) -> str:
     return "\n".join(lines)
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def lookup_disease(query: str) -> str:
     """Disease name autocomplete/lookup across CIViC.
 
@@ -813,7 +814,7 @@ async def lookup_disease(query: str) -> str:
     return "\n".join(lines)
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def lookup_therapy(query: str) -> str:
     """Therapy/drug name autocomplete/lookup across CIViC.
 
@@ -840,7 +841,7 @@ async def lookup_therapy(query: str) -> str:
 # ============================================================================
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def get_classification_frameworks_reference() -> str:
     """Get a comprehensive reference document explaining all classification frameworks.
 
@@ -850,7 +851,7 @@ async def get_classification_frameworks_reference() -> str:
     return table_fmt.format_frameworks_reference()
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
 async def variant_pathogenicity_summary(
     gene: str,
     variant: str,

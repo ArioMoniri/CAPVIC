@@ -49,9 +49,10 @@ class TableFormatter:
         lines.append("### Evidence Codes\n")
         lines.append("| Code | Strength | Points | Description |")
         lines.append("|------|----------|--------|-------------|")
-        for code, info in ONCOGENICITY_EVIDENCE_CODES.items():
+        for code, onco_info in ONCOGENICITY_EVIDENCE_CODES.items():
+            points = int(onco_info["points"])
             lines.append(
-                f"| {code} | {info['strength']} | {info['points']:+d} | {info['description']} |"
+                f"| {code} | {onco_info['strength']} | {points:+d} | {onco_info['description']} |"
             )
         lines.append("\n### Classification Thresholds\n")
         lines.append("| Classification | Points |")

@@ -69,9 +69,10 @@ class OncogenicityScorer:
         for code in codes:
             info = ONCOGENICITY_EVIDENCE_CODES.get(code)
             if info:
-                direction = "Oncogenic" if info["points"] > 0 else "Benign"
+                pts = int(info["points"])
+                direction = "Oncogenic" if pts > 0 else "Benign"
                 lines.append(
-                    f"**{code}** ({info['strength']}, {info['points']:+d} points, "
+                    f"**{code}** ({info['strength']}, {pts:+d} points, "
                     f"{direction}): {info['description']}"
                 )
             else:
@@ -88,8 +89,8 @@ class OncogenicityScorer:
                 applied.append(
                     AppliedEvidenceCode(
                         code=code,
-                        points=info["points"],
-                        description=info["description"],
+                        points=int(info["points"]),
+                        description=str(info["description"]),
                         evidence="Manually specified by user",
                     )
                 )
@@ -143,7 +144,7 @@ class OncogenicityScorer:
             )
 
         # OS2: Functional studies from OncoKB
-        if bundle and bundle.has_oncokb_data:
+        if bundle and bundle.has_oncokb_data and bundle.oncokb_annotation:
             effect = bundle.oncokb_annotation.known_effect or ""
             if effect.lower() in (
                 "gain-of-function",
@@ -240,7 +241,7 @@ class OncogenicityScorer:
         if len(bundle.civic_evidence) >= 5:
             return True
         # OncoKB oncogenic + high evidence level
-        if bundle.has_oncokb_data:
+        if bundle.has_oncokb_data and bundle.oncokb_annotation:
             oncogenic = (bundle.oncokb_annotation.oncogenic or "").lower()
             if "oncogenic" in oncogenic:
                 return True
@@ -249,7 +250,7 @@ class OncogenicityScorer:
     @staticmethod
     def _is_established_oncogenic(bundle: EvidenceBundle) -> bool:
         """Check if variant is an established oncogenic variant."""
-        if bundle.has_oncokb_data:
+        if bundle.has_oncokb_data and bundle.oncokb_annotation:
             oncogenic = (bundle.oncokb_annotation.oncogenic or "").lower()
             if oncogenic == "oncogenic":
                 return True

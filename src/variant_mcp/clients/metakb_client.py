@@ -66,12 +66,12 @@ class MetaKBClient(BaseClient):
         search_term = " ".join(query_parts)
         try:
             data = await self.get_json("api/v2/search", params={"q": search_term})
-            return data
+            return data  # type: ignore[no-any-return]
         except ClientError:
             # Try alternative endpoint format
             try:
                 data = await self.get_json("api/search", params={"term": search_term})
-                return data
+                return data  # type: ignore[no-any-return]
             except ClientError as exc:
                 raise ClientError(METAKB_FALLBACK_MSG) from exc
 
