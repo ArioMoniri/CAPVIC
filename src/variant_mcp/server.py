@@ -7,6 +7,7 @@ Integrates CIViC, ClinVar, OncoKB, VICC MetaKB, gnomAD, UniProt, PubMed, and MyV
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import sys
 from typing import Any
@@ -84,6 +85,158 @@ mcp = FastMCP(
         "OncoKB features require a free academic API token (ONCOKB_API_TOKEN env var)."
     ),
 )
+
+
+# ============================================================================
+# Output format helper
+# ============================================================================
+
+# Valid output_format values across all tools
+_VALID_FORMATS = ("markdown", "json", "text")
+
+
+def _format_output(
+    data: Any,
+    markdown: str,
+    output_format: str,
+    *,
+    disclaimer: bool = True,
+) -> str:
+    """Return tool output in the requested format.
+
+    Args:
+        data: Raw data — a Pydantic model, dict, or list to serialize for JSON.
+        markdown: Pre-built markdown string (used for "markdown" and "text" formats).
+        output_format: One of "markdown", "json", "text".
+        disclaimer: Whether to append the research-only disclaimer (markdown/text only).
+    """
+    fmt = output_format.lower().strip() if output_format else "markdown"
+    if fmt not in _VALID_FORMATS:
+        fmt = "markdown"
+
+    if fmt == "json":
+        if hasattr(data, "model_dump"):
+            result: str = data.model_dump_json(indent=2, exclude_none=True)
+            return result
+        return json.dumps(data, indent=2, default=str)
+
+    if fmt == "text":
+        # Strip markdown formatting: headers, bold, table pipes
+        text = markdown
+        for prefix in ("# ", "## ", "### ", "#### "):
+            text = text.replace(prefix, "")
+        text = text.replace("**", "").replace("`", "")
+        # Remove table separator lines
+        lines = [
+            ln for ln in text.splitlines()
+            if not (ln.strip().startswith("|--") or ln.strip().startswith("|-"))
+        ]
+        return "\n".join(lines)
+
+    # Default: markdown (already built)
+    return markdown
+
+
+# ============================================================================
+# Disease / therapy alias normalization for natural language queries
+# ============================================================================
+
+_DISEASE_ALIASES: dict[str, str] = {
+    "crc": "Colorectal Cancer",
+    "colorectal": "Colorectal Cancer",
+    "colon cancer": "Colorectal Cancer",
+    "nsclc": "Lung Non-small Cell Carcinoma",
+    "lung cancer": "Lung Non-small Cell Carcinoma",
+    "non-small cell lung cancer": "Lung Non-small Cell Carcinoma",
+    "sclc": "Lung Small Cell Carcinoma",
+    "small cell lung cancer": "Lung Small Cell Carcinoma",
+    "mel": "Melanoma",
+    "skin melanoma": "Melanoma",
+    "aml": "Acute Myeloid Leukemia",
+    "cml": "Chronic Myeloid Leukemia",
+    "glioma": "Glioma",
+    "gbm": "Glioblastoma Multiforme",
+    "glioblastoma": "Glioblastoma Multiforme",
+    "breast": "Breast Cancer",
+    "breast cancer": "Breast Cancer",
+    "tnbc": "Triple Negative Breast Cancer",
+    "ovarian": "Ovarian Cancer",
+    "ovarian cancer": "Ovarian Cancer",
+    "pancreatic": "Pancreatic Cancer",
+    "pancreatic cancer": "Pancreatic Cancer",
+    "prostate": "Prostate Cancer",
+    "prostate cancer": "Prostate Cancer",
+    "thyroid": "Thyroid Cancer",
+    "thyroid cancer": "Thyroid Cancer",
+    "renal": "Renal Cell Carcinoma",
+    "kidney cancer": "Renal Cell Carcinoma",
+    "gastric": "Gastric Cancer",
+    "stomach cancer": "Gastric Cancer",
+    "bladder": "Bladder Cancer",
+    "bladder cancer": "Bladder Cancer",
+    "hcc": "Hepatocellular Carcinoma",
+    "liver cancer": "Hepatocellular Carcinoma",
+    "cholangiocarcinoma": "Cholangiocarcinoma",
+    "gist": "Gastrointestinal Stromal Tumor",
+}
+
+_THERAPY_ALIASES: dict[str, str] = {
+    "vem": "Vemurafenib",
+    "vemurafenib": "Vemurafenib",
+    "dab": "Dabrafenib",
+    "dabrafenib": "Dabrafenib",
+    "tram": "Trametinib",
+    "trametinib": "Trametinib",
+    "imatinib": "Imatinib",
+    "gleevec": "Imatinib",
+    "osimertinib": "Osimertinib",
+    "tagrisso": "Osimertinib",
+    "sotorasib": "Sotorasib",
+    "lumakras": "Sotorasib",
+    "adagrasib": "Adagrasib",
+    "erlotinib": "Erlotinib",
+    "tarceva": "Erlotinib",
+    "gefitinib": "Gefitinib",
+    "iressa": "Gefitinib",
+    "pembro": "Pembrolizumab",
+    "pembrolizumab": "Pembrolizumab",
+    "keytruda": "Pembrolizumab",
+    "nivo": "Nivolumab",
+    "nivolumab": "Nivolumab",
+    "opdivo": "Nivolumab",
+    "cetuximab": "Cetuximab",
+    "erbitux": "Cetuximab",
+    "panitumumab": "Panitumumab",
+    "vectibix": "Panitumumab",
+    "encorafenib": "Encorafenib",
+    "braftovi": "Encorafenib",
+    "binimetinib": "Binimetinib",
+    "mektovi": "Binimetinib",
+    "crizotinib": "Crizotinib",
+    "xalkori": "Crizotinib",
+    "alectinib": "Alectinib",
+    "alecensa": "Alectinib",
+    "trastuzumab": "Trastuzumab",
+    "herceptin": "Trastuzumab",
+    "olaparib": "Olaparib",
+    "lynparza": "Olaparib",
+    "ruxolitinib": "Ruxolitinib",
+    "jakafi": "Ruxolitinib",
+}
+
+
+def _normalize_disease(disease: str | None) -> str | None:
+    """Expand common abbreviations/aliases to CIViC-recognized disease names."""
+    if not disease:
+        return disease
+    return _DISEASE_ALIASES.get(disease.lower().strip(), disease)
+
+
+def _normalize_therapy(therapy: str | None) -> str | None:
+    """Expand common abbreviations/brand names to generic drug names."""
+    if not therapy:
+        return therapy
+    return _THERAPY_ALIASES.get(therapy.lower().strip(), therapy)
 
 
 # ============================================================================
@@ -180,6 +333,7 @@ async def variant_search_evidence(
     evidence_type: str | None = None,
     sources: list[str] | None = None,
     limit: int = 25,
+    output_format: str = "markdown",
 ) -> str:
     """Perform a comprehensive multi-database search for clinical evidence on genetic variants, therapies, and diseases.
 
@@ -190,19 +344,23 @@ async def variant_search_evidence(
     - "What is the clinical significance of BRAF V600E in melanoma?"
     - "Are there any FDA-approved therapies targeting EGFR T790M?"
 
-    The returned report includes structured markdown tables and evidence breakdowns suitable for data visualization and comparison.
+    Understands common abbreviations: CRC → Colorectal Cancer, NSCLC → Lung Non-small Cell Carcinoma, keytruda → Pembrolizumab, etc.
 
     Args:
         gene: Gene symbol (e.g., BRAF, KRAS, TP53, EGFR). Required.
         variant: Variant name (e.g., V600E, G12C, T790M). Optional — omit to get all variants for a gene.
-        disease: Disease or cancer type (e.g., "colorectal cancer", "melanoma", "NSCLC"). Optional.
-        therapy: Therapy or drug name filter (e.g., "vemurafenib", "sotorasib"). Optional.
+        disease: Disease or cancer type (e.g., "colorectal cancer", "melanoma", "NSCLC", "CRC"). Optional. Common abbreviations are expanded automatically.
+        therapy: Therapy or drug name filter (e.g., "vemurafenib", "keytruda", "sotorasib"). Optional. Brand names are resolved to generic names.
         evidence_type: Filter by evidence type: PREDICTIVE (therapy response), DIAGNOSTIC, PROGNOSTIC, ONCOGENIC, FUNCTIONAL. Optional.
         sources: List of databases to query: civic, clinvar, oncokb, metakb, uniprot, myvariant. Default: all.
         limit: Max results per source (1-100, default 25).
+        output_format: Response format — "markdown" (default, rich formatted), "json" (raw structured data), or "text" (plain text, no formatting).
     """
+    disease = _normalize_disease(disease)
+    therapy = _normalize_therapy(therapy)
     bundle = await _gather_evidence(gene, variant, disease, sources, limit)
-    return report_fmt.format_evidence_report(bundle)
+    md = report_fmt.format_evidence_report(bundle)
+    return _format_output(bundle, md, output_format)
 
 
 @mcp.tool(
@@ -218,6 +376,7 @@ async def variant_classify(
     variant: str,
     variant_origin: str,
     disease: str | None = None,
+    output_format: str = "markdown",
 ) -> str:
     """Apply formal variant classification frameworks to produce a structured clinical assessment with evidence codes, confidence levels, and tier assignments.
 
@@ -225,13 +384,12 @@ async def variant_classify(
 
     For germline variants: retrieves ACMG/AMP 5-tier interpretation from ClinVar with review status and submitter breakdown.
 
-    The output includes structured markdown tables ideal for reports and visualizations.
-
     Args:
         gene: Gene symbol (e.g., BRAF, TP53, KRAS). Required.
         variant: Variant name (e.g., V600E, R175H, G12C). Required.
         variant_origin: Must be "somatic" or "germline". Required.
         disease: Disease or cancer type context (e.g., "melanoma", "lung adenocarcinoma"). Optional but recommended for somatic variants.
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     from variant_mcp.models.classification import VariantClassificationReport
 
@@ -261,11 +419,11 @@ async def variant_classify(
                 bundle.clinvar_variants[0]
             )
 
-    result = report_fmt.format_classification_report(report)
+    md = report_fmt.format_classification_report(report)
 
     # Suggest fetching gnomAD data if not in bundle (improves SBVS1/SBS1/OM4/OP4)
     if not bundle.has_gnomad_data:
-        result += (
+        md += (
             "\n\n---\n\n> **Tip**: For more accurate oncogenicity scoring "
             "(SBVS1/SBS1/OM4/OP4 evidence codes), first fetch population frequency "
             "data using `lookup_gnomad_frequency` with the genomic coordinate "
@@ -274,7 +432,7 @@ async def variant_classify(
             "frequency-based evidence codes per Horak et al. 2022."
         )
 
-    return result
+    return _format_output(report, md, output_format)
 
 
 @mcp.tool(
@@ -288,6 +446,7 @@ async def variant_classify(
 async def variant_compare_sources(
     gene: str,
     variant: str,
+    output_format: str = "markdown",
 ) -> str:
     """Cross-reference a variant across ALL databases and produce a side-by-side concordance/discordance analysis.
 
@@ -296,9 +455,11 @@ async def variant_compare_sources(
     Args:
         gene: Gene symbol (e.g., BRAF, EGFR). Required.
         variant: Variant name (e.g., V600E, L858R). Required.
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     bundle = await _gather_evidence(gene, variant)
-    return report_fmt.format_source_comparison(bundle)
+    md = report_fmt.format_source_comparison(bundle)
+    return _format_output(bundle, md, output_format)
 
 
 # ============================================================================
@@ -315,6 +476,7 @@ async def civic_search_evidence(
     evidence_type: str | None = None,
     significance: str | None = None,
     limit: int = 25,
+    output_format: str = "markdown",
 ) -> str:
     """Search the CIViC (Clinical Interpretation of Variants in Cancer) database for curated clinical evidence linking genetic variants to therapies, diagnoses, and prognoses.
 
@@ -322,15 +484,20 @@ async def civic_search_evidence(
 
     Use this for questions like "What therapies target KRAS G12C?" or "Find prognostic evidence for TP53 mutations in breast cancer."
 
+    Understands common abbreviations: CRC → Colorectal Cancer, NSCLC → Lung Non-small Cell Carcinoma, keytruda → Pembrolizumab, etc.
+
     Args:
         gene: Gene symbol (e.g., BRAF, KRAS). Optional.
         variant: Variant name (e.g., V600E, G12C). Optional.
-        disease: Disease name (e.g., "colorectal cancer", "melanoma"). Optional.
-        therapy: Therapy or drug name (e.g., "sotorasib", "pembrolizumab"). Optional.
+        disease: Disease name (e.g., "colorectal cancer", "melanoma", "CRC", "NSCLC"). Optional. Common abbreviations expanded automatically.
+        therapy: Therapy or drug name (e.g., "sotorasib", "pembrolizumab", "keytruda"). Optional. Brand names resolved automatically.
         evidence_type: Filter by type: PREDICTIVE (therapy response), DIAGNOSTIC, PROGNOSTIC, PREDISPOSING, ONCOGENIC, FUNCTIONAL. Optional.
         significance: Clinical significance filter (e.g., "Sensitivity", "Resistance"). Optional.
         limit: Max results (1-100, default 25).
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
+    disease = _normalize_disease(disease)
+    therapy = _normalize_therapy(therapy)
     try:
         items = await civic_client.search_evidence_parsed(
             gene=gene,
@@ -357,6 +524,11 @@ async def civic_search_evidence(
             f"or check the gene symbol with lookup_gene.\n\n{DISCLAIMER}"
         )
 
+    if output_format.lower().strip() == "json":
+        return _format_output(
+            [item.model_dump(exclude_none=True) for item in items], "", "json"
+        )
+
     lines = [f"# CIViC Evidence Search Results ({len(items)} items)\n"]
     for item in items:
         therapies_str = ", ".join(item.therapies) if item.therapies else "N/A"
@@ -367,7 +539,8 @@ async def civic_search_evidence(
             f"Therapies: {therapies_str} {pmid}"
         )
     lines.append(f"\n{DISCLAIMER}")
-    return "\n".join(lines)
+    md = "\n".join(lines)
+    return _format_output(items, md, output_format)
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
@@ -377,6 +550,7 @@ async def civic_search_assertions(
     therapy: str | None = None,
     significance: str | None = None,
     limit: int = 25,
+    output_format: str = "markdown",
 ) -> str:
     """Search CIViC curated assertions — expert-reviewed, higher-confidence clinical interpretations.
 
@@ -393,7 +567,10 @@ async def civic_search_assertions(
         therapy: Therapy name (e.g., "vemurafenib", "pembrolizumab"). Optional.
         significance: Significance filter (e.g., "sensitivityresponse", "resistance"). Optional.
         limit: Max results (1-100, default 25).
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
+    disease = _normalize_disease(disease)
+    therapy = _normalize_therapy(therapy)
     try:
         assertions = await civic_client.search_assertions(
             gene=gene,
@@ -408,6 +585,11 @@ async def civic_search_assertions(
     if not assertions:
         return f"No CIViC assertions found for the given filters.\n\n{DISCLAIMER}"
 
+    if output_format.lower().strip() == "json":
+        return _format_output(
+            [a.model_dump(exclude_none=True) for a in assertions], "", "json"
+        )
+
     lines = [f"# CIViC Assertions ({len(assertions)} results)\n"]
     for a in assertions:
         lines.append(
@@ -417,17 +599,19 @@ async def civic_search_assertions(
             f"Evidence items: {a.evidence_count}"
         )
     lines.append(f"\n{DISCLAIMER}")
-    return "\n".join(lines)
+    md = "\n".join(lines)
+    return _format_output(assertions, md, output_format)
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
-async def civic_get_gene(name: str) -> str:
+async def civic_get_gene(name: str, output_format: str = "markdown") -> str:
     """Get gene details and all associated variants from the CIViC knowledge base.
 
     Returns the gene's official name, Entrez ID, description, and a list of all CIViC-curated variants with their IDs. Use this to discover which variants have clinical evidence for a given gene.
 
     Args:
         name: Gene symbol (e.g., BRAF, KRAS, EGFR, TP53).
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     try:
         data = await civic_client.get_gene(name)
@@ -436,6 +620,9 @@ async def civic_get_gene(name: str) -> str:
 
     if not data:
         return f"Gene '{name}' not found in CIViC. Check spelling with lookup_gene.\n\n{DISCLAIMER}"
+
+    if output_format.lower().strip() == "json":
+        return _format_output(data, "", "json")
 
     variants = data.get("variants", {})
     variant_nodes = variants.get("nodes", [])
@@ -454,17 +641,19 @@ async def civic_get_gene(name: str) -> str:
         for v in variant_nodes[:20]:
             lines.append(f"- {v.get('name', 'Unknown')} (ID: {v.get('id')})")
     lines.append(f"\n{DISCLAIMER}")
-    return "\n".join(lines)
+    md = "\n".join(lines)
+    return _format_output(data, md, output_format)
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
-async def civic_get_variant(variant_id: int) -> str:
+async def civic_get_variant(variant_id: int, output_format: str = "markdown") -> str:
     """Get detailed variant information from CIViC by variant ID.
 
     Returns the variant name, gene, variant types, and molecular profile score. Use after civic_search_evidence or civic_get_gene to drill into a specific variant.
 
     Args:
         variant_id: CIViC variant ID number (from search results or gene lookups).
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     try:
         data = await civic_client.get_variant(variant_id)
@@ -473,6 +662,9 @@ async def civic_get_variant(variant_id: int) -> str:
 
     if not data:
         return f"Variant ID {variant_id} not found in CIViC.\n\n{DISCLAIMER}"
+
+    if output_format.lower().strip() == "json":
+        return _format_output(data, "", "json")
 
     gene = data.get("gene", {})
     mp = data.get("singleVariantMolecularProfile", {}) or {}
@@ -485,17 +677,19 @@ async def civic_get_variant(variant_id: int) -> str:
         f"**Molecular Profile Score**: {mp.get('molecularProfileScore', 'N/A')}",
         f"\n{DISCLAIMER}",
     ]
-    return "\n".join(lines)
+    md = "\n".join(lines)
+    return _format_output(data, md, output_format)
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
-async def civic_get_evidence_item(evidence_id: int) -> str:
+async def civic_get_evidence_item(evidence_id: int, output_format: str = "markdown") -> str:
     """Get full details for a single CIViC evidence item including clinical interpretation, source citation, and evidence rating.
 
     Returns evidence type, level, significance, direction, disease, therapies, rating (1-5 stars), description, and source citation with PMID. Use after civic_search_evidence to get the full text and context of a specific evidence item.
 
     Args:
         evidence_id: CIViC evidence item ID number (from search results).
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     try:
         item = await civic_client.get_evidence_item(evidence_id)
@@ -504,6 +698,9 @@ async def civic_get_evidence_item(evidence_id: int) -> str:
 
     if not item:
         return f"Evidence item {evidence_id} not found in CIViC.\n\n{DISCLAIMER}"
+
+    if output_format.lower().strip() == "json":
+        return _format_output(item, "", "json")
 
     lines = [
         f"# CIViC Evidence Item EID{item.id}\n",
@@ -522,7 +719,8 @@ async def civic_get_evidence_item(evidence_id: int) -> str:
         if item.source.pmid:
             lines.append(f"**PMID**: {item.source.pmid}")
     lines.append(f"\n{DISCLAIMER}")
-    return "\n".join(lines)
+    md = "\n".join(lines)
+    return _format_output(item, md, output_format)
 
 
 # ============================================================================
@@ -537,6 +735,7 @@ async def clinvar_search(
     clinical_significance: str | None = None,
     disease: str | None = None,
     limit: int = 25,
+    output_format: str = "markdown",
 ) -> str:
     """Search NCBI ClinVar for germline and somatic variant classifications, expert review status, star ratings, and submitter consensus data.
 
@@ -548,6 +747,7 @@ async def clinvar_search(
         clinical_significance: Filter by classification: pathogenic, likely pathogenic, uncertain significance, likely benign, benign. Optional.
         disease: Disease or phenotype filter (e.g., "breast cancer"). Optional.
         limit: Max results (1-100, default 25).
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     if not any([gene, variant, clinical_significance, disease]):
         return "Error: At least one search parameter is required.\n\n" + DISCLAIMER
@@ -569,6 +769,11 @@ async def clinvar_search(
             f"gene/variant names.\n\n{DISCLAIMER}"
         )
 
+    if output_format.lower().strip() == "json":
+        return _format_output(
+            [cv.model_dump(exclude_none=True) for cv in variants], "", "json"
+        )
+
     lines = [f"# ClinVar Search Results ({len(variants)} variants)\n"]
     for cv in variants:
         lines.append(f"### {cv.title or 'Unknown'}")
@@ -587,7 +792,8 @@ async def clinvar_search(
             lines.append(f"- **URL**: {cv.clinvar_url}")
         lines.append("")
     lines.append(DISCLAIMER)
-    return "\n".join(lines)
+    md = "\n".join(lines)
+    return _format_output(variants, md, output_format)
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
@@ -595,6 +801,7 @@ async def clinvar_get_variant(
     variation_id: int | None = None,
     rsid: str | None = None,
     hgvs: str | None = None,
+    output_format: str = "markdown",
 ) -> str:
     """Get a full ClinVar variant record with all submitter classifications, HGVS expressions, conditions, and conflict detection.
 
@@ -609,6 +816,7 @@ async def clinvar_get_variant(
         variation_id: ClinVar variation ID number (e.g., 65533). Optional.
         rsid: dbSNP rsID (e.g., rs113488022). Optional.
         hgvs: HGVS expression (e.g., NM_004333.6:c.1799T>A). Optional.
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     if not any([variation_id, rsid, hgvs]):
         return "Error: Provide variation_id, rsid, or hgvs.\n\n" + DISCLAIMER
@@ -629,6 +837,9 @@ async def clinvar_get_variant(
         return f"No ClinVar record found.\n\n{DISCLAIMER}"
 
     cv = variants[0]
+    if output_format.lower().strip() == "json":
+        return _format_output(cv, "", "json")
+
     lines = [f"# ClinVar Variant: {cv.title or 'Unknown'}\n"]
     lines.append(f"**Variation ID**: {cv.variation_id}")
     lines.append(
@@ -660,7 +871,8 @@ async def clinvar_get_variant(
     if cv.clinvar_url:
         lines.append(f"\n**URL**: {cv.clinvar_url}")
     lines.append(f"\n{DISCLAIMER}")
-    return "\n".join(lines)
+    md = "\n".join(lines)
+    return _format_output(cv, md, output_format)
 
 
 # ============================================================================
@@ -673,6 +885,7 @@ async def oncokb_annotate(
     gene: str,
     variant: str,
     tumor_type: str | None = None,
+    output_format: str = "markdown",
 ) -> str:
     """Annotate a somatic mutation with OncoKB — the FDA-recognized precision oncology knowledge base.
 
@@ -684,6 +897,7 @@ async def oncokb_annotate(
         gene: Gene symbol (e.g., BRAF, EGFR, ALK). Required.
         variant: Protein change (e.g., V600E, L858R, T790M). Required.
         tumor_type: OncoTree tumor type code (e.g., MEL for melanoma, NSCLC, CRC). Optional but recommended — enables tumor-specific therapeutic levels.
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     if not oncokb_client.is_available:
         return ONCOKB_NO_TOKEN_MSG + "\n\n" + DISCLAIMER
@@ -695,6 +909,9 @@ async def oncokb_annotate(
 
     if isinstance(result, str):
         return result + "\n\n" + DISCLAIMER
+
+    if output_format.lower().strip() == "json":
+        return _format_output(result, "", "json")
 
     from variant_mcp.constants import ONCOKB_LEVELS
 
@@ -721,11 +938,12 @@ async def oncokb_annotate(
     if result.oncokb_url:
         lines.append(f"\n**URL**: {result.oncokb_url}")
     lines.append(f"\n{DISCLAIMER}")
-    return "\n".join(lines)
+    md = "\n".join(lines)
+    return _format_output(result, md, output_format)
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
-async def oncokb_cancer_genes() -> str:
+async def oncokb_cancer_genes(output_format: str = "markdown") -> str:
     """Get the complete OncoKB curated cancer gene list with oncogene/tumor suppressor classification and therapeutic levels.
 
     Returns a structured table of all cancer genes with oncogene status, tumor suppressor gene (TSG) status, and highest sensitive therapeutic level. Use to check if a gene is a known cancer driver, or to compare multiple genes. Output is a markdown table ideal for visualizations. Requires ONCOKB_API_TOKEN environment variable.
@@ -741,6 +959,9 @@ async def oncokb_cancer_genes() -> str:
     if isinstance(result, str):
         return result + "\n\n" + DISCLAIMER
 
+    if output_format.lower().strip() == "json":
+        return _format_output(result, "", "json")
+
     lines = [f"# OncoKB Cancer Gene List ({len(result)} genes)\n"]
     lines.append("| Gene | Oncogene | TSG | Highest Level |")
     lines.append("|------|----------|-----|---------------|")
@@ -753,7 +974,8 @@ async def oncokb_cancer_genes() -> str:
     if len(result) > 100:
         lines.append(f"\n*Showing first 100 of {len(result)} genes.*")
     lines.append(f"\n{DISCLAIMER}")
-    return "\n".join(lines)
+    md = "\n".join(lines)
+    return _format_output(result, md, output_format)
 
 
 # ============================================================================
@@ -766,6 +988,7 @@ async def classify_amp_tier(
     gene: str,
     variant: str,
     disease: str | None = None,
+    output_format: str = "markdown",
 ) -> str:
     """Apply the AMP/ASCO/CAP 4-tier somatic variant classification framework (Li et al. 2017) to assign clinical significance tiers and evidence levels.
 
@@ -775,10 +998,13 @@ async def classify_amp_tier(
         gene: Gene symbol (e.g., BRAF, KRAS). Required.
         variant: Variant name (e.g., V600E, G12C). Required.
         disease: Disease context (e.g., "melanoma"). Optional but recommended — affects tier assignment.
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
+    disease = _normalize_disease(disease)
     bundle = await _gather_evidence(gene, variant, disease)
     result = amp_classifier.classify(bundle)
-    return report_fmt.format_amp_tier(result) + f"\n\n{DISCLAIMER}"
+    md = report_fmt.format_amp_tier(result) + f"\n\n{DISCLAIMER}"
+    return _format_output(result, md, output_format)
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
@@ -786,6 +1012,7 @@ async def score_oncogenicity(
     gene: str,
     variant: str,
     evidence_codes: list[str] | None = None,
+    output_format: str = "markdown",
 ) -> str:
     """Apply the ClinGen/CGC/VICC Oncogenicity SOP (Horak et al. 2022) point-based scoring system with 18 evidence codes.
 
@@ -795,6 +1022,7 @@ async def score_oncogenicity(
         gene: Gene symbol (e.g., BRAF, TP53). Required.
         variant: Variant name (e.g., V600E, R175H). Required.
         evidence_codes: Explicit evidence codes (e.g., ['OVS1', 'OS3', 'OM4']). Optional — if omitted, auto-detects from available data.
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     bundle = None
     if not evidence_codes:
@@ -806,13 +1034,15 @@ async def score_oncogenicity(
         evidence_codes=evidence_codes,
         evidence_bundle=bundle,
     )
-    return report_fmt.format_oncogenicity(result) + f"\n\n{DISCLAIMER}"
+    md = report_fmt.format_oncogenicity(result) + f"\n\n{DISCLAIMER}"
+    return _format_output(result, md, output_format)
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def explain_acmg_criteria(
     criteria_code: str | None = None,
     query: str | None = None,
+    output_format: str = "markdown",
 ) -> str:
     """Reference tool for ACMG/AMP germline pathogenicity classification criteria (Richards et al. 2015).
 
@@ -826,11 +1056,21 @@ async def explain_acmg_criteria(
     Args:
         criteria_code: ACMG criteria code (e.g., PVS1, PM2, BS1, PP3). Optional.
         query: Keyword search or 'all' for complete reference. Optional.
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     if criteria_code:
-        return acmg_helper.get_criteria_reference(criteria_code) + f"\n\n{DISCLAIMER}"
+        md = acmg_helper.get_criteria_reference(criteria_code) + f"\n\n{DISCLAIMER}"
+        if output_format.lower().strip() == "json":
+            from variant_mcp.constants import ACMG_CRITERIA
+            data = {"code": criteria_code, "description": ACMG_CRITERIA.get(criteria_code, "")}
+            return _format_output(data, md, "json")
+        return _format_output(None, md, output_format)
     if query and query.lower().strip() == "all":
-        return acmg_helper.get_all_criteria() + f"\n\n{DISCLAIMER}"
+        md = acmg_helper.get_all_criteria() + f"\n\n{DISCLAIMER}"
+        if output_format.lower().strip() == "json":
+            from variant_mcp.constants import ACMG_CRITERIA
+            return _format_output(ACMG_CRITERIA, md, "json")
+        return _format_output(None, md, output_format)
     if query:
         # Try to find matching criteria
         from variant_mcp.constants import ACMG_CRITERIA
@@ -857,13 +1097,14 @@ async def explain_acmg_criteria(
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
-async def lookup_gene(query: str) -> str:
+async def lookup_gene(query: str, output_format: str = "markdown") -> str:
     """Gene name autocomplete and discovery across the CIViC knowledge base.
 
     Type-ahead search that matches partial gene names. Use this to find the correct gene symbol before running evidence searches, or to explore which genes have clinical evidence in CIViC.
 
     Args:
         query: Gene name or partial name (e.g., 'BRA' matches BRAF, 'EGF' matches EGFR).
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     try:
         results = await civic_client.search_typeahead("gene", query)
@@ -873,20 +1114,25 @@ async def lookup_gene(query: str) -> str:
     if not results:
         return f"No genes matching '{query}' found in CIViC."
 
+    if output_format.lower().strip() == "json":
+        return _format_output(results, "", "json")
+
     lines = [f"# Gene Lookup: '{query}' ({len(results)} matches)\n"]
     for g in results:
         lines.append(f"- **{g.get('name', '')}** (Entrez: {g.get('entrezId', 'N/A')})")
-    return "\n".join(lines)
+    md = "\n".join(lines)
+    return _format_output(results, md, output_format)
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
-async def lookup_disease(query: str) -> str:
+async def lookup_disease(query: str, output_format: str = "markdown") -> str:
     """Disease name autocomplete and discovery across the CIViC knowledge base.
 
     Type-ahead search that matches partial disease names and returns Disease Ontology IDs (DOID). Use to find the correct disease name before running evidence or classification searches.
 
     Args:
         query: Disease name or partial name (e.g., 'melan' matches Melanoma, 'colorect' matches Colorectal Cancer).
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     try:
         results = await civic_client.search_typeahead("disease", query)
@@ -896,21 +1142,26 @@ async def lookup_disease(query: str) -> str:
     if not results:
         return f"No diseases matching '{query}' found in CIViC."
 
+    if output_format.lower().strip() == "json":
+        return _format_output(results, "", "json")
+
     lines = [f"# Disease Lookup: '{query}' ({len(results)} matches)\n"]
     for d in results:
         doid = d.get("doid", "N/A")
         lines.append(f"- **{d.get('name', '')}** (DOID: {doid})")
-    return "\n".join(lines)
+    md = "\n".join(lines)
+    return _format_output(results, md, output_format)
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
-async def lookup_therapy(query: str) -> str:
+async def lookup_therapy(query: str, output_format: str = "markdown") -> str:
     """Therapy and drug name autocomplete and discovery across the CIViC knowledge base.
 
     Type-ahead search that matches partial therapy/drug names and returns NCI Thesaurus IDs. Use to find the correct therapy name before searching for treatment evidence, or to explore available targeted therapies.
 
     Args:
         query: Drug or therapy name or partial (e.g., 'vemur' matches Vemurafenib, 'pembroli' matches Pembrolizumab).
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     try:
         results = await civic_client.search_typeahead("therapy", query)
@@ -920,11 +1171,15 @@ async def lookup_therapy(query: str) -> str:
     if not results:
         return f"No therapies matching '{query}' found in CIViC."
 
+    if output_format.lower().strip() == "json":
+        return _format_output(results, "", "json")
+
     lines = [f"# Therapy Lookup: '{query}' ({len(results)} matches)\n"]
     for t in results:
         ncit = t.get("ncitId", "N/A")
         lines.append(f"- **{t.get('name', '')}** (NCIt: {ncit})")
-    return "\n".join(lines)
+    md = "\n".join(lines)
+    return _format_output(results, md, output_format)
 
 
 # ============================================================================
@@ -933,12 +1188,25 @@ async def lookup_therapy(query: str) -> str:
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
-async def get_classification_frameworks_reference() -> str:
+async def get_classification_frameworks_reference(output_format: str = "markdown") -> str:
     """Get a comprehensive reference document explaining all three variant classification frameworks used in precision oncology and genetics.
 
     Returns a detailed guide covering AMP/ASCO/CAP 4-tier somatic classification (Li et al. 2017), ClinGen/CGC/VICC Oncogenicity SOP point-based scoring (Horak et al. 2022), and ACMG/AMP 5-tier germline pathogenicity (Richards et al. 2015). Explains when to use each framework, how they relate, and decision criteria. Ideal for understanding the classification methodology before interpreting results.
+
+    Args:
+        output_format: Response format — "markdown" (default), "json" (framework summary as JSON), or "text" (plain text).
     """
-    return table_fmt.format_frameworks_reference()
+    md = table_fmt.format_frameworks_reference()
+    if output_format.lower().strip() == "json":
+        data = {
+            "frameworks": [
+                {"name": "AMP/ASCO/CAP", "type": "somatic", "tiers": 4, "reference": "Li et al. 2017, PMID: 27993330"},
+                {"name": "ClinGen/CGC/VICC Oncogenicity SOP", "type": "somatic", "scoring": "point-based", "reference": "Horak et al. 2022, PMID: 35101336"},
+                {"name": "ACMG/AMP", "type": "germline", "tiers": 5, "reference": "Richards et al. 2015, PMID: 25741868"},
+            ]
+        }
+        return _format_output(data, md, "json")
+    return _format_output(None, md, output_format)
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
@@ -946,6 +1214,7 @@ async def variant_pathogenicity_summary(
     gene: str,
     variant: str,
     disease: str | None = None,
+    output_format: str = "markdown",
 ) -> str:
     """Generate a structured pathogenic-vs-benign evidence report showing all supporting and opposing evidence for a variant's clinical significance.
 
@@ -955,10 +1224,16 @@ async def variant_pathogenicity_summary(
         gene: Gene symbol (e.g., BRAF, KRAS). Required.
         variant: Variant name (e.g., V600E, G12C). Required.
         disease: Disease context (e.g., "melanoma"). Optional.
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
+    disease = _normalize_disease(disease)
     bundle = await _gather_evidence(gene, variant, disease)
     oncogenicity = oncogenicity_scorer.score_variant(gene, variant, evidence_bundle=bundle)
-    return report_fmt.format_pathogenicity_summary(bundle, oncogenicity)
+    md = report_fmt.format_pathogenicity_summary(bundle, oncogenicity)
+    if output_format.lower().strip() == "json":
+        data = {"bundle": bundle.model_dump(exclude_none=True), "oncogenicity": oncogenicity.model_dump(exclude_none=True)}
+        return _format_output(data, md, "json")
+    return _format_output(None, md, output_format)
 
 
 # ============================================================================
@@ -970,6 +1245,7 @@ async def variant_pathogenicity_summary(
 async def lookup_gnomad_frequency(
     variant_id: str,
     genome_version: str = "GRCh38",
+    output_format: str = "markdown",
 ) -> str:
     """Look up population allele frequencies from the Genome Aggregation Database (gnomAD) — the largest human exome/genome frequency resource (807k exomes, 76k genomes).
 
@@ -980,9 +1256,13 @@ async def lookup_gnomad_frequency(
             Use GRCh38 coordinates with GRCh38 (e.g., "7-140753336-A-T" for BRAF V600E).
             Use GRCh37 coordinates with GRCh37 (e.g., "7-140453136-A-T" for BRAF V600E).
         genome_version: "GRCh38" (default, gnomAD v4) or "GRCh37" (gnomAD v2.1).
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     try:
         freq = await gnomad_client.get_variant_frequency(variant_id, genome_version)
+
+        if output_format.lower().strip() == "json":
+            return _format_output(freq, "", "json")
 
         lines = [f"## 🧬 gnomAD Population Frequency — {freq.variant_id or 'N/A'}\n"]
         if freq.rsid:
@@ -1027,7 +1307,8 @@ async def lookup_gnomad_frequency(
             )
 
         lines.append(f"\n---\n\n{DISCLAIMER}")
-        return "\n".join(lines)
+        md = "\n".join(lines)
+        return _format_output(freq, md, output_format)
     except ClientError as exc:
         return f"gnomAD query error: {exc}\n\n{DISCLAIMER}"
 
@@ -1036,6 +1317,7 @@ async def lookup_gnomad_frequency(
 async def normalize_variant(
     variant: str,
     gene: str | None = None,
+    output_format: str = "markdown",
 ) -> str:
     """Parse and normalize variant notation between multiple HGVS and protein change formats.
 
@@ -1049,8 +1331,12 @@ async def normalize_variant(
     Args:
         variant: Variant notation to parse (e.g., V600E, p.Val600Glu, c.1799T>A, R175H).
         gene: Gene symbol for context (optional, helps with gene-specific formatting).
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     notation = variant_normalizer.normalize(variant)
+
+    if output_format.lower().strip() == "json":
+        return _format_output(notation, "", "json")
 
     lines = ["## 🔀 Variant Notation\n"]
     lines.append(f"**Input**: `{notation.original}`")
@@ -1075,7 +1361,8 @@ async def normalize_variant(
         lines.append(f"| cDNA | `{notation.cdna}` |")
 
     lines.append(f"\n---\n\n{DISCLAIMER}")
-    return "\n".join(lines)
+    md = "\n".join(lines)
+    return _format_output(notation, md, output_format)
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
@@ -1083,6 +1370,7 @@ async def lookup_protein_domains(
     gene: str,
     variant: str | None = None,
     position: int | None = None,
+    output_format: str = "markdown",
 ) -> str:
     """Look up protein functional domains from UniProt/InterPro and check whether a variant falls within a critical functional region.
 
@@ -1092,10 +1380,13 @@ async def lookup_protein_domains(
         gene: Gene symbol. Required.
         variant: Variant name — position will be extracted automatically.
         position: Explicit amino acid position to check.
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     try:
         if variant:
             result = await uniprot_client.check_variant_in_domain(gene, variant)
+            if output_format.lower().strip() == "json":
+                return _format_output(result, "", "json")
         elif position:
             domains = await uniprot_client.get_domain_at_position(gene, position)
             from variant_mcp.models.evidence import DomainCheckResult
@@ -1108,8 +1399,12 @@ async def lookup_protein_domains(
                 domains=domains,
                 evidence_for_om1=bool(domains),
             )
+            if output_format.lower().strip() == "json":
+                return _format_output(result, "", "json")
         else:
             features = await uniprot_client.get_protein_features(gene)
+            if output_format.lower().strip() == "json":
+                return _format_output(features, "", "json")
             lines = [f"## 🏗️ Protein Domains — {gene}\n"]
             lines.append(f"**UniProt ID**: {features.uniprot_id or 'N/A'}")
             lines.append(f"**Protein length**: {features.protein_length or 'N/A'} aa\n")
@@ -1124,7 +1419,8 @@ async def lookup_protein_domains(
             else:
                 lines.append("No domains found in UniProt for this gene.")
             lines.append(f"\n---\n\n{DISCLAIMER}")
-            return "\n".join(lines)
+            md = "\n".join(lines)
+            return _format_output(features, md, output_format)
 
         lines = [f"## 🏗️ Domain Check — {gene} {result.variant}\n"]
         lines.append(f"**Position**: {result.position or 'N/A'}")
@@ -1148,7 +1444,8 @@ async def lookup_protein_domains(
             lines.append("No known functional domains overlap this position.")
 
         lines.append(f"\n---\n\n{DISCLAIMER}")
-        return "\n".join(lines)
+        md = "\n".join(lines)
+        return _format_output(result, md, output_format)
     except ClientError as exc:
         return f"UniProt query error: {exc}\n\n{DISCLAIMER}"
 
@@ -1159,6 +1456,7 @@ async def search_literature(
     variant: str | None = None,
     disease: str | None = None,
     limit: int = 10,
+    output_format: str = "markdown",
 ) -> str:
     """Search PubMed for peer-reviewed publications about a gene, variant, or disease combination.
 
@@ -1174,9 +1472,13 @@ async def search_literature(
         variant: Variant name to narrow search (e.g., V600E). Optional.
         disease: Disease context to narrow search (e.g., "melanoma"). Optional.
         limit: Max publications to return (1-50, default 10).
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     try:
         result = await pubmed_client.search_publications(gene, variant, disease, limit)
+
+        if output_format.lower().strip() == "json":
+            return _format_output(result, "", "json")
 
         lines = ["## 📚 PubMed Literature Search\n"]
         lines.append(f"**Query**: `{result.query}`")
@@ -1198,13 +1500,14 @@ async def search_literature(
             lines.append("No publications found matching this query.")
 
         lines.append(f"\n---\n\n{DISCLAIMER}")
-        return "\n".join(lines)
+        md = "\n".join(lines)
+        return _format_output(result, md, output_format)
     except ClientError as exc:
         return f"PubMed search error: {exc}\n\n{DISCLAIMER}"
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
-async def get_publication(pmid: str) -> str:
+async def get_publication(pmid: str, output_format: str = "markdown") -> str:
     """Fetch full publication details from PubMed by PMID — title, all authors, abstract, journal, year, DOI, and MeSH terms.
 
     Use to retrieve the complete metadata and abstract for a specific paper referenced in evidence items or classification guidelines. Essential for verifying the source behind a clinical assertion.
@@ -1215,9 +1518,13 @@ async def get_publication(pmid: str) -> str:
 
     Args:
         pmid: PubMed ID (e.g., 27993330, 35101336).
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     try:
         pub = await pubmed_client.get_publication(pmid)
+
+        if output_format.lower().strip() == "json":
+            return _format_output(pub, "", "json")
 
         lines = [f"## 📄 Publication — PMID {pub.pmid}\n"]
         lines.append(f"**Title**: {pub.title or 'N/A'}")
@@ -1235,7 +1542,8 @@ async def get_publication(pmid: str) -> str:
             lines.append(f"\n**MeSH Terms**: {', '.join(pub.mesh_terms)}")
 
         lines.append(f"\n---\n\n{DISCLAIMER}")
-        return "\n".join(lines)
+        md = "\n".join(lines)
+        return _format_output(pub, md, output_format)
     except ClientError as exc:
         return f"PubMed fetch error: {exc}\n\n{DISCLAIMER}"
 
@@ -1245,6 +1553,7 @@ async def predict_variant_effect(
     gene: str,
     variant: str,
     hgvs_id: str | None = None,
+    output_format: str = "markdown",
 ) -> str:
     """Aggregate in-silico pathogenicity predictions from 7 computational tools: SIFT, PolyPhen-2, REVEL, CADD, AlphaMissense, GERP++, and phyloP.
 
@@ -1261,6 +1570,7 @@ async def predict_variant_effect(
         hgvs_id: HGVS genomic ID for direct lookup (e.g., chr7:g.140453136A>T). Optional.
             **Must use GRCh37/hg19 coordinates** — MyVariant.info indexes on hg19.
             Without hgvs_id, searches by gene+protein change (build-agnostic).
+        output_format: Response format — "markdown" (default), "json" (raw structured data), or "text" (plain text).
     """
     try:
         preds = None
@@ -1275,6 +1585,9 @@ async def predict_variant_effect(
                 "This may occur for non-coding variants, indels, or novel variants "
                 "not yet indexed in dbNSFP.\n\n" + DISCLAIMER
             )
+
+        if output_format.lower().strip() == "json":
+            return _format_output(preds, "", "json")
 
         lines = [f"## 🤖 In-Silico Predictions — {gene} {variant}\n"]
         lines.append(
@@ -1345,7 +1658,8 @@ async def predict_variant_effect(
             )
 
         lines.append(f"\n---\n\n{DISCLAIMER}")
-        return "\n".join(lines)
+        md = "\n".join(lines)
+        return _format_output(preds, md, output_format)
     except ClientError as exc:
         return f"MyVariant.info query error: {exc}\n\n{DISCLAIMER}"
 

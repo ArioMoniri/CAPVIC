@@ -1,5 +1,15 @@
 # CAPVIC Roadmap
 
+## Completed (v1.0.4 — 2026-04-03)
+
+### Output Format & NLP Enhancement (v1.0.3 → v1.0.4)
+- [x] Added `output_format` parameter to all 26 tools (markdown/json/text)
+- [x] JSON format returns raw Pydantic model data for programmatic access
+- [x] Text format strips markdown formatting for plain text consumers
+- [x] Added disease alias normalization (35+ abbreviations: CRC, NSCLC, GBM, TNBC, etc.)
+- [x] Added therapy alias normalization (40+ brand-to-generic mappings: keytruda → Pembrolizumab, etc.)
+- [x] Enhanced variant_search_evidence, civic_search_evidence, civic_search_assertions with NLP normalization
+
 ## Completed (v1.0.3 — 2026-04-03)
 
 ### Natural Language & Discovery UX (v1.0.2 → v1.0.3)

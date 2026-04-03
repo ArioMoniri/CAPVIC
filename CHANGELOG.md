@@ -2,6 +2,12 @@
 
 All notable changes to CAPVIC are documented in this file.
 
+## [1.0.4] — 2026-04-03
+
+### Added
+- **`output_format` parameter**: All 26 tools now accept `output_format` — `"markdown"` (default, rich formatted), `"json"` (raw structured data from Pydantic models), or `"text"` (plain text, no formatting). Enables programmatic access and pipeline integration
+- **Disease/therapy NLP aliases**: `variant_search_evidence`, `civic_search_evidence`, `civic_search_assertions`, `classify_amp_tier`, and `variant_pathogenicity_summary` now auto-expand common abbreviations — CRC → Colorectal Cancer, NSCLC → Lung Non-small Cell Carcinoma, keytruda → Pembrolizumab, gleevec → Imatinib, etc. (35+ disease aliases, 40+ therapy aliases including brand names)
+
 ## [1.0.3] — 2026-04-03
 
 ### Changed

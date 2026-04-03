@@ -366,6 +366,36 @@ CAPVIC tools are designed to work with natural language. Ask questions as you wo
 | "What ACMG criteria apply to BRCA2 variants?" | `explain_acmg_criteria` |
 | "Explain the AMP/ASCO/CAP and oncogenicity classification frameworks" | `get_classification_frameworks_reference` |
 
+### Output Formats
+
+All 26 tools accept an optional `output_format` parameter:
+
+| Format | Description | Use Case |
+|--------|-------------|----------|
+| `"markdown"` | Rich formatted markdown with tables, headers, emojis (default) | AI chat, reports, artifacts |
+| `"json"` | Raw structured data from Pydantic models | Programmatic access, pipelines, data visualization |
+| `"text"` | Plain text, no formatting | Simple displays, logging, CLI output |
+
+```python
+# Get raw JSON data for programmatic use
+variant_search_evidence(gene="KRAS", disease="CRC", output_format="json")
+
+# Get plain text for logging
+clinvar_search(gene="BRAF", variant="V600E", output_format="text")
+```
+
+### Disease & Therapy Abbreviations
+
+Tools that accept disease/therapy parameters auto-expand common abbreviations:
+
+| Input | Expands To | Input | Expands To |
+|-------|-----------|-------|-----------|
+| CRC | Colorectal Cancer | keytruda | Pembrolizumab |
+| NSCLC | Lung Non-small Cell Carcinoma | gleevec | Imatinib |
+| GBM | Glioblastoma Multiforme | tagrisso | Osimertinib |
+| TNBC | Triple Negative Breast Cancer | lumakras | Sotorasib |
+| HCC | Hepatocellular Carcinoma | erbitux | Cetuximab |
+
 ### Visualization & Artifacts
 
 All tool outputs return structured markdown with tables, headers, and data breakdowns — ready for:
