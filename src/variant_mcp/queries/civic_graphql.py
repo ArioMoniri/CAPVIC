@@ -85,20 +85,17 @@ class CIViCQueries:
 
     GET_GENE = """
     query GetGene($name: String!) {
-        genes(name: $name) {
-            nodes {
-                id
-                name
-                officialName
-                description
-                entrezId
-                variants {
-                    totalCount
-                    nodes {
-                        id
-                        name
-                        singleVariantMolecularProfileId
-                    }
+        gene(entrezSymbol: $name) {
+            id
+            name
+            fullName
+            description
+            entrezId
+            variants {
+                totalCount
+                nodes {
+                    id
+                    name
                 }
             }
         }
@@ -145,7 +142,7 @@ class CIViCQueries:
         $diseaseName: String,
         $molecularProfileName: String,
         $therapyName: String,
-        $significance: String,
+        $significance: AssertionSignificance,
         $first: Int,
         $after: String
     ) {
@@ -212,10 +209,9 @@ class CIViCQueries:
 
     TYPEAHEAD_GENES = """
     query TypeaheadGenes($queryTerm: String!) {
-        geneTypeahead(queryTerm: $queryTerm) {
+        featureTypeahead(queryTerm: $queryTerm, featureType: GENE) {
             id
             name
-            entrezId
         }
     }
     """

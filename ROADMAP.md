@@ -1,5 +1,14 @@
 # CAPVIC Roadmap
 
+## Completed (v1.0.5 — 2026-04-03)
+
+### CIViC API Migration Fixes (v1.0.4 → v1.0.5)
+- [x] Fixed `civic_get_gene` — migrated from deprecated `genes(name:)` to `gene(entrezSymbol:)`
+- [x] Fixed `lookup_gene` — migrated from removed `geneTypeahead` to `featureTypeahead`
+- [x] Fixed `civic_search_assertions` — `significance` now uses `AssertionSignificance` enum type
+- [x] Fixed ClinVar efetch VCV format migration (`rettype=vcv`)
+- [x] Updated test mocks for new CIViC GraphQL schema
+
 ## Completed (v1.0.4 — 2026-04-03)
 
 ### Output Format & NLP Enhancement (v1.0.3 → v1.0.4)

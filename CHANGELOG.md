@@ -2,6 +2,15 @@
 
 All notable changes to CAPVIC are documented in this file.
 
+## [1.0.5] — 2026-04-03
+
+### Fixed
+- **CIViC `civic_get_gene` BROKEN**: CIViC deprecated `genes(name:)` query — migrated to `gene(entrezSymbol:)` and `fullName` field (was `officialName`)
+- **CIViC `lookup_gene` BROKEN**: `geneTypeahead` field removed from schema — migrated to `featureTypeahead(queryTerm, featureType: GENE)`
+- **CIViC `civic_search_assertions` BROKEN**: `significance` parameter changed from `String` to `AssertionSignificance` enum — client now auto-uppercases values
+- **ClinVar efetch**: Migrated to VCV format (`rettype=vcv`) after NCBI deprecated `rettype=variation`
+- **Test fix**: Updated typeahead test mock from `geneTypeahead` to `featureTypeahead`
+
 ## [1.0.4] — 2026-04-03
 
 ### Added

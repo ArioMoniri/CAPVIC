@@ -91,8 +91,7 @@ class CIViCClient(BaseClient):
     async def get_gene(self, name: str) -> dict[str, Any]:
         """Get gene details and associated variants."""
         data = await self._graphql(CIViCQueries.GET_GENE, {"name": name})
-        genes = data.get("genes", {}).get("nodes", [])
-        return genes[0] if genes else {}
+        return data.get("gene") or {}  # type: ignore[no-any-return]
 
     async def get_variant(self, variant_id: int) -> dict[str, Any]:
         """Get variant details by CIViC ID."""
@@ -119,11 +118,13 @@ class CIViCClient(BaseClient):
     ) -> list[CIViCAssertion]:
         """Search CIViC curated assertions."""
         mp_name = self._build_molecular_profile_name(gene, None)
+        # CIViC expects AssertionSignificance enum values (uppercase)
+        sig_value = significance.upper().replace(" ", "_") if significance else None
         variables = {
             "diseaseName": disease,
             "molecularProfileName": mp_name,
             "therapyName": therapy,
-            "significance": significance,
+            "significance": sig_value,
             "first": first,
             "after": after,
         }
@@ -147,7 +148,11 @@ class CIViCClient(BaseClient):
                 f"Unknown entity type '{entity_type}'. Use 'gene', 'disease', or 'therapy'."
             )
         data = await self._graphql(query, {"queryTerm": query_term})
-        key = f"{entity_type.lower()}Typeahead"
+        # Gene typeahead uses featureTypeahead; disease/therapy use their own keys
+        if entity_type.lower() == "gene":
+            key = "featureTypeahead"
+        else:
+            key = f"{entity_type.lower()}Typeahead"
         return data.get(key, [])  # type: ignore[no-any-return]
 
     @staticmethod

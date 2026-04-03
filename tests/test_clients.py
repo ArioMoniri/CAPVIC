@@ -101,9 +101,9 @@ class TestCIViCClient:
                 200,
                 json={
                     "data": {
-                        "geneTypeahead": [
-                            {"id": 5, "name": "BRAF", "entrezId": 673},
-                            {"id": 6, "name": "BRCA1", "entrezId": 672},
+                        "featureTypeahead": [
+                            {"id": 5, "name": "BRAF"},
+                            {"id": 6, "name": "BRCA1"},
                         ]
                     }
                 },

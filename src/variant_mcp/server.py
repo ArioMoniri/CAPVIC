@@ -627,7 +627,7 @@ async def civic_get_gene(name: str, output_format: str = "markdown") -> str:
 
     lines = [
         f"# CIViC Gene: {data.get('name', name)}\n",
-        f"**Official Name**: {data.get('officialName', 'N/A')}",
+        f"**Full Name**: {data.get('fullName', 'N/A')}",
         f"**Entrez ID**: {data.get('entrezId', 'N/A')}",
         f"**Total Variants**: {total}",
     ]
@@ -1116,7 +1116,7 @@ async def lookup_gene(query: str, output_format: str = "markdown") -> str:
 
     lines = [f"# Gene Lookup: '{query}' ({len(results)} matches)\n"]
     for g in results:
-        lines.append(f"- **{g.get('name', '')}** (Entrez: {g.get('entrezId', 'N/A')})")
+        lines.append(f"- **{g.get('name', '')}** (ID: {g.get('id', 'N/A')})")
     md = "\n".join(lines)
     return _format_output(results, md, output_format)
 
