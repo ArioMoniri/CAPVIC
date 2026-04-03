@@ -62,6 +62,10 @@ CAPVIC turns any AI assistant (Claude, GPT, etc.) into a **virtual molecular tum
 
 ### Data Sources
 
+<p align="center">
+  <img src="assets/data-sources.svg" alt="8 Integrated Data Sources" width="100%"/>
+</p>
+
 | Source | Type | Access | Update Frequency |
 |--------|------|--------|-----------------|
 | 🟢 [CIViC](https://civicdb.org) | Expert-curated clinical evidence | Free, no auth | Continuous (community-driven) |
@@ -402,6 +406,10 @@ AI clients can use these structured outputs to generate plots, charts, and inter
 
 ## 🛠️ Tool Reference
 
+<p align="center">
+  <img src="assets/tools-overview.svg" alt="26 MCP Tools Overview" width="100%"/>
+</p>
+
 ### Category 1: Multi-Source Power Tools ⚡
 
 | # | Tool | Description | Key Inputs |
@@ -473,6 +481,10 @@ AI clients can use these structured outputs to generate plots, charts, and inter
 ---
 
 ## 📊 Classification Frameworks
+
+<p align="center">
+  <img src="assets/classification-frameworks.svg" alt="Classification Frameworks" width="100%"/>
+</p>
 
 ### 1. AMP/ASCO/CAP 4-Tier Somatic Classification
 

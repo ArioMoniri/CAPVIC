@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 340" width="900" height="340">
+  <defs>
+    <linearGradient id="dsBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a" />
+      <stop offset="100%" style="stop-color:#1e293b" />
+    </linearGradient>
+    <filter id="dsShadow">
+      <feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+    <filter id="dsGlow">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="900" height="340" rx="12" fill="url(#dsBg)"/>
+  <text x="450" y="35" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="18" font-weight="700" letter-spacing="3" fill="#e2e8f0">8 INTEGRATED DATA SOURCES</text>
+  <rect x="280" y="43" width="340" height="1.5" rx="1" fill="#06b6d4" opacity="0.4"/>
+
+  <!-- Row 1 -->
+  <g filter="url(#dsShadow)">
+    <!-- CIViC -->
+    <rect x="25" y="65" width="200" height="115" rx="10" fill="#1e293b" stroke="#06b6d4" stroke-width="1"/>
+    <circle cx="55" cy="92" r="12" fill="#06b6d4" fill-opacity="0.2" stroke="#06b6d4" stroke-width="1" filter="url(#dsGlow)"/>
+    <text x="55" y="96" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" font-weight="700" fill="#06b6d4">Cv</text>
+    <text x="78" y="96" font-family="'SF Pro Display',sans-serif" font-size="13" font-weight="700" fill="#22d3ee">CIViC</text>
+    <text x="45" y="115" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">GraphQL v2 API</text>
+    <text x="45" y="130" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">Evidence + Assertions</text>
+    <text x="45" y="145" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">~3,800 items, ~400 genes</text>
+    <rect x="40" y="155" width="55" height="16" rx="8" fill="#22c55e" fill-opacity="0.15"/>
+    <text x="67" y="166" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#22c55e">FREE</text>
+
+    <!-- ClinVar -->
+    <rect x="240" y="65" width="200" height="115" rx="10" fill="#1e293b" stroke="#22c55e" stroke-width="1"/>
+    <circle cx="270" cy="92" r="12" fill="#22c55e" fill-opacity="0.2" stroke="#22c55e" stroke-width="1" filter="url(#dsGlow)"/>
+    <text x="270" y="96" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" font-weight="700" fill="#22c55e">Cl</text>
+    <text x="293" y="96" font-family="'SF Pro Display',sans-serif" font-size="13" font-weight="700" fill="#86efac">ClinVar</text>
+    <text x="260" y="115" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">NCBI E-utilities</text>
+    <text x="260" y="130" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">VCV XML + esummary</text>
+    <text x="260" y="145" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">2.5M+ submissions</text>
+    <rect x="255" y="155" width="55" height="16" rx="8" fill="#22c55e" fill-opacity="0.15"/>
+    <text x="282" y="166" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#22c55e">FREE</text>
+
+    <!-- OncoKB -->
+    <rect x="455" y="65" width="200" height="115" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="1"/>
+    <circle cx="485" cy="92" r="12" fill="#f59e0b" fill-opacity="0.2" stroke="#f59e0b" stroke-width="1" filter="url(#dsGlow)"/>
+    <text x="485" y="96" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" font-weight="700" fill="#f59e0b">Ok</text>
+    <text x="508" y="96" font-family="'SF Pro Display',sans-serif" font-size="13" font-weight="700" fill="#fbbf24">OncoKB</text>
+    <text x="475" y="115" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">REST API + Token</text>
+    <text x="475" y="130" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">FDA-recognized</text>
+    <text x="475" y="145" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">~700 genes, ~5.4K alts</text>
+    <rect x="470" y="155" width="70" height="16" rx="8" fill="#f59e0b" fill-opacity="0.15"/>
+    <text x="505" y="166" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#f59e0b">TOKEN</text>
+
+    <!-- MetaKB -->
+    <rect x="670" y="65" width="200" height="115" rx="10" fill="#1e293b" stroke="#ef4444" stroke-width="1"/>
+    <circle cx="700" cy="92" r="12" fill="#ef4444" fill-opacity="0.2" stroke="#ef4444" stroke-width="1" filter="url(#dsGlow)"/>
+    <text x="700" y="96" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" font-weight="700" fill="#ef4444">Mk</text>
+    <text x="723" y="96" font-family="'SF Pro Display',sans-serif" font-size="13" font-weight="700" fill="#fca5a5">VICC MetaKB</text>
+    <text x="690" y="115" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">REST v1 API</text>
+    <text x="690" y="130" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">Harmonized from 6 KBs</text>
+    <text x="690" y="145" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">CIViC+OncoKB+CGI+more</text>
+    <rect x="685" y="155" width="55" height="16" rx="8" fill="#22c55e" fill-opacity="0.15"/>
+    <text x="712" y="166" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#22c55e">FREE</text>
+  </g>
+
+  <!-- Row 2 -->
+  <g filter="url(#dsShadow)">
+    <!-- gnomAD -->
+    <rect x="25" y="200" width="200" height="115" rx="10" fill="#1e293b" stroke="#8b5cf6" stroke-width="1"/>
+    <circle cx="55" cy="227" r="12" fill="#8b5cf6" fill-opacity="0.2" stroke="#8b5cf6" stroke-width="1" filter="url(#dsGlow)"/>
+    <text x="55" y="231" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" font-weight="700" fill="#8b5cf6">gn</text>
+    <text x="78" y="231" font-family="'SF Pro Display',sans-serif" font-size="13" font-weight="700" fill="#c4b5fd">gnomAD</text>
+    <text x="45" y="250" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">GraphQL v4 + v2</text>
+    <text x="45" y="265" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">GRCh37 + GRCh38</text>
+    <text x="45" y="280" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">76K genomes, 807K exomes</text>
+    <rect x="40" y="290" width="55" height="16" rx="8" fill="#22c55e" fill-opacity="0.15"/>
+    <text x="67" y="301" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#22c55e">FREE</text>
+
+    <!-- UniProt -->
+    <rect x="240" y="200" width="200" height="115" rx="10" fill="#1e293b" stroke="#14b8a6" stroke-width="1"/>
+    <circle cx="270" cy="227" r="12" fill="#14b8a6" fill-opacity="0.2" stroke="#14b8a6" stroke-width="1" filter="url(#dsGlow)"/>
+    <text x="270" y="231" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" font-weight="700" fill="#14b8a6">Up</text>
+    <text x="293" y="231" font-family="'SF Pro Display',sans-serif" font-size="13" font-weight="700" fill="#5eead4">UniProt</text>
+    <text x="260" y="250" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">REST API</text>
+    <text x="260" y="265" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">Protein domains/features</text>
+    <text x="260" y="280" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">570K+ reviewed entries</text>
+    <rect x="255" y="290" width="55" height="16" rx="8" fill="#22c55e" fill-opacity="0.15"/>
+    <text x="282" y="301" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#22c55e">FREE</text>
+
+    <!-- PubMed -->
+    <rect x="455" y="200" width="200" height="115" rx="10" fill="#1e293b" stroke="#ec4899" stroke-width="1"/>
+    <circle cx="485" cy="227" r="12" fill="#ec4899" fill-opacity="0.2" stroke="#ec4899" stroke-width="1" filter="url(#dsGlow)"/>
+    <text x="485" y="231" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" font-weight="700" fill="#ec4899">Pm</text>
+    <text x="508" y="231" font-family="'SF Pro Display',sans-serif" font-size="13" font-weight="700" fill="#f9a8d4">PubMed</text>
+    <text x="475" y="250" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">NCBI E-utilities</text>
+    <text x="475" y="265" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">Literature co-occurrence</text>
+    <text x="475" y="280" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">36M+ articles</text>
+    <rect x="470" y="290" width="55" height="16" rx="8" fill="#22c55e" fill-opacity="0.15"/>
+    <text x="497" y="301" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#22c55e">FREE</text>
+
+    <!-- MyVariant.info -->
+    <rect x="670" y="200" width="200" height="115" rx="10" fill="#1e293b" stroke="#f97316" stroke-width="1"/>
+    <circle cx="700" cy="227" r="12" fill="#f97316" fill-opacity="0.2" stroke="#f97316" stroke-width="1" filter="url(#dsGlow)"/>
+    <text x="700" y="231" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" font-weight="700" fill="#f97316">Mv</text>
+    <text x="723" y="231" font-family="'SF Pro Display',sans-serif" font-size="12" font-weight="700" fill="#fdba74">MyVariant.info</text>
+    <text x="690" y="250" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">REST API (dbNSFP)</text>
+    <text x="690" y="265" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">SIFT, PolyPhen, REVEL</text>
+    <text x="690" y="280" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">CADD, AlphaMissense</text>
+    <rect x="685" y="290" width="55" height="16" rx="8" fill="#22c55e" fill-opacity="0.15"/>
+    <text x="712" y="301" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8" fill="#22c55e">FREE</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="450" y="332" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#475569">All sources queried via async rate-limited clients | Automatic retry with exponential backoff</text>
+</svg>
