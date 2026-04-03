@@ -71,12 +71,18 @@ class ClinVarClient(BaseClient):
         return await self._esummary_variants(ids)
 
     async def get_variant_detail(self, variation_id: int) -> ClinVarVariant:
-        """Get full ClinVar variant record by variation ID using efetch XML."""
+        """Get full ClinVar variant record by variation ID using efetch VCV XML.
+
+        NCBI deprecated ``rettype=variation`` in 2019.  The current endpoint
+        requires ``rettype=vcv`` together with ``is_variationid=true`` so that
+        the numeric variation-ID is accepted directly.
+        """
         params = {
             "db": "clinvar",
             "id": str(variation_id),
-            "rettype": "variation",
+            "rettype": "vcv",
             "retmode": "xml",
+            "is_variationid": "true",
         }
         if self._api_key:
             params["api_key"] = self._api_key
@@ -206,7 +212,15 @@ class ClinVarClient(BaseClient):
 
     @staticmethod
     def _parse_efetch_xml(xml_text: str, variation_id: int) -> ClinVarVariant:
-        """Parse ClinVar efetch XML response."""
+        """Parse ClinVar efetch VCV XML response.
+
+        The VCV XML (``rettype=vcv``) uses ``ClassifiedRecord`` (not the
+        older ``InterpretedRecord``).  Classifications live under
+        ``Classifications/GermlineClassification`` (and siblings for
+        somatic / oncogenicity).  HGVS expressions are structured as
+        ``NucleotideExpression`` / ``ProteinExpression`` child elements
+        with ``sequenceAccessionVersion`` + ``change`` attributes.
+        """
         try:
             root = ElementTree.fromstring(xml_text)
         except ElementTree.ParseError as e:
@@ -223,62 +237,117 @@ class ClinVarClient(BaseClient):
             variant.title = va.get("VariationName", "")
             variant.variation_type = va.get("VariationType", "")
 
-        # Parse InterpretedRecord
-        ir = root.find(".//InterpretedRecord")
+        # Parse ClassifiedRecord (VCV format) or fall back to InterpretedRecord
+        ir = root.find(".//ClassifiedRecord")
         if ir is None:
-            ir = root.find(".//ClassifiedRecord")
+            ir = root.find(".//InterpretedRecord")
 
         if ir is not None:
-            # Clinical significance
-            interp = ir.find(".//Interpretation") or ir.find(".//Classification")
-            if interp is not None:
-                desc = interp.find("Description")
-                if desc is not None and desc.text:
-                    variant.clinical_significance = desc.text
-                review = interp.find("ReviewStatus")
-                if review is not None and review.text:
-                    variant.review_status = review.text
-                    variant.review_stars = CLINVAR_REVIEW_STARS.get(review.text.lower(), "")
-                last_eval_el = interp.find("DateLastEvaluated")
-                if last_eval_el is not None and last_eval_el.text:
-                    variant.last_evaluated = last_eval_el.text
+            # ---- Clinical significance from Classifications block ----
+            # VCV XML puts classifications under Classifications/<Type>
+            cls_block = ir.find("Classifications")
+            classification_parts: list[str] = []
+            if cls_block is not None:
+                for cls_type in (
+                    "GermlineClassification",
+                    "SomaticClinicalImpact",
+                    "OncogenicityClassification",
+                ):
+                    cls_el = cls_block.find(cls_type)
+                    if cls_el is not None:
+                        desc_el = cls_el.find("Description")
+                        if desc_el is not None and desc_el.text:
+                            classification_parts.append(desc_el.text)
+                            # Use the first non-empty classification for primary fields
+                            if not variant.clinical_significance:
+                                variant.clinical_significance = desc_el.text
+                                review_el = cls_el.find("ReviewStatus")
+                                if review_el is not None and review_el.text:
+                                    variant.review_status = review_el.text
+                                    variant.review_stars = CLINVAR_REVIEW_STARS.get(
+                                        review_el.text.lower(), ""
+                                    )
 
-            # HGVS expressions
-            hgvs_list = []
-            for hgvs_el in ir.findall(".//HGVSlist/HGVS") + ir.findall(".//HGVSExpression"):
-                text = hgvs_el.text or hgvs_el.get("Expression", "")
-                if text:
-                    hgvs_list.append(text)
-            variant.hgvs_expressions = hgvs_list
+                if len(classification_parts) > 1:
+                    variant.clinical_significance = " | ".join(classification_parts)
 
-            # Genes
-            gene_names = []
+            # Fall back to legacy Interpretation/Classification element
+            if not variant.clinical_significance:
+                interp = ir.find(".//Interpretation") or ir.find(".//Classification")
+                if interp is not None:
+                    desc = interp.find("Description")
+                    if desc is not None and desc.text:
+                        variant.clinical_significance = desc.text
+                    review = interp.find("ReviewStatus")
+                    if review is not None and review.text:
+                        variant.review_status = review.text
+                        variant.review_stars = CLINVAR_REVIEW_STARS.get(review.text.lower(), "")
+                    last_eval_el = interp.find("DateLastEvaluated")
+                    if last_eval_el is not None and last_eval_el.text:
+                        variant.last_evaluated = last_eval_el.text
+
+            # ---- HGVS expressions ----
+            # VCV format: SimpleAllele/HGVSlist/HGVS with child elements
+            hgvs_set: list[str] = []
+            for hgvs_el in ir.findall(".//SimpleAllele/HGVSlist/HGVS"):
+                # Try structured sub-elements first (VCV format)
+                for sub_tag in ("NucleotideExpression", "ProteinExpression"):
+                    sub = hgvs_el.find(sub_tag)
+                    if sub is not None:
+                        acc = sub.get("sequenceAccessionVersion", "")
+                        change = sub.get("change", "")
+                        if acc and change:
+                            hgvs_set.append(f"{acc}:{change}")
+                # Fall back to text / Expression attribute (legacy)
+                if not hgvs_set:
+                    text = (hgvs_el.text or "").strip() or hgvs_el.get("Expression", "")
+                    if text:
+                        hgvs_set.append(text)
+            # Also check legacy paths
+            if not hgvs_set:
+                for hgvs_el in ir.findall(".//HGVSlist/HGVS") + ir.findall(".//HGVSExpression"):
+                    text = (hgvs_el.text or "").strip() or hgvs_el.get("Expression", "")
+                    if text:
+                        hgvs_set.append(text)
+            variant.hgvs_expressions = hgvs_set
+
+            # ---- Genes (deduplicated) ----
+            gene_names_seen: set[str] = set()
+            gene_names: list[str] = []
             for gene_el in ir.findall(".//GeneList/Gene"):
                 symbol = gene_el.get("Symbol")
-                if symbol:
+                if symbol and symbol not in gene_names_seen:
+                    gene_names_seen.add(symbol)
                     gene_names.append(symbol)
             variant.genes = gene_names
 
-            # Conditions
-            conditions = []
+            # ---- Conditions (deduplicated) ----
+            conditions_seen: set[str] = set()
+            conditions: list[str] = []
             for trait in ir.findall(".//TraitSet/Trait"):
                 name_el = trait.find("Name/ElementValue[@Type='Preferred']")
                 if name_el is not None and name_el.text:
-                    conditions.append(name_el.text)
+                    cond = name_el.text
+                    if cond not in conditions_seen:
+                        conditions_seen.add(cond)
+                        conditions.append(cond)
             variant.conditions = conditions
 
-            # Submitter classifications
+            # ---- Submitter classifications ----
             submitter_list = []
             for scv in ir.findall(".//ClinicalAssertionList/ClinicalAssertion"):
                 submitter_el = scv.find(".//ClinVarAccession")
-                interp_el = scv.find(".//Interpretation/Description")
+                # VCV: Classification/GermlineClassification (or Description)
+                interp_el = scv.find(".//Classification/GermlineClassification")
                 if interp_el is None:
                     interp_el = scv.find(".//Classification/Description")
+                if interp_el is None:
+                    interp_el = scv.find(".//Interpretation/Description")
                 if submitter_el is not None:
                     entry = {
                         "submitter": submitter_el.get("SubmitterName", "Unknown"),
                         "accession": submitter_el.get("Accession", ""),
-                        "classification": interp_el.text if interp_el is not None else "N/A",
+                        "classification": (interp_el.text if interp_el is not None else "N/A"),
                     }
                     submitter_list.append(entry)
             variant.submitter_classifications = submitter_list

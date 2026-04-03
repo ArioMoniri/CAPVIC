@@ -10,6 +10,7 @@ All notable changes to CAPVIC are documented in this file.
 - **AMP tier parser**: Fixed prefix collision where "TIERI" matched before "TIERII" — now checks longest tier strings first (IV, III, II, I)
 - **ClinVar Tier IV**: Conflicting "pathogenic/likely benign" classifications no longer incorrectly assigned Tier IV
 - **Rate limiter**: Replaced deprecated `asyncio.get_event_loop()` with `asyncio.get_running_loop()`
+- **ClinVar efetch**: NCBI deprecated `rettype=variation` — migrated to `rettype=vcv` with `is_variationid=true`. Rewrote XML parser for VCV format (ClassifiedRecord, structured HGVS sub-elements, Classifications block)
 - **Reports assert**: Replaced bare `assert` statements with proper None checks (safe under Python -O flag)
 - **Null variant types**: Added `stop_gained` (Sequence Ontology term) and `initiator_codon_variant` to null variant detection
 
