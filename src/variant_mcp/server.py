@@ -128,7 +128,8 @@ def _format_output(
         text = text.replace("**", "").replace("`", "")
         # Remove table separator lines
         lines = [
-            ln for ln in text.splitlines()
+            ln
+            for ln in text.splitlines()
             if not (ln.strip().startswith("|--") or ln.strip().startswith("|-"))
         ]
         return "\n".join(lines)
@@ -525,9 +526,7 @@ async def civic_search_evidence(
         )
 
     if output_format.lower().strip() == "json":
-        return _format_output(
-            [item.model_dump(exclude_none=True) for item in items], "", "json"
-        )
+        return _format_output([item.model_dump(exclude_none=True) for item in items], "", "json")
 
     lines = [f"# CIViC Evidence Search Results ({len(items)} items)\n"]
     for item in items:
@@ -586,9 +585,7 @@ async def civic_search_assertions(
         return f"No CIViC assertions found for the given filters.\n\n{DISCLAIMER}"
 
     if output_format.lower().strip() == "json":
-        return _format_output(
-            [a.model_dump(exclude_none=True) for a in assertions], "", "json"
-        )
+        return _format_output([a.model_dump(exclude_none=True) for a in assertions], "", "json")
 
     lines = [f"# CIViC Assertions ({len(assertions)} results)\n"]
     for a in assertions:
@@ -770,9 +767,7 @@ async def clinvar_search(
         )
 
     if output_format.lower().strip() == "json":
-        return _format_output(
-            [cv.model_dump(exclude_none=True) for cv in variants], "", "json"
-        )
+        return _format_output([cv.model_dump(exclude_none=True) for cv in variants], "", "json")
 
     lines = [f"# ClinVar Search Results ({len(variants)} variants)\n"]
     for cv in variants:
@@ -1062,6 +1057,7 @@ async def explain_acmg_criteria(
         md = acmg_helper.get_criteria_reference(criteria_code) + f"\n\n{DISCLAIMER}"
         if output_format.lower().strip() == "json":
             from variant_mcp.constants import ACMG_CRITERIA
+
             data = {"code": criteria_code, "description": ACMG_CRITERIA.get(criteria_code, "")}
             return _format_output(data, md, "json")
         return _format_output(None, md, output_format)
@@ -1069,6 +1065,7 @@ async def explain_acmg_criteria(
         md = acmg_helper.get_all_criteria() + f"\n\n{DISCLAIMER}"
         if output_format.lower().strip() == "json":
             from variant_mcp.constants import ACMG_CRITERIA
+
             return _format_output(ACMG_CRITERIA, md, "json")
         return _format_output(None, md, output_format)
     if query:
@@ -1200,9 +1197,24 @@ async def get_classification_frameworks_reference(output_format: str = "markdown
     if output_format.lower().strip() == "json":
         data = {
             "frameworks": [
-                {"name": "AMP/ASCO/CAP", "type": "somatic", "tiers": 4, "reference": "Li et al. 2017, PMID: 27993330"},
-                {"name": "ClinGen/CGC/VICC Oncogenicity SOP", "type": "somatic", "scoring": "point-based", "reference": "Horak et al. 2022, PMID: 35101336"},
-                {"name": "ACMG/AMP", "type": "germline", "tiers": 5, "reference": "Richards et al. 2015, PMID: 25741868"},
+                {
+                    "name": "AMP/ASCO/CAP",
+                    "type": "somatic",
+                    "tiers": 4,
+                    "reference": "Li et al. 2017, PMID: 27993330",
+                },
+                {
+                    "name": "ClinGen/CGC/VICC Oncogenicity SOP",
+                    "type": "somatic",
+                    "scoring": "point-based",
+                    "reference": "Horak et al. 2022, PMID: 35101336",
+                },
+                {
+                    "name": "ACMG/AMP",
+                    "type": "germline",
+                    "tiers": 5,
+                    "reference": "Richards et al. 2015, PMID: 25741868",
+                },
             ]
         }
         return _format_output(data, md, "json")
@@ -1231,7 +1243,10 @@ async def variant_pathogenicity_summary(
     oncogenicity = oncogenicity_scorer.score_variant(gene, variant, evidence_bundle=bundle)
     md = report_fmt.format_pathogenicity_summary(bundle, oncogenicity)
     if output_format.lower().strip() == "json":
-        data = {"bundle": bundle.model_dump(exclude_none=True), "oncogenicity": oncogenicity.model_dump(exclude_none=True)}
+        data = {
+            "bundle": bundle.model_dump(exclude_none=True),
+            "oncogenicity": oncogenicity.model_dump(exclude_none=True),
+        }
         return _format_output(data, md, "json")
     return _format_output(None, md, output_format)
 
