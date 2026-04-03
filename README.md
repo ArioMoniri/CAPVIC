@@ -916,7 +916,9 @@ Copyright (c) 2026 [Vivax Teknoloji A.S.](https://getvivax.com)
 ---
 
 <p align="center">
-  <img src="assets/logo.svg" alt="CAPVIC Logo" width="80"/><br/>
-  <strong>CAPVIC</strong> — A product of <a href="https://getvivax.com">Vivax Teknoloji A.S.</a><br/>
+  <img src="assets/vivax-logo.svg" alt="Vivax" width="36"/>
+  <br/>
+  <strong>CAPVIC</strong> — A product of <a href="https://getvivax.com">Vivax Teknoloji A.S.</a>
+  <br/>
   Built for the precision oncology research community
 </p>

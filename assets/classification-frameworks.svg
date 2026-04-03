@@ -1,116 +1,101 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 420" width="1000" height="420">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 400" width="1000" height="400">
   <defs>
-    <linearGradient id="cfBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0f172a" />
-      <stop offset="100%" style="stop-color:#1e293b" />
-    </linearGradient>
-    <filter id="cfShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
-    </filter>
-    <filter id="cfGlow">
-      <feGaussianBlur stdDeviation="2" result="b"/>
-      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    <filter id="cSh">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#94a3b8" flood-opacity="0.12"/>
     </filter>
   </defs>
 
-  <rect width="1000" height="420" rx="12" fill="url(#cfBg)"/>
-  <text x="500" y="38" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="20" font-weight="700" letter-spacing="3" fill="#e2e8f0">CLASSIFICATION FRAMEWORKS</text>
-  <rect x="330" y="47" width="340" height="1.5" rx="1" fill="#8b5cf6" opacity="0.4"/>
+  <rect width="1000" height="400" rx="16" fill="#f8fafc"/>
+  <text x="500" y="35" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="18" font-weight="800" letter-spacing="1" fill="#0f172a">Classification Frameworks</text>
+  <rect x="350" y="43" width="300" height="2" rx="1" fill="#0ea5e9" opacity="0.25"/>
 
   <!-- AMP/ASCO/CAP -->
-  <rect x="25" y="70" width="310" height="320" rx="12" fill="#1e293b" stroke="#f59e0b" stroke-width="1.2" filter="url(#cfShadow)"/>
-  <text x="180" y="100" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="14" font-weight="700" fill="#fbbf24">AMP/ASCO/CAP</text>
-  <text x="180" y="118" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#94a3b8">Somatic 4-Tier</text>
-  <text x="180" y="132" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">Li et al. 2017</text>
+  <rect x="20" y="62" width="310" height="315" rx="14" fill="#fff" stroke="#f59e0b" stroke-width="1" filter="url(#cSh)"/>
+  <text x="175" y="90" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="14" font-weight="800" fill="#d97706">AMP/ASCO/CAP</text>
+  <text x="175" y="106" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#94a3b8">Somatic 4-Tier | Li et al. 2017</text>
 
-  <!-- Tier boxes -->
-  <rect x="45" y="148" width="270" height="38" rx="6" fill="#ef4444" fill-opacity="0.12" stroke="#ef4444" stroke-width="0.8"/>
-  <circle cx="65" cy="167" r="8" fill="#ef4444" filter="url(#cfGlow)"/>
-  <text x="65" y="171" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="10" font-weight="700" fill="#fff">I</text>
-  <text x="85" y="163" font-family="'SF Pro Display',sans-serif" font-size="11" font-weight="600" fill="#fca5a5">Strong Clinical Significance</text>
-  <text x="85" y="178" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">FDA-approved, Guidelines (A/B)</text>
+  <g font-family="'SF Pro Display','Inter',sans-serif">
+    <rect x="40" y="120" width="270" height="38" rx="8" fill="#ef4444" fill-opacity="0.06" stroke="#ef4444" stroke-width="0.7"/>
+    <circle cx="58" cy="139" r="9" fill="#ef4444"/><text x="58" y="143" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">I</text>
+    <text x="78" y="135" font-size="11" font-weight="600" fill="#dc2626">Strong Clinical Significance</text>
+    <text x="78" y="150" font-family="'SF Mono',monospace" font-size="8.5" fill="#94a3b8">FDA-approved, Guidelines (A/B)</text>
 
-  <rect x="45" y="194" width="270" height="38" rx="6" fill="#f97316" fill-opacity="0.12" stroke="#f97316" stroke-width="0.8"/>
-  <circle cx="65" cy="213" r="8" fill="#f97316" filter="url(#cfGlow)"/>
-  <text x="65" y="217" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="10" font-weight="700" fill="#fff">II</text>
-  <text x="85" y="209" font-family="'SF Pro Display',sans-serif" font-size="11" font-weight="600" fill="#fdba74">Potential Clinical Significance</text>
-  <text x="85" y="224" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">Off-label, Preclinical (C/D)</text>
+    <rect x="40" y="164" width="270" height="38" rx="8" fill="#f97316" fill-opacity="0.06" stroke="#f97316" stroke-width="0.7"/>
+    <circle cx="58" cy="183" r="9" fill="#f97316"/><text x="58" y="187" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">II</text>
+    <text x="78" y="179" font-size="11" font-weight="600" fill="#ea580c">Potential Clinical Significance</text>
+    <text x="78" y="194" font-family="'SF Mono',monospace" font-size="8.5" fill="#94a3b8">Off-label, Preclinical (C/D)</text>
 
-  <rect x="45" y="240" width="270" height="38" rx="6" fill="#eab308" fill-opacity="0.12" stroke="#eab308" stroke-width="0.8"/>
-  <circle cx="65" cy="259" r="8" fill="#eab308" filter="url(#cfGlow)"/>
-  <text x="65" y="263" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="9" font-weight="700" fill="#422006">III</text>
-  <text x="85" y="255" font-family="'SF Pro Display',sans-serif" font-size="11" font-weight="600" fill="#fde047">Unknown Significance</text>
-  <text x="85" y="270" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">No published evidence</text>
+    <rect x="40" y="208" width="270" height="38" rx="8" fill="#eab308" fill-opacity="0.06" stroke="#eab308" stroke-width="0.7"/>
+    <circle cx="58" cy="227" r="9" fill="#eab308"/><text x="58" y="231" text-anchor="middle" font-size="9" font-weight="700" fill="#422006">III</text>
+    <text x="78" y="223" font-size="11" font-weight="600" fill="#a16207">Unknown Significance</text>
+    <text x="78" y="238" font-family="'SF Mono',monospace" font-size="8.5" fill="#94a3b8">No published evidence</text>
 
-  <rect x="45" y="286" width="270" height="38" rx="6" fill="#22c55e" fill-opacity="0.12" stroke="#22c55e" stroke-width="0.8"/>
-  <circle cx="65" cy="305" r="8" fill="#22c55e" filter="url(#cfGlow)"/>
-  <text x="65" y="309" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="9" font-weight="700" fill="#052e16">IV</text>
-  <text x="85" y="301" font-family="'SF Pro Display',sans-serif" font-size="11" font-weight="600" fill="#86efac">Benign / Likely Benign</text>
-  <text x="85" y="316" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">High population frequency</text>
+    <rect x="40" y="252" width="270" height="38" rx="8" fill="#22c55e" fill-opacity="0.06" stroke="#22c55e" stroke-width="0.7"/>
+    <circle cx="58" cy="271" r="9" fill="#22c55e"/><text x="58" y="275" text-anchor="middle" font-size="9" font-weight="700" fill="#052e16">IV</text>
+    <text x="78" y="267" font-size="11" font-weight="600" fill="#16a34a">Benign / Likely Benign</text>
+    <text x="78" y="282" font-family="'SF Mono',monospace" font-size="8.5" fill="#94a3b8">High population frequency</text>
+  </g>
+  <rect x="40" y="302" width="270" height="28" rx="14" fill="#f59e0b" fill-opacity="0.06" stroke="#f59e0b" stroke-width="0.6" stroke-dasharray="5,3"/>
+  <text x="175" y="320" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#d97706">classify_amp_tier</text>
 
-  <rect x="45" y="338" width="270" height="36" rx="8" fill="#f59e0b" fill-opacity="0.06" stroke="#f59e0b" stroke-width="0.5" stroke-dasharray="4,3"/>
-  <text x="180" y="360" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#fbbf24">classify_amp_tier</text>
+  <!-- ClinGen Oncogenicity -->
+  <rect x="345" y="62" width="310" height="315" rx="14" fill="#fff" stroke="#8b5cf6" stroke-width="1" filter="url(#cSh)"/>
+  <text x="500" y="90" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="14" font-weight="800" fill="#7c3aed">ClinGen Oncogenicity SOP</text>
+  <text x="500" y="106" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#94a3b8">18 Codes | Horak et al. 2022</text>
 
-  <!-- ClinGen Oncogenicity SOP -->
-  <rect x="345" y="70" width="310" height="320" rx="12" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.2" filter="url(#cfShadow)"/>
-  <text x="500" y="100" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="14" font-weight="700" fill="#c4b5fd">ClinGen Oncogenicity SOP</text>
-  <text x="500" y="118" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#94a3b8">Point-Based (18 Codes)</text>
-  <text x="500" y="132" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">Horak et al. 2022</text>
+  <g font-family="'SF Pro Display','Inter',sans-serif">
+    <rect x="365" y="120" width="270" height="32" rx="8" fill="#ef4444" fill-opacity="0.06" stroke="#ef4444" stroke-width="0.7"/>
+    <text x="385" y="140" font-size="11" font-weight="600" fill="#dc2626">Oncogenic</text>
+    <text x="615" y="140" text-anchor="end" font-family="'SF Mono',monospace" font-size="10" fill="#ef4444">≥ 10 pts</text>
 
-  <rect x="365" y="148" width="270" height="32" rx="6" fill="#ef4444" fill-opacity="0.12" stroke="#ef4444" stroke-width="0.8"/>
-  <text x="385" y="168" font-family="'SF Pro Display',sans-serif" font-size="11" font-weight="600" fill="#fca5a5">Oncogenic</text>
-  <text x="615" y="168" text-anchor="end" font-family="'SF Mono',monospace" font-size="10" fill="#ef4444">≥ 10 pts</text>
+    <rect x="365" y="158" width="270" height="32" rx="8" fill="#f97316" fill-opacity="0.06" stroke="#f97316" stroke-width="0.7"/>
+    <text x="385" y="178" font-size="11" font-weight="600" fill="#ea580c">Likely Oncogenic</text>
+    <text x="615" y="178" text-anchor="end" font-family="'SF Mono',monospace" font-size="10" fill="#f97316">6 – 9 pts</text>
 
-  <rect x="365" y="188" width="270" height="32" rx="6" fill="#f97316" fill-opacity="0.12" stroke="#f97316" stroke-width="0.8"/>
-  <text x="385" y="208" font-family="'SF Pro Display',sans-serif" font-size="11" font-weight="600" fill="#fdba74">Likely Oncogenic</text>
-  <text x="615" y="208" text-anchor="end" font-family="'SF Mono',monospace" font-size="10" fill="#f97316">6–9 pts</text>
+    <rect x="365" y="196" width="270" height="32" rx="8" fill="#eab308" fill-opacity="0.06" stroke="#eab308" stroke-width="0.7"/>
+    <text x="385" y="216" font-size="11" font-weight="600" fill="#a16207">VUS</text>
+    <text x="615" y="216" text-anchor="end" font-family="'SF Mono',monospace" font-size="10" fill="#eab308">-5 to +5</text>
 
-  <rect x="365" y="228" width="270" height="32" rx="6" fill="#eab308" fill-opacity="0.12" stroke="#eab308" stroke-width="0.8"/>
-  <text x="385" y="248" font-family="'SF Pro Display',sans-serif" font-size="11" font-weight="600" fill="#fde047">VUS</text>
-  <text x="615" y="248" text-anchor="end" font-family="'SF Mono',monospace" font-size="10" fill="#eab308">-5 to +5</text>
+    <rect x="365" y="234" width="270" height="32" rx="8" fill="#3b82f6" fill-opacity="0.06" stroke="#3b82f6" stroke-width="0.7"/>
+    <text x="385" y="254" font-size="11" font-weight="600" fill="#2563eb">Likely Benign</text>
+    <text x="615" y="254" text-anchor="end" font-family="'SF Mono',monospace" font-size="10" fill="#3b82f6">-6 to -9</text>
 
-  <rect x="365" y="268" width="270" height="32" rx="6" fill="#3b82f6" fill-opacity="0.12" stroke="#3b82f6" stroke-width="0.8"/>
-  <text x="385" y="288" font-family="'SF Pro Display',sans-serif" font-size="11" font-weight="600" fill="#93c5fd">Likely Benign</text>
-  <text x="615" y="288" text-anchor="end" font-family="'SF Mono',monospace" font-size="10" fill="#3b82f6">-6 to -9</text>
-
-  <rect x="365" y="308" width="270" height="32" rx="6" fill="#22c55e" fill-opacity="0.12" stroke="#22c55e" stroke-width="0.8"/>
-  <text x="385" y="328" font-family="'SF Pro Display',sans-serif" font-size="11" font-weight="600" fill="#86efac">Benign</text>
-  <text x="615" y="328" text-anchor="end" font-family="'SF Mono',monospace" font-size="10" fill="#22c55e">≤ -10 pts</text>
-
-  <rect x="365" y="348" width="270" height="28" rx="8" fill="#8b5cf6" fill-opacity="0.06" stroke="#8b5cf6" stroke-width="0.5" stroke-dasharray="4,3"/>
-  <text x="500" y="366" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#c4b5fd">score_oncogenicity</text>
+    <rect x="365" y="272" width="270" height="32" rx="8" fill="#22c55e" fill-opacity="0.06" stroke="#22c55e" stroke-width="0.7"/>
+    <text x="385" y="292" font-size="11" font-weight="600" fill="#16a34a">Benign</text>
+    <text x="615" y="292" text-anchor="end" font-family="'SF Mono',monospace" font-size="10" fill="#22c55e">≤ -10 pts</text>
+  </g>
+  <rect x="365" y="316" width="270" height="28" rx="14" fill="#8b5cf6" fill-opacity="0.06" stroke="#8b5cf6" stroke-width="0.6" stroke-dasharray="5,3"/>
+  <text x="500" y="334" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#7c3aed">score_oncogenicity</text>
 
   <!-- ACMG/AMP -->
-  <rect x="665" y="70" width="310" height="320" rx="12" fill="#1e293b" stroke="#22c55e" stroke-width="1.2" filter="url(#cfShadow)"/>
-  <text x="820" y="100" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="14" font-weight="700" fill="#86efac">ACMG/AMP</text>
-  <text x="820" y="118" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#94a3b8">Germline 5-Tier</text>
-  <text x="820" y="132" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">Richards et al. 2015</text>
+  <rect x="670" y="62" width="310" height="315" rx="14" fill="#fff" stroke="#22c55e" stroke-width="1" filter="url(#cSh)"/>
+  <text x="825" y="90" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="14" font-weight="800" fill="#16a34a">ACMG/AMP</text>
+  <text x="825" y="106" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#94a3b8">Germline 5-Tier | Richards 2015</text>
 
-  <rect x="685" y="148" width="270" height="28" rx="6" fill="#ef4444" fill-opacity="0.12" stroke="#ef4444" stroke-width="0.8"/>
-  <text x="705" y="166" font-family="'SF Pro Display',sans-serif" font-size="11" font-weight="600" fill="#fca5a5">Pathogenic</text>
-  <text x="935" y="166" text-anchor="end" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">PVS1 + Strong</text>
+  <g font-family="'SF Pro Display','Inter',sans-serif">
+    <rect x="690" y="120" width="270" height="30" rx="8" fill="#ef4444" fill-opacity="0.06" stroke="#ef4444" stroke-width="0.7"/>
+    <text x="710" y="139" font-size="11" font-weight="600" fill="#dc2626">Pathogenic</text>
+    <text x="940" y="139" text-anchor="end" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">PVS1 + Strong</text>
 
-  <rect x="685" y="184" width="270" height="28" rx="6" fill="#f97316" fill-opacity="0.12" stroke="#f97316" stroke-width="0.8"/>
-  <text x="705" y="202" font-family="'SF Pro Display',sans-serif" font-size="11" font-weight="600" fill="#fdba74">Likely Pathogenic</text>
-  <text x="935" y="202" text-anchor="end" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">Strong + Moderate</text>
+    <rect x="690" y="156" width="270" height="30" rx="8" fill="#f97316" fill-opacity="0.06" stroke="#f97316" stroke-width="0.7"/>
+    <text x="710" y="175" font-size="11" font-weight="600" fill="#ea580c">Likely Pathogenic</text>
+    <text x="940" y="175" text-anchor="end" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">Strong + Moderate</text>
 
-  <rect x="685" y="220" width="270" height="28" rx="6" fill="#eab308" fill-opacity="0.12" stroke="#eab308" stroke-width="0.8"/>
-  <text x="705" y="238" font-family="'SF Pro Display',sans-serif" font-size="11" font-weight="600" fill="#fde047">VUS</text>
-  <text x="935" y="238" text-anchor="end" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">Criteria not met</text>
+    <rect x="690" y="192" width="270" height="30" rx="8" fill="#eab308" fill-opacity="0.06" stroke="#eab308" stroke-width="0.7"/>
+    <text x="710" y="211" font-size="11" font-weight="600" fill="#a16207">VUS</text>
+    <text x="940" y="211" text-anchor="end" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">Criteria not met</text>
 
-  <rect x="685" y="256" width="270" height="28" rx="6" fill="#3b82f6" fill-opacity="0.12" stroke="#3b82f6" stroke-width="0.8"/>
-  <text x="705" y="274" font-family="'SF Pro Display',sans-serif" font-size="11" font-weight="600" fill="#93c5fd">Likely Benign</text>
-  <text x="935" y="274" text-anchor="end" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">BS + BP</text>
+    <rect x="690" y="228" width="270" height="30" rx="8" fill="#3b82f6" fill-opacity="0.06" stroke="#3b82f6" stroke-width="0.7"/>
+    <text x="710" y="247" font-size="11" font-weight="600" fill="#2563eb">Likely Benign</text>
+    <text x="940" y="247" text-anchor="end" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">BS + BP</text>
 
-  <rect x="685" y="292" width="270" height="28" rx="6" fill="#22c55e" fill-opacity="0.12" stroke="#22c55e" stroke-width="0.8"/>
-  <text x="705" y="310" font-family="'SF Pro Display',sans-serif" font-size="11" font-weight="600" fill="#86efac">Benign</text>
-  <text x="935" y="310" text-anchor="end" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">BA1 standalone</text>
-
-  <!-- Decision guide -->
-  <rect x="685" y="330" width="270" height="46" rx="8" fill="#22c55e" fill-opacity="0.06" stroke="#22c55e" stroke-width="0.5" stroke-dasharray="4,3"/>
-  <text x="820" y="350" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#86efac">explain_acmg_criteria</text>
-  <text x="820" y="366" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#64748b">variant_pathogenicity_summary</text>
+    <rect x="690" y="264" width="270" height="30" rx="8" fill="#22c55e" fill-opacity="0.06" stroke="#22c55e" stroke-width="0.7"/>
+    <text x="710" y="283" font-size="11" font-weight="600" fill="#16a34a">Benign</text>
+    <text x="940" y="283" text-anchor="end" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">BA1 standalone</text>
+  </g>
+  <rect x="690" y="306" width="270" height="28" rx="14" fill="#22c55e" fill-opacity="0.06" stroke="#22c55e" stroke-width="0.6" stroke-dasharray="5,3"/>
+  <text x="825" y="324" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#16a34a">explain_acmg_criteria</text>
 
   <!-- Footer -->
-  <text x="500" y="408" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#475569">All frameworks accessible via natural language prompts | output_format: markdown | json | text</text>
+  <text x="500" y="393" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">All frameworks accessible via natural language | output_format: markdown | json | text</text>
 </svg>

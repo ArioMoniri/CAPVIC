@@ -1,185 +1,146 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" width="1000" height="700">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 660" width="1000" height="660">
   <defs>
-    <linearGradient id="archBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0f172a" />
-      <stop offset="100%" style="stop-color:#1e293b" />
+    <linearGradient id="aGr" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1a3a6b"/>
+      <stop offset="50%" style="stop-color:#0ea5e9"/>
+      <stop offset="100%" style="stop-color:#22d3ee"/>
     </linearGradient>
-    <linearGradient id="cyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#06b6d4" />
-      <stop offset="100%" style="stop-color:#0891b2" />
-    </linearGradient>
-    <linearGradient id="viGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#8b5cf6" />
-      <stop offset="100%" style="stop-color:#7c3aed" />
-    </linearGradient>
-    <linearGradient id="amGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#f59e0b" />
-      <stop offset="100%" style="stop-color:#d97706" />
-    </linearGradient>
-    <linearGradient id="grGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#22c55e" />
-      <stop offset="100%" style="stop-color:#16a34a" />
-    </linearGradient>
-    <linearGradient id="rdGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ef4444" />
-      <stop offset="100%" style="stop-color:#dc2626" />
-    </linearGradient>
-    <linearGradient id="pkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ec4899" />
-      <stop offset="100%" style="stop-color:#db2777" />
-    </linearGradient>
-    <linearGradient id="tlGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#14b8a6" />
-      <stop offset="100%" style="stop-color:#0d9488" />
-    </linearGradient>
-    <linearGradient id="orGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#f97316" />
-      <stop offset="100%" style="stop-color:#ea580c" />
-    </linearGradient>
-    <filter id="aGlow">
-      <feGaussianBlur stdDeviation="2" result="b"/>
-      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-    <filter id="shadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
+    <filter id="aSh">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#94a3b8" flood-opacity="0.12"/>
     </filter>
   </defs>
 
-  <!-- Background -->
-  <rect width="1000" height="700" rx="12" fill="url(#archBg)"/>
+  <rect width="1000" height="660" rx="16" fill="#f8fafc"/>
 
   <!-- Title -->
-  <text x="500" y="45" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="22" font-weight="700" letter-spacing="3" fill="#e2e8f0">CAPVIC ARCHITECTURE</text>
-  <rect x="350" y="55" width="300" height="1.5" rx="1" fill="#8b5cf6" opacity="0.4"/>
+  <text x="500" y="40" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="20" font-weight="800" letter-spacing="1" fill="#0f172a">Architecture</text>
+  <rect x="420" y="50" width="160" height="2" rx="1" fill="#0ea5e9" opacity="0.3"/>
 
-  <!-- AI Client Layer -->
-  <rect x="50" y="80" width="900" height="60" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#shadow)"/>
-  <text x="500" y="100" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="11" font-weight="600" letter-spacing="2" fill="#64748b">AI CLIENT LAYER</text>
-  <g font-family="'SF Mono',monospace" font-size="12" fill="#94a3b8">
-    <rect x="130" y="106" width="100" height="24" rx="12" fill="#8b5cf6" fill-opacity="0.12" stroke="#8b5cf6" stroke-width="0.6" stroke-opacity="0.3"/>
-    <text x="180" y="122" text-anchor="middle" fill="#8b5cf6">Claude</text>
-    <rect x="250" y="106" width="100" height="24" rx="12" fill="#22c55e" fill-opacity="0.12" stroke="#22c55e" stroke-width="0.6" stroke-opacity="0.3"/>
-    <text x="300" y="122" text-anchor="middle" fill="#22c55e">GPT</text>
-    <rect x="370" y="106" width="100" height="24" rx="12" fill="#06b6d4" fill-opacity="0.12" stroke="#06b6d4" stroke-width="0.6" stroke-opacity="0.3"/>
-    <text x="420" y="122" text-anchor="middle" fill="#06b6d4">Gemini</text>
-    <rect x="490" y="106" width="100" height="24" rx="12" fill="#f59e0b" fill-opacity="0.12" stroke="#f59e0b" stroke-width="0.6" stroke-opacity="0.3"/>
-    <text x="540" y="122" text-anchor="middle" fill="#f59e0b">OpenCode</text>
-    <rect x="610" y="106" width="140" height="24" rx="12" fill="#ec4899" fill-opacity="0.12" stroke="#ec4899" stroke-width="0.6" stroke-opacity="0.3"/>
-    <text x="680" y="122" text-anchor="middle" fill="#ec4899">Any MCP Client</text>
+  <!-- Layer 1: AI Clients -->
+  <rect x="60" y="72" width="880" height="64" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#aSh)"/>
+  <text x="500" y="92" text-anchor="middle" font-family="'SF Pro Text','Inter',sans-serif" font-size="10" font-weight="600" letter-spacing="1.5" fill="#94a3b8">AI CLIENT LAYER</text>
+  <g font-family="'SF Pro Text','Inter',sans-serif" font-size="12" font-weight="600">
+    <rect x="170" y="102" width="88" height="24" rx="12" fill="#8b5cf6" fill-opacity="0.08" stroke="#8b5cf6" stroke-width="0.7"/>
+    <text x="214" y="118" text-anchor="middle" fill="#8b5cf6">Claude</text>
+    <rect x="270" y="102" width="70" height="24" rx="12" fill="#22c55e" fill-opacity="0.08" stroke="#22c55e" stroke-width="0.7"/>
+    <text x="305" y="118" text-anchor="middle" fill="#16a34a">GPT</text>
+    <rect x="352" y="102" width="82" height="24" rx="12" fill="#0ea5e9" fill-opacity="0.08" stroke="#0ea5e9" stroke-width="0.7"/>
+    <text x="393" y="118" text-anchor="middle" fill="#0ea5e9">Gemini</text>
+    <rect x="446" y="102" width="98" height="24" rx="12" fill="#f59e0b" fill-opacity="0.08" stroke="#f59e0b" stroke-width="0.7"/>
+    <text x="495" y="118" text-anchor="middle" fill="#d97706">OpenCode</text>
+    <rect x="556" y="102" width="130" height="24" rx="12" fill="#64748b" fill-opacity="0.08" stroke="#94a3b8" stroke-width="0.7"/>
+    <text x="621" y="118" text-anchor="middle" fill="#64748b">Any MCP Client</text>
   </g>
 
-  <!-- Arrow down -->
-  <line x1="500" y1="140" x2="500" y2="165" stroke="#475569" stroke-width="1.5"/>
-  <polygon points="495,163 500,172 505,163" fill="#475569"/>
-  <text x="530" y="158" font-family="'SF Mono',monospace" font-size="10" fill="#475569">JSON-RPC / stdio</text>
+  <!-- Arrow -->
+  <line x1="500" y1="136" x2="500" y2="162" stroke="#cbd5e1" stroke-width="1.5"/>
+  <polygon points="496,160 500,168 504,160" fill="#cbd5e1"/>
+  <text x="530" y="155" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">JSON-RPC / stdio</text>
 
-  <!-- MCP Server Core -->
-  <rect x="200" y="175" width="600" height="75" rx="10" fill="#1e1b4b" fill-opacity="0.5" stroke="#8b5cf6" stroke-width="1.2" filter="url(#shadow)"/>
-  <text x="500" y="197" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="14" font-weight="700" letter-spacing="2" fill="#c4b5fd">CAPVIC MCP SERVER</text>
-  <g font-family="'SF Mono',monospace" font-size="10" fill="#a5b4fc">
-    <text x="280" y="218" text-anchor="middle">FastMCP</text>
-    <text x="400" y="218" text-anchor="middle">26 Tools</text>
-    <text x="520" y="218" text-anchor="middle">Pydantic Models</text>
-    <text x="660" y="218" text-anchor="middle">NLP Normalization</text>
+  <!-- Layer 2: MCP Server -->
+  <rect x="160" y="170" width="680" height="88" rx="14" fill="#fff" stroke="#0ea5e9" stroke-width="1.2" filter="url(#aSh)"/>
+  <text x="500" y="196" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="15" font-weight="800" letter-spacing="1" fill="#0f172a">CAPVIC MCP SERVER</text>
+  <g font-family="'SF Mono',monospace" font-size="10" fill="#64748b">
+    <text x="280" y="216" text-anchor="middle">FastMCP</text>
+    <text x="400" y="216" text-anchor="middle">26 Tools</text>
+    <text x="530" y="216" text-anchor="middle">Pydantic Models</text>
+    <text x="680" y="216" text-anchor="middle">NLP Normalization</text>
   </g>
-  <!-- Output format pills -->
   <g font-family="'SF Mono',monospace" font-size="9">
-    <rect x="310" y="228" width="70" height="18" rx="9" fill="#06b6d4" fill-opacity="0.15" stroke="#06b6d4" stroke-width="0.5"/>
-    <text x="345" y="240" text-anchor="middle" fill="#06b6d4">Markdown</text>
-    <rect x="395" y="228" width="50" height="18" rx="9" fill="#22c55e" fill-opacity="0.15" stroke="#22c55e" stroke-width="0.5"/>
-    <text x="420" y="240" text-anchor="middle" fill="#22c55e">JSON</text>
-    <rect x="460" y="228" width="50" height="18" rx="9" fill="#f59e0b" fill-opacity="0.15" stroke="#f59e0b" stroke-width="0.5"/>
-    <text x="485" y="240" text-anchor="middle" fill="#f59e0b">Text</text>
-    <rect x="525" y="228" width="120" height="18" rx="9" fill="#8b5cf6" fill-opacity="0.15" stroke="#8b5cf6" stroke-width="0.5"/>
-    <text x="585" y="240" text-anchor="middle" fill="#8b5cf6">output_format</text>
+    <rect x="300" y="228" width="68" height="18" rx="9" fill="#0ea5e9" fill-opacity="0.08" stroke="#0ea5e9" stroke-width="0.6"/>
+    <text x="334" y="240" text-anchor="middle" fill="#0ea5e9">Markdown</text>
+    <rect x="378" y="228" width="50" height="18" rx="9" fill="#22c55e" fill-opacity="0.08" stroke="#22c55e" stroke-width="0.6"/>
+    <text x="403" y="240" text-anchor="middle" fill="#16a34a">JSON</text>
+    <rect x="438" y="228" width="50" height="18" rx="9" fill="#f59e0b" fill-opacity="0.08" stroke="#f59e0b" stroke-width="0.6"/>
+    <text x="463" y="240" text-anchor="middle" fill="#d97706">Text</text>
   </g>
 
-  <!-- Arrows to classification & data -->
-  <line x1="350" y1="250" x2="200" y2="290" stroke="#475569" stroke-width="1"/>
-  <line x1="500" y1="250" x2="500" y2="290" stroke="#475569" stroke-width="1"/>
-  <line x1="650" y1="250" x2="800" y2="290" stroke="#475569" stroke-width="1"/>
+  <!-- Arrows to 3 modules -->
+  <line x1="340" y1="258" x2="190" y2="295" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="500" y1="258" x2="500" y2="295" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="660" y1="258" x2="810" y2="295" stroke="#cbd5e1" stroke-width="1"/>
 
-  <!-- Classification Frameworks -->
-  <rect x="50" y="290" width="280" height="120" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="1" filter="url(#shadow)"/>
-  <text x="190" y="315" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="12" font-weight="600" letter-spacing="1" fill="#fbbf24">CLASSIFICATION FRAMEWORKS</text>
-  <g font-family="'SF Mono',monospace" font-size="11" fill="#94a3b8">
-    <rect x="70" y="328" width="240" height="22" rx="4" fill="#f59e0b" fill-opacity="0.08"/>
-    <text x="190" y="343" text-anchor="middle">AMP/ASCO/CAP 4-Tier (Somatic)</text>
-    <rect x="70" y="356" width="240" height="22" rx="4" fill="#f59e0b" fill-opacity="0.08"/>
-    <text x="190" y="371" text-anchor="middle">ClinGen Oncogenicity SOP (18 codes)</text>
-    <rect x="70" y="384" width="240" height="22" rx="4" fill="#f59e0b" fill-opacity="0.08"/>
-    <text x="190" y="399" text-anchor="middle">ACMG/AMP 5-Tier (Germline)</text>
+  <!-- Module 1: Classification -->
+  <rect x="40" y="298" width="290" height="130" rx="14" fill="#fff" stroke="#f59e0b" stroke-width="1" filter="url(#aSh)"/>
+  <text x="185" y="322" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="12" font-weight="700" fill="#d97706">CLASSIFICATION</text>
+  <g font-family="'SF Mono',monospace" font-size="10.5" fill="#475569">
+    <rect x="60" y="336" width="250" height="22" rx="4" fill="#f59e0b" fill-opacity="0.05"/>
+    <text x="185" y="351" text-anchor="middle">AMP/ASCO/CAP 4-Tier (Somatic)</text>
+    <rect x="60" y="364" width="250" height="22" rx="4" fill="#f59e0b" fill-opacity="0.05"/>
+    <text x="185" y="379" text-anchor="middle">ClinGen Oncogenicity SOP (18 codes)</text>
+    <rect x="60" y="392" width="250" height="22" rx="4" fill="#f59e0b" fill-opacity="0.05"/>
+    <text x="185" y="407" text-anchor="middle">ACMG/AMP 5-Tier (Germline)</text>
   </g>
 
-  <!-- Utilities -->
-  <rect x="360" y="290" width="280" height="120" rx="10" fill="#1e293b" stroke="#8b5cf6" stroke-width="1" filter="url(#shadow)"/>
-  <text x="500" y="315" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="12" font-weight="600" letter-spacing="1" fill="#c4b5fd">UTILITIES</text>
-  <g font-family="'SF Mono',monospace" font-size="11" fill="#94a3b8">
-    <rect x="380" y="328" width="240" height="22" rx="4" fill="#8b5cf6" fill-opacity="0.08"/>
-    <text x="500" y="343" text-anchor="middle">HGVS Variant Normalizer</text>
-    <rect x="380" y="356" width="240" height="22" rx="4" fill="#8b5cf6" fill-opacity="0.08"/>
-    <text x="500" y="371" text-anchor="middle">In-silico Prediction (PP3/BP4)</text>
-    <rect x="380" y="384" width="240" height="22" rx="4" fill="#8b5cf6" fill-opacity="0.08"/>
-    <text x="500" y="399" text-anchor="middle">Report Formatters / Comparisons</text>
+  <!-- Module 2: Utilities -->
+  <rect x="355" y="298" width="290" height="130" rx="14" fill="#fff" stroke="#8b5cf6" stroke-width="1" filter="url(#aSh)"/>
+  <text x="500" y="322" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="12" font-weight="700" fill="#7c3aed">UTILITIES</text>
+  <g font-family="'SF Mono',monospace" font-size="10.5" fill="#475569">
+    <rect x="375" y="336" width="250" height="22" rx="4" fill="#8b5cf6" fill-opacity="0.05"/>
+    <text x="500" y="351" text-anchor="middle">HGVS Variant Normalizer</text>
+    <rect x="375" y="364" width="250" height="22" rx="4" fill="#8b5cf6" fill-opacity="0.05"/>
+    <text x="500" y="379" text-anchor="middle">In-silico Prediction (PP3/BP4)</text>
+    <rect x="375" y="392" width="250" height="22" rx="4" fill="#8b5cf6" fill-opacity="0.05"/>
+    <text x="500" y="407" text-anchor="middle">Report Formatters / Comparisons</text>
   </g>
 
-  <!-- Client layer label -->
-  <rect x="670" y="290" width="280" height="120" rx="10" fill="#1e293b" stroke="#06b6d4" stroke-width="1" filter="url(#shadow)"/>
-  <text x="810" y="315" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="12" font-weight="600" letter-spacing="1" fill="#22d3ee">API CLIENTS</text>
-  <g font-family="'SF Mono',monospace" font-size="11" fill="#94a3b8">
-    <rect x="690" y="328" width="240" height="22" rx="4" fill="#06b6d4" fill-opacity="0.08"/>
-    <text x="810" y="343" text-anchor="middle">Rate-limited HTTP/GraphQL</text>
-    <rect x="690" y="356" width="240" height="22" rx="4" fill="#06b6d4" fill-opacity="0.08"/>
-    <text x="810" y="371" text-anchor="middle">Async with httpx</text>
-    <rect x="690" y="384" width="240" height="22" rx="4" fill="#06b6d4" fill-opacity="0.08"/>
-    <text x="810" y="399" text-anchor="middle">Structured Pydantic Parsing</text>
+  <!-- Module 3: Clients -->
+  <rect x="670" y="298" width="290" height="130" rx="14" fill="#fff" stroke="#0ea5e9" stroke-width="1" filter="url(#aSh)"/>
+  <text x="815" y="322" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="12" font-weight="700" fill="#0ea5e9">API CLIENTS</text>
+  <g font-family="'SF Mono',monospace" font-size="10.5" fill="#475569">
+    <rect x="690" y="336" width="250" height="22" rx="4" fill="#0ea5e9" fill-opacity="0.05"/>
+    <text x="815" y="351" text-anchor="middle">Rate-limited HTTP / GraphQL</text>
+    <rect x="690" y="364" width="250" height="22" rx="4" fill="#0ea5e9" fill-opacity="0.05"/>
+    <text x="815" y="379" text-anchor="middle">Async with httpx</text>
+    <rect x="690" y="392" width="250" height="22" rx="4" fill="#0ea5e9" fill-opacity="0.05"/>
+    <text x="815" y="407" text-anchor="middle">Structured Pydantic Parsing</text>
   </g>
 
   <!-- Arrow to data sources -->
-  <line x1="500" y1="415" x2="500" y2="445" stroke="#475569" stroke-width="1.5"/>
-  <polygon points="495,443 500,452 505,443" fill="#475569"/>
+  <line x1="500" y1="430" x2="500" y2="460" stroke="#cbd5e1" stroke-width="1.5"/>
+  <polygon points="496,458 500,466 504,458" fill="#cbd5e1"/>
 
-  <!-- Data Sources -->
-  <rect x="50" y="455" width="900" height="200" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1" filter="url(#shadow)"/>
-  <text x="500" y="480" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="12" font-weight="600" letter-spacing="2" fill="#64748b">EXTERNAL DATA SOURCES</text>
+  <!-- Layer 4: Data Sources -->
+  <rect x="40" y="470" width="920" height="165" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#aSh)"/>
+  <text x="500" y="495" text-anchor="middle" font-family="'SF Pro Text','Inter',sans-serif" font-size="10" font-weight="600" letter-spacing="1.5" fill="#94a3b8">EXTERNAL DATA SOURCES</text>
 
-  <!-- Source boxes (2 rows of 4) -->
-  <g filter="url(#aGlow)">
+  <!-- Source cards (2 rows x 4) -->
+  <g font-family="'SF Pro Display','Inter',sans-serif">
     <!-- Row 1 -->
-    <rect x="80" y="495" width="185" height="55" rx="8" fill="url(#cyGrad)" fill-opacity="0.15" stroke="#06b6d4" stroke-width="0.8"/>
-    <text x="172" y="518" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="13" font-weight="700" fill="#06b6d4">CIViC</text>
-    <text x="172" y="536" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#67e8f9">GraphQL v2 | Evidence + Assertions</text>
+    <rect x="65" y="510" width="195" height="44" rx="10" fill="#0ea5e9" fill-opacity="0.06" stroke="#0ea5e9" stroke-width="0.7"/>
+    <text x="162" y="530" text-anchor="middle" font-size="13" font-weight="700" fill="#0ea5e9">CIViC</text>
+    <text x="162" y="545" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8.5" fill="#94a3b8">GraphQL v2 | Evidence</text>
 
-    <rect x="285" y="495" width="185" height="55" rx="8" fill="url(#grGrad)" fill-opacity="0.15" stroke="#22c55e" stroke-width="0.8"/>
-    <text x="377" y="518" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="13" font-weight="700" fill="#22c55e">ClinVar</text>
-    <text x="377" y="536" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#86efac">E-utilities | VCV XML Parsing</text>
+    <rect x="280" y="510" width="195" height="44" rx="10" fill="#22c55e" fill-opacity="0.06" stroke="#22c55e" stroke-width="0.7"/>
+    <text x="377" y="530" text-anchor="middle" font-size="13" font-weight="700" fill="#16a34a">ClinVar</text>
+    <text x="377" y="545" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8.5" fill="#94a3b8">E-utilities | VCV XML</text>
 
-    <rect x="490" y="495" width="185" height="55" rx="8" fill="url(#amGrad)" fill-opacity="0.15" stroke="#f59e0b" stroke-width="0.8"/>
-    <text x="582" y="518" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="13" font-weight="700" fill="#f59e0b">OncoKB</text>
-    <text x="582" y="536" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#fcd34d">REST API | Token Auth</text>
+    <rect x="495" y="510" width="195" height="44" rx="10" fill="#f59e0b" fill-opacity="0.06" stroke="#f59e0b" stroke-width="0.7"/>
+    <text x="592" y="530" text-anchor="middle" font-size="13" font-weight="700" fill="#d97706">OncoKB</text>
+    <text x="592" y="545" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8.5" fill="#94a3b8">REST | Token Auth</text>
 
-    <rect x="695" y="495" width="185" height="55" rx="8" fill="url(#rdGrad)" fill-opacity="0.15" stroke="#ef4444" stroke-width="0.8"/>
-    <text x="787" y="518" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="13" font-weight="700" fill="#ef4444">VICC MetaKB</text>
-    <text x="787" y="536" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#fca5a5">Harmonized | 6 KBs</text>
+    <rect x="710" y="510" width="195" height="44" rx="10" fill="#ef4444" fill-opacity="0.06" stroke="#ef4444" stroke-width="0.7"/>
+    <text x="807" y="530" text-anchor="middle" font-size="13" font-weight="700" fill="#dc2626">VICC MetaKB</text>
+    <text x="807" y="545" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8.5" fill="#94a3b8">Harmonized | 6 KBs</text>
 
     <!-- Row 2 -->
-    <rect x="80" y="565" width="185" height="55" rx="8" fill="url(#viGrad)" fill-opacity="0.15" stroke="#8b5cf6" stroke-width="0.8"/>
-    <text x="172" y="588" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="13" font-weight="700" fill="#8b5cf6">gnomAD</text>
-    <text x="172" y="606" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#c4b5fd">GraphQL v4 | GRCh37/38</text>
+    <rect x="65" y="564" width="195" height="44" rx="10" fill="#8b5cf6" fill-opacity="0.06" stroke="#8b5cf6" stroke-width="0.7"/>
+    <text x="162" y="584" text-anchor="middle" font-size="13" font-weight="700" fill="#7c3aed">gnomAD</text>
+    <text x="162" y="599" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8.5" fill="#94a3b8">GraphQL v4 | GRCh37/38</text>
 
-    <rect x="285" y="565" width="185" height="55" rx="8" fill="url(#tlGrad)" fill-opacity="0.15" stroke="#14b8a6" stroke-width="0.8"/>
-    <text x="377" y="588" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="13" font-weight="700" fill="#14b8a6">UniProt</text>
-    <text x="377" y="606" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#5eead4">REST | Protein Domains</text>
+    <rect x="280" y="564" width="195" height="44" rx="10" fill="#14b8a6" fill-opacity="0.06" stroke="#14b8a6" stroke-width="0.7"/>
+    <text x="377" y="584" text-anchor="middle" font-size="13" font-weight="700" fill="#0d9488">UniProt</text>
+    <text x="377" y="599" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8.5" fill="#94a3b8">REST | Protein Domains</text>
 
-    <rect x="490" y="565" width="185" height="55" rx="8" fill="url(#pkGrad)" fill-opacity="0.15" stroke="#ec4899" stroke-width="0.8"/>
-    <text x="582" y="588" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="13" font-weight="700" fill="#ec4899">PubMed</text>
-    <text x="582" y="606" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#f9a8d4">E-utilities | Literature</text>
+    <rect x="495" y="564" width="195" height="44" rx="10" fill="#ec4899" fill-opacity="0.06" stroke="#ec4899" stroke-width="0.7"/>
+    <text x="592" y="584" text-anchor="middle" font-size="13" font-weight="700" fill="#db2777">PubMed</text>
+    <text x="592" y="599" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8.5" fill="#94a3b8">E-utilities | Literature</text>
 
-    <rect x="695" y="565" width="185" height="55" rx="8" fill="url(#orGrad)" fill-opacity="0.15" stroke="#f97316" stroke-width="0.8"/>
-    <text x="787" y="588" text-anchor="middle" font-family="'SF Pro Display',sans-serif" font-size="13" font-weight="700" fill="#f97316">MyVariant.info</text>
-    <text x="787" y="606" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#fdba74">REST | SIFT/REVEL/CADD</text>
+    <rect x="710" y="564" width="195" height="44" rx="10" fill="#f97316" fill-opacity="0.06" stroke="#f97316" stroke-width="0.7"/>
+    <text x="807" y="584" text-anchor="middle" font-size="13" font-weight="700" fill="#ea580c">MyVariant.info</text>
+    <text x="807" y="599" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8.5" fill="#94a3b8">REST | SIFT/REVEL/CADD</text>
   </g>
 
   <!-- Footer -->
-  <text x="500" y="680" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#475569">Vivax Teknoloji A.S. | MIT License | v1.0.5</text>
+  <text x="500" y="650" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">Vivax Teknoloji A.S. | MIT License | v1.0.5</text>
 </svg>
