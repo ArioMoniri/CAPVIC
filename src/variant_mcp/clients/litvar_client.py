@@ -55,7 +55,9 @@ class LitVarClient(BaseClient):
             Variant detail dict or None if not found.
         """
         try:
-            result = await self.get_json(f"variant/get/{litvar_id}/")
+            # URL-encode '#' chars — they are URL fragment separators and httpx strips them
+            safe_id = litvar_id.replace("#", "%23")
+            result = await self.get_json(f"variant/get/{safe_id}/")
             return result if isinstance(result, dict) else None
         except Exception as e:
             logger.warning("LitVar2 variant get failed for %s: %s", litvar_id, e)
