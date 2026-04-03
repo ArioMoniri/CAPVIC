@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "variant-mcp"
-version = "1.0.5"
+version = "1.0.6"
 description = "Multi-source precision oncology and variant classification MCP server"
 license = {text = "MIT"}
 authors = [

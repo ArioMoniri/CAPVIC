@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460" width="900" height="460">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 540" width="900" height="540">
   <defs>
     <filter id="tSh">
       <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#94a3b8" flood-opacity="0.12"/>
     </filter>
   </defs>
 
-  <rect width="900" height="460" rx="16" fill="#f8fafc"/>
-  <text x="450" y="32" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="18" font-weight="800" letter-spacing="1" fill="#0f172a">26 MCP Tools</text>
+  <rect width="900" height="540" rx="16" fill="#f8fafc"/>
+  <text x="450" y="32" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="18" font-weight="800" letter-spacing="1" fill="#0f172a">29 MCP Tools</text>
   <rect x="350" y="40" width="200" height="2" rx="1" fill="#0ea5e9" opacity="0.25"/>
 
   <!-- Search & Discovery -->
@@ -52,7 +52,7 @@
   <text x="844" y="210" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" font-weight="600" fill="#d97706">6</text>
 
   <!-- Data Retrieval -->
-  <rect x="20" y="258" width="270" height="175" rx="14" fill="#fff" stroke="#22c55e" stroke-width="0.8" filter="url(#tSh)"/>
+  <rect x="20" y="258" width="270" height="155" rx="14" fill="#fff" stroke="#22c55e" stroke-width="0.8" filter="url(#tSh)"/>
   <text x="155" y="280" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="12" font-weight="700" fill="#16a34a">DATA RETRIEVAL</text>
   <g font-family="'SF Mono',monospace" font-size="10" fill="#475569">
     <circle cx="40" cy="298" r="3" fill="#22c55e"/><text x="50" y="302">civic_get_gene</text>
@@ -61,33 +61,42 @@
     <circle cx="40" cy="352" r="3" fill="#22c55e"/><text x="50" y="356">clinvar_get_variant</text>
     <circle cx="40" cy="370" r="3" fill="#22c55e"/><text x="50" y="374">get_publication</text>
   </g>
-  <rect x="235" y="386" width="38" height="14" rx="7" fill="#22c55e" fill-opacity="0.1"/>
-  <text x="254" y="396" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" font-weight="600" fill="#16a34a">5</text>
+  <rect x="235" y="376" width="38" height="14" rx="7" fill="#22c55e" fill-opacity="0.1"/>
+  <text x="254" y="386" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" font-weight="600" fill="#16a34a">5</text>
+
+  <!-- Driver & Literature -->
+  <rect x="310" y="258" width="270" height="155" rx="14" fill="#fff" stroke="#f97316" stroke-width="0.8" filter="url(#tSh)"/>
+  <text x="445" y="280" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="12" font-weight="700" fill="#ea580c">DRIVER &amp; LITERATURE</text>
+  <g font-family="'SF Mono',monospace" font-size="10" fill="#475569">
+    <circle cx="330" cy="298" r="3" fill="#f97316"/><text x="340" y="302">assess_driver_mutation</text>
+    <circle cx="330" cy="316" r="3" fill="#f97316"/><text x="340" y="320">lookup_cancer_hotspots</text>
+    <circle cx="330" cy="334" r="3" fill="#f97316"/><text x="340" y="338">search_variant_literature_litvar</text>
+  </g>
+  <rect x="525" y="348" width="38" height="14" rx="7" fill="#f97316" fill-opacity="0.1"/>
+  <text x="544" y="358" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" font-weight="600" fill="#ea580c">3</text>
+  <text x="330" y="370" font-family="'SF Mono',monospace" font-size="8.5" fill="#94a3b8">Cancer Hotspots + LitVar2 + 7-signal</text>
+  <text x="330" y="384" font-family="'SF Mono',monospace" font-size="8.5" fill="#94a3b8">cross-ref driver classification</text>
 
   <!-- Discovery & Lookup -->
-  <rect x="310" y="258" width="270" height="175" rx="14" fill="#fff" stroke="#ec4899" stroke-width="0.8" filter="url(#tSh)"/>
-  <text x="445" y="280" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="12" font-weight="700" fill="#db2777">DISCOVERY &amp; LOOKUP</text>
+  <rect x="600" y="258" width="280" height="155" rx="14" fill="#fff" stroke="#ec4899" stroke-width="0.8" filter="url(#tSh)"/>
+  <text x="740" y="280" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="12" font-weight="700" fill="#db2777">DISCOVERY &amp; FORMAT</text>
   <g font-family="'SF Mono',monospace" font-size="10" fill="#475569">
-    <circle cx="330" cy="298" r="3" fill="#ec4899"/><text x="340" y="302">lookup_gene</text>
-    <circle cx="330" cy="316" r="3" fill="#ec4899"/><text x="340" y="320">lookup_disease</text>
-    <circle cx="330" cy="334" r="3" fill="#ec4899"/><text x="340" y="338">lookup_therapy</text>
+    <circle cx="620" cy="298" r="3" fill="#ec4899"/><text x="630" y="302">lookup_gene</text>
+    <circle cx="620" cy="316" r="3" fill="#ec4899"/><text x="630" y="320">lookup_disease</text>
+    <circle cx="620" cy="334" r="3" fill="#ec4899"/><text x="630" y="338">lookup_therapy</text>
   </g>
-  <rect x="525" y="348" width="38" height="14" rx="7" fill="#ec4899" fill-opacity="0.1"/>
-  <text x="544" y="358" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" font-weight="600" fill="#db2777">3</text>
-
-  <!-- All tools support -->
-  <rect x="600" y="258" width="280" height="175" rx="14" fill="#fff" stroke="#94a3b8" stroke-width="0.8" filter="url(#tSh)"/>
-  <text x="740" y="280" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="12" font-weight="700" fill="#475569">ALL TOOLS SUPPORT</text>
-  <g font-family="'SF Mono',monospace" font-size="10.5">
-    <rect x="620" y="295" width="240" height="28" rx="8" fill="#0ea5e9" fill-opacity="0.05" stroke="#0ea5e9" stroke-width="0.5"/>
-    <text x="740" y="313" text-anchor="middle" fill="#0ea5e9">output_format="markdown"</text>
-    <rect x="620" y="331" width="240" height="28" rx="8" fill="#22c55e" fill-opacity="0.05" stroke="#22c55e" stroke-width="0.5"/>
-    <text x="740" y="349" text-anchor="middle" fill="#16a34a">output_format="json"</text>
-    <rect x="620" y="367" width="240" height="28" rx="8" fill="#f59e0b" fill-opacity="0.05" stroke="#f59e0b" stroke-width="0.5"/>
-    <text x="740" y="385" text-anchor="middle" fill="#d97706">output_format="text"</text>
+  <rect x="825" y="348" width="38" height="14" rx="7" fill="#ec4899" fill-opacity="0.1"/>
+  <text x="844" y="358" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" font-weight="600" fill="#db2777">3</text>
+  <g font-family="'SF Mono',monospace" font-size="9">
+    <text x="620" y="376" fill="#94a3b8">All 29 tools support:</text>
+    <rect x="620" y="386" width="120" height="18" rx="6" fill="#0ea5e9" fill-opacity="0.05" stroke="#0ea5e9" stroke-width="0.4"/>
+    <text x="680" y="399" text-anchor="middle" fill="#0ea5e9" font-size="8.5">markdown / json / text</text>
   </g>
-  <text x="740" y="413" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">NLP: 35+ disease + 40+ therapy aliases</text>
 
   <!-- Footer -->
-  <text x="450" y="452" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">7 + 5 + 6 + 5 + 3 = 26 tools | Natural language discoverable</text>
+  <text x="450" y="440" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#475569" font-weight="600">7 + 5 + 6 + 5 + 3 + 3 = 29 tools</text>
+  <text x="450" y="458" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">10 data sources | 3 classification frameworks | Driver mutation cross-reference</text>
+  <text x="450" y="474" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">NLP: 35+ disease + 40+ therapy aliases | GRCh37/38 aware</text>
+
+  <text x="450" y="530" text-anchor="middle" font-family="'SF Mono',monospace" font-size="8.5" fill="#cbd5e1">CAPVIC v1.0.6 — Vivax Teknoloji A.S.</text>
 </svg>

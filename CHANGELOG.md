@@ -2,6 +2,29 @@
 
 All notable changes to CAPVIC are documented in this file.
 
+## [1.0.6] — 2026-04-03
+
+### Added
+- **Cancer Hotspots API client** — queries cancerhotspots.org (Chang et al. 2016, 2018) for recurrent somatic mutation hotspots. Uses POST `/api/hotspots/single/byGene` with JSON array body. Returns residue-level recurrence data with sample counts, variant amino acid distributions, cancer type breakdowns, and statistical q-values
+- **LitVar2 API client** — queries NCBI LitVar2 (Allot et al. 2023) for variant-centric literature mining. Chains autocomplete search → variant detail → v1 entity enrichment to provide publication counts, disease co-mentions, clinical significance, ClinGen IDs, and all observed HGVS nomenclatures
+- **`lookup_cancer_hotspots` tool** — query Cancer Hotspots database by gene or specific residue position. Returns hotspot table with sample counts, q-values, and cancer type distributions
+- **`assess_driver_mutation` tool** — cross-references 7 evidence signals (Cancer Hotspots recurrence, OncoKB oncogenic status, CIViC evidence volume, oncogenicity SOP score, in-silico predictions, gnomAD population frequency, known gene role) to produce a composite driver/passenger classification with confidence score (Driver ≥0.7, Likely Driver 0.4–0.69, VUS 0.2–0.39, Passenger <0.2)
+- **`search_variant_literature_litvar` tool** — NLP-curated variant literature search via LitVar2. Returns publication count, top disease co-mentions with frequencies, HGVS nomenclature variants found in literature, rsID mapping, and ClinGen IDs
+- **`CancerHotspot` model** — Pydantic model for hotspot residue data with sample counts, amino acid distributions, cancer type breakdowns, q-values
+- **`DriverMutationAssessment` model** — composite driver classification result with 7-signal scoring, therapeutic implications, and confidence levels
+- **Cancer Hotspots integration in evidence bundle** — `_gather_evidence()` now fetches hotspot data in parallel with other sources
+- **Enhanced oncogenicity scorer** — `_is_hotspot()` now uses real Cancer Hotspots API data (sample count ≥10 or q-value <0.05) as primary signal, with CIViC/OncoKB as fallbacks
+- **53 new unit tests** — comprehensive mock-based tests for Cancer Hotspots client (POST API, parsing, edge cases), LitVar2 client (autocomplete, entity, full search), driver assessment models, hotspot-aware oncogenicity scoring, and GRCh37/38 coordinate awareness
+
+### Changed
+- **10 data sources** (up from 8): CIViC, ClinVar, OncoKB, MetaKB, gnomAD, UniProt, PubMed, MyVariant.info, **Cancer Hotspots**, **LitVar2**
+- **29 MCP tools** (up from 26): added `lookup_cancer_hotspots`, `assess_driver_mutation`, `search_variant_literature_litvar`
+- **Base HTTP client** — widened `json_body` type from `dict` to `Any` to support Cancer Hotspots POST-with-array API pattern
+
+### Fixed
+- **Cancer Hotspots API method** — corrected from GET to POST (API requires `POST /hotspots/single/byGene` with JSON array body `["GENE"]`)
+- **Cancer Hotspots q-value parsing** — API returns q-values as strings (e.g., `"3.65e-82"`) or `null`; parser now correctly converts to `float | None`
+
 ## [1.0.5] — 2026-04-03
 
 ### Fixed

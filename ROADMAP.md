@@ -1,5 +1,19 @@
 # CAPVIC Roadmap
 
+## Completed (v1.0.6 — 2026-04-03)
+
+### Driver Mutation Support (v1.0.5 → v1.0.6)
+- [x] **Cancer Hotspots API** client — recurrent somatic mutation hotspot data (Chang et al. 2016, 2018)
+- [x] `CancerHotspot` data model with sample counts, variant amino acids, cancer type breakdowns, q-values
+- [x] `DriverMutationAssessment` model — composite driver/passenger classification with confidence scoring
+- [x] `lookup_cancer_hotspots` MCP tool — query cancerhotspots.org by gene or specific residue
+- [x] `assess_driver_mutation` MCP tool — cross-reference Cancer Hotspots + OncoKB + CIViC + oncogenicity SOP + in-silico predictions + gnomAD for driver vs. passenger classification
+- [x] Composite scoring algorithm: 7 evidence signals weighted and combined (hotspot recurrence, OncoKB oncogenic, CIViC evidence volume, oncogenicity SOP points, in-silico consensus, gnomAD AF, gene role)
+- [x] Cancer Hotspots data wired into evidence bundle pipeline (`_gather_evidence`)
+- [x] Enhanced `_is_hotspot()` in oncogenicity scorer to use real Cancer Hotspots data (sample count ≥ 10 or q-value < 0.05)
+- [x] EvidenceBundle extended with `cancer_hotspots` field and `has_hotspot_data` property
+- [x] 28 MCP tools total (up from 26)
+
 ## Completed (v1.0.5 — 2026-04-03)
 
 ### CIViC API Migration Fixes (v1.0.4 → v1.0.5)
@@ -76,10 +90,18 @@
 
 ## Planned (v1.1.0)
 
+### Driver Mutation Enhancements
+- [ ] **IntOGen integration** — pre-download `drivers.tsv` for gene-level driver classification (Act/LoF), 633 driver genes across 7 statistical methods (dNdScv, OncodriveCLUSTL, HotMAPS, etc.)
+- [ ] **Cancer Gene Census (CGC)** — expand `KNOWN_ONCOGENES`/`KNOWN_TUMOR_SUPPRESSORS` from ~73 genes to ~800 genes using COSMIC CGC Tier 1/2 classification
+- [ ] **COSMIC NLM proxy** — lightweight real-time query via `clinicaltables.nlm.nih.gov/api/cosmic/v4/search` (no auth required)
+- [ ] **3D Hotspots** — integrate `cancerhotspots.org/api/hotspots/3d/byGene` for structure-based clustering (HotMAPS-style)
+- [ ] **Driver confidence calibration** — tune composite score weights based on benchmark against OncoKB truth set (Bailey et al. 2018)
+- [ ] **Somatic vs germline filter** — use gnomAD AF + variant caller annotations to distinguish somatic from germline before driver classification
+
 ### New Data Sources
-- [ ] **COSMIC** — Catalogue of Somatic Mutations in Cancer (hotspot frequencies, mutational signatures)
+- [ ] **COSMIC full** — Catalogue of Somatic Mutations in Cancer (mutation frequencies, mutational signatures; requires academic registration)
 - [ ] **PharmGKB** — Pharmacogenomics associations for drug-variant interactions
-- [ ] **dbSNP** — rsID-based variant lookups and cross-referencing
+- [ ] **dbSNP** — rsID-based variant lookups and cross-referencing (partial via LitVar2 rsID)
 - [ ] **InterVar** — Automated ACMG/AMP interpretation
 
 ### Classification Enhancements

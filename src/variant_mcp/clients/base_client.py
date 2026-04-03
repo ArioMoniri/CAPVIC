@@ -62,7 +62,7 @@ class BaseClient:
         url: str,
         *,
         params: dict[str, Any] | None = None,
-        json_body: dict[str, Any] | None = None,
+        json_body: Any = None,
         max_retries: int = MAX_RETRIES,
     ) -> httpx.Response:
         """Execute HTTP request with rate limiting and exponential backoff retry."""
@@ -123,7 +123,7 @@ class BaseClient:
     async def post(
         self,
         path: str,
-        json_body: dict[str, Any] | None = None,
+        json_body: Any = None,
         params: dict[str, Any] | None = None,
     ) -> httpx.Response:
         url = f"{self.base_url}/{path.lstrip('/')}" if path else self.base_url

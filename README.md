@@ -12,7 +12,7 @@
 
 <p align="center">
   <strong>A production-grade MCP server for precision oncology variant classification</strong><br/>
-  Integrating 8 data sources with AMP/ASCO/CAP, ClinGen/CGC/VICC Oncogenicity SOP, and ACMG/AMP classification frameworks.
+  Integrating 10 data sources with AMP/ASCO/CAP, ClinGen/CGC/VICC Oncogenicity SOP, ACMG/AMP classification, and driver mutation cross-referencing.
 </p>
 
 ---
@@ -27,7 +27,7 @@
 - [OpenCode Integration](#-opencode-integration)
 - [Natural Language Prompts](#-natural-language-prompts)
 - [Environment Variables](#-environment-variables)
-- [Tool Reference (26 Tools)](#-tool-reference)
+- [Tool Reference (29 Tools)](#-tool-reference)
 - [Classification Frameworks](#-classification-frameworks)
 - [Example Workflows](#-example-workflows)
 - [For ML/AI Competition Teams](#-for-mlai-competition-teams)
@@ -57,7 +57,9 @@ CAPVIC turns any AI assistant (Claude, GPT, etc.) into a **virtual molecular tum
 | 🧬 **Population frequency** | gnomAD allele frequencies for BA1/PM2/SBVS1 criteria |
 | 🔀 **Variant normalization** | HGVS notation parsing (V600E ↔ p.Val600Glu) |
 | 🏗️ **Protein domain mapping** | UniProt/InterPro domain lookup for OM1 evidence |
-| 📚 **Literature search** | PubMed co-occurrence for gene/variant/disease |
+| 📚 **Literature search** | PubMed co-occurrence + LitVar2 NLP-curated variant literature |
+| 🔥 **Driver mutation assessment** | Cross-reference 7 signals for driver vs. passenger classification |
+| 🎯 **Cancer hotspot lookup** | Recurrent somatic mutation hotspots from cancerhotspots.org |
 | 🤖 **In-silico predictions** | SIFT, PolyPhen-2, REVEL, CADD, AlphaMissense + ClinGen SVI-calibrated PP3/BP4 |
 
 ### Data Sources
@@ -121,7 +123,7 @@ CAPVIC/
 │   │   └── tables.py            # Framework reference table formatters
 │   └── queries/
 │       └── civic_graphql.py      # CIViC GraphQL query definitions
-├── tests/                        # 131 unit tests (all clients mock-tested)
+├── tests/                        # 180+ unit tests (all clients mock-tested)
 ├── .github/workflows/ci.yml     # CI: lint, typecheck, test (3.11+3.12), build
 ├── Dockerfile
 ├── docker-compose.yml
@@ -350,10 +352,14 @@ CAPVIC tools are designed to work with natural language. Ask questions as you wo
 | "Create a pathogenicity report for ALK F1174L" | `variant_pathogenicity_summary` |
 | "What ACMG criteria apply to BRCA2 variants?" | `explain_acmg_criteria` |
 | "Explain the AMP/ASCO/CAP and oncogenicity classification frameworks" | `get_classification_frameworks_reference` |
+| "Is BRAF V600E a driver mutation?" | `assess_driver_mutation` |
+| "What are the mutation hotspots in TP53?" | `lookup_cancer_hotspots` |
+| "How many papers mention EGFR L858R? What diseases?" | `search_variant_literature_litvar` |
+| "Is KRAS G12D a driver or passenger in colorectal cancer?" | `assess_driver_mutation` + `lookup_cancer_hotspots` |
 
 ### Output Formats
 
-All 26 tools accept an optional `output_format` parameter:
+All 29 tools accept an optional `output_format` parameter:
 
 | Format | Description | Use Case |
 |--------|-------------|----------|
@@ -407,7 +413,7 @@ AI clients can use these structured outputs to generate plots, charts, and inter
 ## 🛠️ Tool Reference
 
 <p align="center">
-  <img src="assets/tools-overview.svg" alt="26 MCP Tools Overview" width="100%"/>
+  <img src="assets/tools-overview.svg" alt="29 MCP Tools Overview" width="100%"/>
 </p>
 
 ### Category 1: Multi-Source Power Tools ⚡
@@ -475,6 +481,19 @@ AI clients can use these structured outputs to generate plots, charts, and inter
 | 24 | `search_literature` | 📚 PubMed literature co-occurrence search | `gene`\*, `variant`, `disease`, `limit` |
 | 25 | `get_publication` | 📄 Fetch full publication details by PMID | `pmid`\* |
 | 26 | `predict_variant_effect` | 🤖 SIFT/PolyPhen-2/REVEL/CADD/AlphaMissense + ClinGen SVI PP3/BP4 strength | `gene`\*, `variant`\*, `hgvs_id` |
+
+### Category 9: Literature Mining Tools 📚
+
+| # | Tool | Description | Key Inputs |
+|---|------|-------------|------------|
+| 27 | `search_variant_literature_litvar` | 📚 LitVar2 NLP-curated variant literature (diseases, HGVS, pub counts) | `gene`\*, `variant`\* |
+
+### Category 10: Driver Mutation Tools 🔥
+
+| # | Tool | Description | Key Inputs |
+|---|------|-------------|------------|
+| 28 | `lookup_cancer_hotspots` | 🔥 Recurrent somatic mutation hotspots from cancerhotspots.org | `gene`\*, `residue` |
+| 29 | `assess_driver_mutation` | 🎯 Driver vs passenger cross-reference (7 evidence signals) | `gene`\*, `variant`\*, `disease` |
 
 \* = required parameter
 
@@ -711,6 +730,62 @@ lookup_gnomad_frequency(variant_id="7-140453136-A-T", genome_version="GRCh37")
 
 Returns: Global AF, per-population frequencies, and clinical interpretation for BA1/PM2/SBVS1/OM4 criteria. Requires chrom-pos-ref-alt format (see [Limitations](#-known-limitations--future-work)).
 
+### 🔥 "Is BRAF V600E a driver mutation?"
+
+```python
+assess_driver_mutation(gene="BRAF", variant="V600E", disease="Melanoma")
+```
+
+<details>
+<summary>Expected output (click to expand)</summary>
+
+```
+## 🔴 Driver Mutation Assessment — BRAF V600E
+
+Classification: Driver (composite score: 0.85)
+Confidence: HIGH
+
+### Evidence Signals
+- Recurrent hotspot (897 samples)
+- OncoKB: Oncogenic
+- Strong CIViC evidence (25+ items)
+- Oncogenicity SOP: Likely Oncogenic (7 pts)
+- In-silico: Damaging (5/7)
+- BRAF is a known oncogene
+
+### Cancer Hotspot Detail
+- Residue: V600
+- Total samples: 897
+- q-value: 0.00e+00
+- Top cancer types: skin (357), thyroid (316), bowel (113)
+
+### Classification Scale
+| Score Range | Classification | Meaning |
+|-------------|---------------|---------|
+| ≥ 0.70 | Driver | Strong multi-source oncogenic evidence |
+| 0.40 – 0.69 | Likely Driver | Moderate evidence from 2+ sources |
+| 0.20 – 0.39 | VUS | Insufficient or conflicting evidence |
+| < 0.20 | Passenger | Evidence suggests benign/non-functional |
+```
+
+</details>
+
+### 📚 "How many papers mention EGFR L858R?"
+
+```python
+search_variant_literature_litvar(gene="EGFR", variant="L858R")
+```
+
+Returns: Publication count, top disease co-mentions (with frequencies), all HGVS nomenclatures found in literature, rsID, ClinGen IDs, clinical significance, and publication timeline.
+
+### 🎯 "What are the hotspot residues in KRAS?"
+
+```python
+lookup_cancer_hotspots(gene="KRAS")
+```
+
+Returns: Table of recurrent mutation residues with sample counts, variant amino acid distributions, q-values, and top cancer types.
+
 ---
 
 ## 🏆 For ML/AI Competition Teams
@@ -799,6 +874,8 @@ for gene, variant in your_dataset:
 | **UniProt** | Monthly | 570K+ reviewed entries | Protein domains, functional annotation |
 | **PubMed** | Daily | 36M+ biomedical articles | Literature co-occurrence for evidence support |
 | **MyVariant.info** | Periodic | Aggregated dbNSFP | SIFT, PolyPhen, REVEL, CADD, AlphaMissense |
+| **Cancer Hotspots** | Static (v2) | 3,000+ hotspot residues, 275+ genes | Statistically validated recurrence (Chang et al. 2016, 2018) |
+| **LitVar2** | Continuous | 20M+ variant-publication links | NLP text-mined from PubMed (Allot et al. 2023) |
 
 > 📌 All API responses include retrieval timestamps. ClinVar data may be up to 7 days old; CIViC and OncoKB are near real-time.
 
@@ -810,6 +887,9 @@ for gene, variant in your_dataset:
 | `predict_variant_effect` | **GRCh37** (hg19) | `hgvs_id` parameter must use hg19 coordinates. Gene+variant search is build-agnostic. |
 | `clinvar_get_variant` | **GRCh38** | ClinVar returns GRCh38 coordinates by default. Queries by gene/variant name are build-agnostic. |
 | `oncokb_annotate` | Build-agnostic | Uses protein-level queries (gene + variant name). HGVSg annotation defaults to GRCh38. |
+| `search_variant_literature_litvar` | **GRCh38** | LitVar2 chromosomal positions from dbSNP (GRCh38). Queries by gene+variant are build-agnostic. |
+| `lookup_cancer_hotspots` | Build-agnostic | Uses amino acid residue positions (e.g., V600), not genomic coordinates. |
+| `assess_driver_mutation` | Build-agnostic | Cross-references protein-level data from multiple sources. |
 | All other tools | Build-agnostic | CIViC, UniProt, PubMed query by gene/variant name, not coordinates. |
 
 > **Important**: When using `lookup_gnomad_frequency`, provide coordinates matching the genome build. BRAF V600E is `7-140753336-A-T` on GRCh38 and `7-140453136-A-T` on GRCh37.
@@ -829,7 +909,7 @@ pip install -e ".[dev]"
 ### Commands
 
 ```bash
-# Run tests (131 unit tests)
+# Run tests (180+ unit tests)
 pytest tests/ -v --tb=short -m "not integration"
 
 # Lint

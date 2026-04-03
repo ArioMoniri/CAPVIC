@@ -16,18 +16,24 @@ from mcp.server.fastmcp import FastMCP
 
 from variant_mcp.classification import ACMGAMPHelper, AMPTierClassifier, OncogenicityScorer
 from variant_mcp.clients.base_client import ClientError
+from variant_mcp.clients.cancer_hotspots_client import CancerHotspotsClient
 from variant_mcp.clients.civic_client import CIViCClient
 from variant_mcp.clients.clinvar_client import ClinVarClient
 from variant_mcp.clients.gnomad_client import GnomADClient
+from variant_mcp.clients.litvar_client import LitVarClient
 from variant_mcp.clients.metakb_client import MetaKBClient
 from variant_mcp.clients.myvariant_client import MyVariantClient
 from variant_mcp.clients.oncokb_client import ONCOKB_NO_TOKEN_MSG, OncoKBClient
 from variant_mcp.clients.pubmed_client import PubMedClient
 from variant_mcp.clients.uniprot_client import UniProtClient
-from variant_mcp.constants import DISCLAIMER
+from variant_mcp.constants import DISCLAIMER, KNOWN_ONCOGENES, KNOWN_TUMOR_SUPPRESSORS
 from variant_mcp.formatters.reports import ReportFormatter
 from variant_mcp.formatters.tables import TableFormatter
-from variant_mcp.models.evidence import EvidenceBundle
+from variant_mcp.models.evidence import (
+    CancerHotspot,
+    DriverMutationAssessment,
+    EvidenceBundle,
+)
 from variant_mcp.utils.variant_normalizer import VariantNormalizer
 
 logger = logging.getLogger("variant_mcp")
@@ -45,6 +51,8 @@ gnomad_client = GnomADClient()
 pubmed_client = PubMedClient()
 uniprot_client = UniProtClient()
 myvariant_client = MyVariantClient()
+cancer_hotspots_client = CancerHotspotsClient()
+litvar_client = LitVarClient()
 
 # --- Utilities ---
 variant_normalizer = VariantNormalizer()
@@ -77,7 +85,10 @@ mcp = FastMCP(
         "- lookup_gnomad_frequency: Population allele frequencies from gnomAD\n"
         "- lookup_protein_domains: Protein domain mapping from UniProt\n"
         "- predict_variant_effect: In-silico predictions (SIFT, PolyPhen-2, REVEL, etc.)\n"
+        "- search_variant_literature_litvar: LitVar2 NLP-curated variant literature\n"
         "- search_literature / get_publication: PubMed literature search\n"
+        "- assess_driver_mutation: Driver vs passenger classification (cross-reference)\n"
+        "- lookup_cancer_hotspots: Recurrent somatic mutation hotspots\n"
         "- normalize_variant: HGVS notation parsing and conversion\n"
         "- lookup_gene / lookup_disease / lookup_therapy: Discovery/autocomplete\n"
         "- get_classification_frameworks_reference: Understand the guidelines\n\n"
@@ -274,6 +285,10 @@ async def _gather_evidence(
     if variant and (query_all or "myvariant" in (sources or [])):
         tasks["myvariant"] = myvariant_client.search_variant(gene, variant)
 
+    # Phase 11: Cancer Hotspots — recurrent somatic mutation data
+    if query_all or "hotspots" in (sources or []):
+        tasks["hotspots"] = cancer_hotspots_client.get_hotspots_by_gene(gene)
+
     results = await asyncio.gather(
         *[tasks[k] for k in tasks],
         return_exceptions=True,
@@ -300,6 +315,12 @@ async def _gather_evidence(
         elif key == "myvariant":
             if result is not None:
                 bundle.in_silico_predictions = result  # type: ignore[assignment]
+        elif key == "hotspots":
+            if isinstance(result, list):
+                parsed = [
+                    CancerHotspot(**cancer_hotspots_client.parse_hotspot_residue(h)) for h in result
+                ]
+                bundle.cancer_hotspots = parsed
 
     # Also fetch CIViC assertions for the gene
     if query_all or "civic" in (sources or []):
@@ -1677,6 +1698,447 @@ async def predict_variant_effect(
         return _format_output(preds, md, output_format)
     except ClientError as exc:
         return f"MyVariant.info query error: {exc}\n\n{DISCLAIMER}"
+
+
+# ============================================================================
+# CATEGORY 8: Literature Mining Tools (LitVar2)
+# ============================================================================
+
+
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
+async def search_variant_literature_litvar(
+    gene: str,
+    variant: str,
+    output_format: str = "markdown",
+) -> str:
+    """Search NCBI LitVar2 for variant-centric literature — publication counts, disease co-mentions, clinical significance, and HGVS nomenclatures.
+
+    LitVar2 (Allot et al. 2023) uses NLP/text-mining to link genetic variants to PubMed publications,
+    diseases, and clinical annotations. Returns publication volume, top co-mentioned diseases with
+    frequencies, all observed HGVS notations, rsID, ClinGen IDs, and clinical significance from ClinVar.
+
+    Complements the existing search_literature tool (keyword-based PubMed search) by providing
+    variant-centric, NLP-curated associations rather than simple keyword co-occurrence.
+
+    Use for questions like:
+    - "How many papers mention BRAF V600E?"
+    - "What diseases are associated with TP53 R175H in the literature?"
+    - "Find the rsID and HGVS notations for KRAS G12D"
+    - "What is the publication history of EGFR L858R?"
+
+    Args:
+        gene: Gene symbol (e.g., BRAF, TP53, KRAS). Required.
+        variant: Variant name (e.g., V600E, R175H, G12D). Required.
+        output_format: Response format — "markdown" (default), "json", or "text".
+    """
+    try:
+        result = await litvar_client.search_variant_literature(gene, variant)
+
+        if not result.get("found"):
+            return (
+                f"No LitVar2 results for {gene} {variant}.\n\n"
+                f"The variant may not have an rsID mapping or may not appear "
+                f"in text-mined PubMed literature.\n\n{DISCLAIMER}"
+            )
+
+        if output_format.lower().strip() == "json":
+            return _format_output(result, "", "json")
+
+        lines = [f"## 📚 LitVar2 Literature Profile — {gene} {variant}\n"]
+        lines.append(
+            f"**rsID**: [{result.get('rsid', 'N/A')}]"
+            f"(https://www.ncbi.nlm.nih.gov/snp/{result.get('rsid', '')})"
+        )
+        lines.append(f"**HGVS**: {result.get('hgvs', 'N/A')}")
+        lines.append(f"**Publications**: **{result.get('pmids_count', 0):,}** PubMed articles")
+
+        if result.get("first_published_year"):
+            lines.append(f"**First published**: {result['first_published_year']}")
+
+        clin_sig = result.get("clinical_significance", [])
+        if clin_sig:
+            lines.append(f"**Clinical significance**: {', '.join(clin_sig)}")
+
+        clingen = result.get("clingen_ids", [])
+        if clingen:
+            lines.append(f"**ClinGen IDs**: {', '.join(clingen)}")
+
+        chrpos = result.get("chromosome_position", [])
+        if chrpos:
+            lines.append(f"**Chromosomal position**: {', '.join(chrpos)} (GRCh38)")
+
+        # Disease co-mentions
+        diseases = result.get("diseases", {})
+        if diseases:
+            lines.append("\n### Top Disease Co-mentions\n")
+            lines.append("| Disease | Publication Count |")
+            lines.append("|---------|------------------|")
+            for disease, count in sorted(diseases.items(), key=lambda x: x[1], reverse=True)[:15]:
+                lines.append(f"| {disease} | {count:,} |")
+
+        # HGVS nomenclatures
+        all_hgvs = result.get("all_hgvs", [])
+        if all_hgvs:
+            lines.append("\n### HGVS Nomenclatures Found in Literature\n")
+            lines.append("| Notation | Frequency |")
+            lines.append("|----------|-----------|")
+            for h in sorted(all_hgvs, key=lambda x: x.get("count", 0), reverse=True)[:10]:
+                lines.append(f"| `{h['notation']}` | {h.get('count', 0):,} |")
+
+        # Publication year timeline
+        years = result.get("years", [])
+        if years:
+            lines.append(f"\n**Publication span**: {min(years)}–{max(years)} ({len(years)} years)")
+
+        lines.append(
+            "\n*Source: [LitVar2](https://www.ncbi.nlm.nih.gov/research/litvar2/) "
+            "(Allot et al. 2023, PMID: 36350631)*"
+        )
+        lines.append(f"\n---\n\n{DISCLAIMER}")
+        md = "\n".join(lines)
+        return _format_output(result, md, output_format)
+    except ClientError as exc:
+        return f"LitVar2 query error: {exc}\n\n{DISCLAIMER}"
+
+
+# ============================================================================
+# CATEGORY 9: Driver Mutation Tools
+# ============================================================================
+
+
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
+async def lookup_cancer_hotspots(
+    gene: str,
+    residue: int | None = None,
+    output_format: str = "markdown",
+) -> str:
+    """Look up recurrent somatic mutation hotspots from cancerhotspots.org (Chang et al. 2016, 2018).
+
+    Returns statistically significant recurrent mutation positions observed across large cancer
+    genomics studies, including sample counts, variant amino acid distributions, cancer type
+    breakdowns, and statistical q-values. Hotspot status is key evidence for the OS3/OP3
+    oncogenicity codes and driver mutation classification.
+
+    Use for questions like:
+    - "Is BRAF V600 a mutation hotspot?"
+    - "What are the recurrent mutation sites in TP53?"
+    - "Show me hotspot residues in KRAS"
+
+    Args:
+        gene: Gene symbol (e.g., BRAF, TP53, KRAS). Required.
+        residue: Specific amino acid position to check (e.g., 600 for V600E). Optional.
+            If omitted, returns all hotspot residues for the gene.
+        output_format: Response format — "markdown" (default), "json", or "text".
+    """
+    try:
+        if residue is not None:
+            raw_hotspots = await cancer_hotspots_client.get_hotspot_at_residue(gene, residue)
+        else:
+            raw_hotspots = await cancer_hotspots_client.get_hotspots_by_gene(gene)
+
+        parsed = [cancer_hotspots_client.parse_hotspot_residue(h) for h in raw_hotspots]
+
+        if not parsed:
+            target = f"residue {residue}" if residue else "gene"
+            return (
+                f"No hotspot data found for {gene} {target} in Cancer Hotspots database.\n\n"
+                f"This does not necessarily mean the variant is not recurrent — "
+                f"it may not be covered in the cancerhotspots.org dataset.\n\n{DISCLAIMER}"
+            )
+
+        if output_format.lower().strip() == "json":
+            return _format_output(parsed, "", "json")
+
+        lines = [f"## 🔥 Cancer Hotspots — {gene}\n"]
+        if residue:
+            lines[0] = f"## 🔥 Cancer Hotspots — {gene} residue {residue}\n"
+        lines.append(f"**{len(parsed)} hotspot residue(s)** found in Cancer Hotspots database\n")
+        lines.append("| Residue | Total Samples | Variant AAs | q-value | Top Cancer Types |")
+        lines.append("|---------|--------------|-------------|---------|-----------------|")
+
+        for h in sorted(parsed, key=lambda x: x["total_sample_count"], reverse=True)[:20]:
+            res = h["residue"] or "?"
+            count = h["total_sample_count"]
+            aas = ", ".join(
+                f"{k}({v})"
+                for k, v in sorted(
+                    h.get("variant_amino_acids", {}).items(),
+                    key=lambda x: int(x[1]) if str(x[1]).isdigit() else 0,
+                    reverse=True,
+                )[:5]
+            )
+            q = f"{h['q_value']:.2e}" if h.get("q_value") is not None else "—"
+            cancers = ", ".join(
+                sorted(
+                    h.get("cancer_type_counts", {}).keys(),
+                    key=lambda k: h["cancer_type_counts"][k],
+                    reverse=True,
+                )[:3]
+            )
+            lines.append(f"| {res} | {count} | {aas} | {q} | {cancers} |")
+
+        lines.append("\n*Source: cancerhotspots.org (Chang et al. 2016, 2018)*")
+        lines.append(f"\n---\n\n{DISCLAIMER}")
+        md = "\n".join(lines)
+        return _format_output(parsed, md, output_format)
+    except ClientError as exc:
+        return f"Cancer Hotspots query error: {exc}\n\n{DISCLAIMER}"
+
+
+@mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": True})  # type: ignore[arg-type]
+async def assess_driver_mutation(
+    gene: str,
+    variant: str,
+    disease: str | None = None,
+    output_format: str = "markdown",
+) -> str:
+    """Assess whether a somatic variant is a driver or passenger mutation by cross-referencing multiple evidence signals.
+
+    Combines Cancer Hotspots recurrence data, OncoKB oncogenic classification, CIViC evidence,
+    ClinGen/CGC/VICC oncogenicity scoring, in-silico predictions, and gnomAD population frequency
+    to produce a composite driver mutation assessment with confidence score.
+
+    Classification tiers:
+    - **Driver**: Strong multi-source evidence of oncogenic function (score >= 0.7)
+    - **Likely Driver**: Moderate evidence from 2+ sources (score 0.4-0.69)
+    - **Passenger**: Evidence suggests benign/non-functional (score < 0.2)
+    - **VUS**: Insufficient or conflicting evidence (score 0.2-0.39)
+
+    Use for questions like:
+    - "Is BRAF V600E a driver mutation?"
+    - "Is this TP53 R175H variant a driver or passenger?"
+    - "Classify KRAS G12D as driver/passenger in colorectal cancer"
+
+    Args:
+        gene: Gene symbol (e.g., BRAF, TP53, KRAS). Required.
+        variant: Variant name (e.g., V600E, R175H, G12D). Required.
+        disease: Cancer type for context (e.g., "Melanoma", "NSCLC"). Optional.
+        output_format: Response format — "markdown" (default), "json", or "text".
+    """
+    try:
+        # Gather all evidence in parallel
+        bundle = await _gather_evidence(gene, variant, disease=disease)
+
+        # Build the driver assessment
+        assessment = _build_driver_assessment(gene, variant, bundle)
+
+        if output_format.lower().strip() == "json":
+            return _format_output(assessment, "", "json")
+
+        md = _format_driver_assessment(gene, variant, assessment, bundle)
+        return _format_output(assessment, md, output_format)
+    except Exception as exc:
+        logger.error("Driver mutation assessment error: %s", exc)
+        return f"Error assessing driver status for {gene} {variant}: {exc}\n\n{DISCLAIMER}"
+
+
+def _build_driver_assessment(
+    gene: str, variant: str, bundle: EvidenceBundle
+) -> DriverMutationAssessment:
+    """Build a composite driver mutation assessment from evidence bundle."""
+    gene_upper = gene.upper()
+    signals: list[str] = []
+    score = 0.0
+    cancer_types: list[str] = []
+    therapeutic_implications: list[str] = []
+
+    is_oncogene = gene_upper in KNOWN_ONCOGENES
+    is_tsg = gene_upper in KNOWN_TUMOR_SUPPRESSORS
+
+    # Signal 1: Cancer Hotspots recurrence (strongest signal)
+    hotspot_data: CancerHotspot | None = None
+    if bundle.has_hotspot_data:
+        # Find the hotspot with highest sample count relevant to this variant
+        best_hs = max(bundle.cancer_hotspots, key=lambda h: h.total_sample_count)
+        if best_hs.total_sample_count >= 10:
+            score += 0.25
+            signals.append(f"Recurrent hotspot ({best_hs.total_sample_count} samples)")
+            hotspot_data = best_hs
+            cancer_types.extend(best_hs.cancer_type_counts.keys())
+        elif best_hs.total_sample_count >= 3:
+            score += 0.10
+            signals.append(f"Low-frequency hotspot ({best_hs.total_sample_count} samples)")
+            hotspot_data = best_hs
+
+    # Signal 2: OncoKB oncogenic classification
+    oncokb_oncogenic: str | None = None
+    if bundle.has_oncokb_data and bundle.oncokb_annotation:
+        oncogenic = (bundle.oncokb_annotation.oncogenic or "").lower()
+        oncokb_oncogenic = bundle.oncokb_annotation.oncogenic
+        if oncogenic == "oncogenic":
+            score += 0.25
+            signals.append("OncoKB: Oncogenic")
+        elif oncogenic == "likely oncogenic":
+            score += 0.15
+            signals.append("OncoKB: Likely Oncogenic")
+        elif "inconclusive" in oncogenic:
+            score += 0.0
+            signals.append("OncoKB: Inconclusive")
+        elif "neutral" in oncogenic or "likely neutral" in oncogenic:
+            score -= 0.15
+            signals.append("OncoKB: Likely Neutral")
+
+        # Therapeutic levels from OncoKB
+        for tx in bundle.oncokb_annotation.treatments:
+            level = tx.get("level", "")
+            drugs = tx.get("drugs", [])
+            if level and drugs:
+                drug_names = ", ".join(d.get("drugName", "") for d in drugs if isinstance(d, dict))
+                if drug_names:
+                    therapeutic_implications.append(f"{level}: {drug_names}")
+
+    # Signal 3: CIViC evidence volume and quality
+    civic_count = len(bundle.civic_evidence)
+    if civic_count >= 5:
+        score += 0.15
+        signals.append(f"Strong CIViC evidence ({civic_count} items)")
+    elif civic_count >= 2:
+        score += 0.08
+        signals.append(f"Moderate CIViC evidence ({civic_count} items)")
+    elif civic_count >= 1:
+        score += 0.03
+        signals.append(f"Limited CIViC evidence ({civic_count} item)")
+
+    # Signal 4: Oncogenicity SOP scoring
+    onc_result = oncogenicity_scorer.score_variant(gene, variant, evidence_bundle=bundle)
+    onc_class = onc_result.classification
+    if onc_class == "Oncogenic":
+        score += 0.20
+        signals.append(f"Oncogenicity SOP: Oncogenic ({onc_result.total_points} pts)")
+    elif onc_class == "Likely Oncogenic":
+        score += 0.12
+        signals.append(f"Oncogenicity SOP: Likely Oncogenic ({onc_result.total_points} pts)")
+    elif onc_class in ("Likely Benign", "Benign"):
+        score -= 0.15
+        signals.append(f"Oncogenicity SOP: {onc_class} ({onc_result.total_points} pts)")
+
+    # Signal 5: In-silico predictions
+    functional_impact: str | None = None
+    if bundle.has_prediction_data and bundle.in_silico_predictions:
+        preds = bundle.in_silico_predictions
+        if preds.consensus == "Damaging":
+            score += 0.08
+            signals.append(f"In-silico: Damaging ({preds.damaging_count}/{preds.total_predictors})")
+            functional_impact = "Damaging"
+        elif preds.consensus == "Benign":
+            score -= 0.08
+            signals.append(f"In-silico: Benign ({preds.benign_count}/{preds.total_predictors})")
+            functional_impact = "Benign"
+
+    # Signal 6: gnomAD population frequency (benign indicator)
+    gnomad_af: float | None = None
+    if bundle.has_gnomad_data and bundle.gnomad_frequency:
+        af = bundle.gnomad_frequency.allele_frequency
+        gnomad_af = af
+        if af is not None and af > 0.01:
+            score -= 0.20
+            signals.append(f"Common in gnomAD (AF={af:.4f}) — likely benign")
+        elif af is not None and af > 0.001:
+            score -= 0.05
+            signals.append(f"Low-frequency in gnomAD (AF={af:.6f})")
+
+    # Signal 7: Known gene role
+    if is_oncogene:
+        score += 0.05
+        signals.append(f"{gene} is a known oncogene")
+    if is_tsg:
+        score += 0.05
+        signals.append(f"{gene} is a known tumor suppressor")
+
+    # Clamp score to [0, 1]
+    score = max(0.0, min(1.0, score))
+
+    # Classify
+    if score >= 0.7:
+        classification = "Driver"
+        confidence = "HIGH"
+    elif score >= 0.4:
+        classification = "Likely Driver"
+        confidence = "MODERATE"
+    elif score < 0.2:
+        classification = "Passenger"
+        confidence = "MODERATE" if len(signals) >= 3 else "LOW"
+    else:
+        classification = "VUS"
+        confidence = "LOW"
+
+    return DriverMutationAssessment(
+        gene=gene,
+        variant=variant,
+        driver_classification=classification,
+        driver_score=round(score, 3),
+        signals=signals,
+        hotspot_data=hotspot_data,
+        oncokb_oncogenic=oncokb_oncogenic,
+        civic_evidence_count=civic_count,
+        oncogenicity_classification=onc_class,
+        is_known_oncogene=is_oncogene,
+        is_known_tsg=is_tsg,
+        gnomad_af=gnomad_af,
+        functional_impact=functional_impact,
+        cancer_types=list(set(cancer_types))[:10],
+        therapeutic_implications=therapeutic_implications[:10],
+        sources_used=bundle.sources_queried,
+        confidence=confidence,
+    )
+
+
+def _format_driver_assessment(
+    gene: str,
+    variant: str,
+    assessment: DriverMutationAssessment,
+    bundle: EvidenceBundle,
+) -> str:
+    """Format a driver mutation assessment as markdown."""
+    icon = {
+        "Driver": "🔴",
+        "Likely Driver": "🟠",
+        "VUS": "🟡",
+        "Passenger": "🟢",
+    }.get(assessment.driver_classification, "⚪")
+
+    lines = [
+        f"## {icon} Driver Mutation Assessment — {gene} {variant}\n",
+        f"**Classification**: **{assessment.driver_classification}** "
+        f"(composite score: {assessment.driver_score:.2f})",
+        f"**Confidence**: {assessment.confidence}\n",
+    ]
+
+    # Evidence signals
+    lines.append("### Evidence Signals\n")
+    for sig in assessment.signals:
+        lines.append(f"- {sig}")
+
+    # Hotspot detail
+    if assessment.hotspot_data:
+        hs = assessment.hotspot_data
+        lines.append("\n### Cancer Hotspot Detail\n")
+        lines.append(f"- **Residue**: {hs.residue}")
+        lines.append(f"- **Total samples**: {hs.total_sample_count}")
+        if hs.q_value is not None:
+            lines.append(f"- **q-value**: {hs.q_value:.2e}")
+        if hs.cancer_type_counts:
+            top_types = sorted(hs.cancer_type_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+            lines.append("- **Top cancer types**: " + ", ".join(f"{t} ({c})" for t, c in top_types))
+
+    # Therapeutic implications
+    if assessment.therapeutic_implications:
+        lines.append("\n### Therapeutic Implications\n")
+        for tx in assessment.therapeutic_implications:
+            lines.append(f"- {tx}")
+
+    # Classification explanation
+    lines.append("\n### Classification Scale\n")
+    lines.append("| Score Range | Classification | Meaning |")
+    lines.append("|-------------|---------------|---------|")
+    lines.append("| ≥ 0.70 | Driver | Strong multi-source oncogenic evidence |")
+    lines.append("| 0.40 – 0.69 | Likely Driver | Moderate evidence from 2+ sources |")
+    lines.append("| 0.20 – 0.39 | VUS | Insufficient or conflicting evidence |")
+    lines.append("| < 0.20 | Passenger | Evidence suggests benign/non-functional |")
+
+    lines.append(f"\n**Sources used**: {', '.join(assessment.sources_used)}")
+    lines.append(f"\n---\n\n{DISCLAIMER}")
+    return "\n".join(lines)
 
 
 # ============================================================================

@@ -299,11 +299,18 @@ class OncogenicityScorer:
 
     @staticmethod
     def _is_hotspot(gene: str, variant: str, bundle: EvidenceBundle) -> bool:
-        """Check if variant is in a known hotspot based on evidence volume."""
-        # A variant with many CIViC evidence items likely represents a hotspot
+        """Check if variant is in a known hotspot using Cancer Hotspots + evidence."""
+        # Primary: Cancer Hotspots data (statistically validated recurrence)
+        if bundle.has_hotspot_data:
+            for hs in bundle.cancer_hotspots:
+                if hs.total_sample_count >= 10:
+                    return True
+                if hs.q_value is not None and hs.q_value < 0.05:
+                    return True
+        # Secondary: CIViC evidence volume as proxy for hotspot status
         if len(bundle.civic_evidence) >= 5:
             return True
-        # OncoKB oncogenic + high evidence level
+        # Tertiary: OncoKB oncogenic classification
         if bundle.has_oncokb_data and bundle.oncokb_annotation:
             oncogenic = (bundle.oncokb_annotation.oncogenic or "").lower()
             if "oncogenic" in oncogenic:

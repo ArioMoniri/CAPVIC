@@ -146,6 +146,41 @@ class PubMedSearchResult(BaseModel):
     publications: list[Publication] = Field(default_factory=list)
 
 
+class CancerHotspot(BaseModel):
+    """A recurrent somatic mutation hotspot from cancerhotspots.org."""
+
+    gene: str | None = None
+    residue: str | None = None
+    total_sample_count: int = 0
+    variant_amino_acids: dict[str, int] = Field(default_factory=dict)
+    cancer_type_counts: dict[str, int] = Field(default_factory=dict)
+    classification: str | None = None
+    q_value: float | None = None
+    q_value_cancertype: float | None = None
+
+
+class DriverMutationAssessment(BaseModel):
+    """Cross-referenced driver mutation assessment combining multiple signals."""
+
+    gene: str
+    variant: str
+    driver_classification: str  # "Driver", "Likely Driver", "Passenger", "VUS"
+    driver_score: float = 0.0  # 0.0 - 1.0 composite probability
+    signals: list[str] = Field(default_factory=list)
+    hotspot_data: CancerHotspot | None = None
+    oncokb_oncogenic: str | None = None
+    civic_evidence_count: int = 0
+    oncogenicity_classification: str | None = None
+    is_known_oncogene: bool = False
+    is_known_tsg: bool = False
+    gnomad_af: float | None = None
+    functional_impact: str | None = None
+    cancer_types: list[str] = Field(default_factory=list)
+    therapeutic_implications: list[str] = Field(default_factory=list)
+    sources_used: list[str] = Field(default_factory=list)
+    confidence: str = "LOW"
+
+
 class EvidenceBundle(BaseModel):
     """Aggregated evidence from all sources for a variant."""
 
@@ -162,6 +197,7 @@ class EvidenceBundle(BaseModel):
     protein_domains: list[ProteinDomain] = Field(default_factory=list)
     in_silico_predictions: InSilicoPredictions | None = None
     gnomad_frequency: GnomADFrequency | None = None
+    cancer_hotspots: list[CancerHotspot] = Field(default_factory=list)
     errors: dict[str, str] = Field(default_factory=dict)
 
     @property
@@ -189,6 +225,10 @@ class EvidenceBundle(BaseModel):
         return self.in_silico_predictions is not None
 
     @property
+    def has_hotspot_data(self) -> bool:
+        return bool(self.cancer_hotspots)
+
+    @property
     def sources_queried(self) -> list[str]:
         sources = []
         if self.has_civic_data:
@@ -205,6 +245,8 @@ class EvidenceBundle(BaseModel):
             sources.append("UniProt")
         if self.has_prediction_data:
             sources.append("MyVariant.info")
+        if self.has_hotspot_data:
+            sources.append("Cancer Hotspots")
         return sources
 
 

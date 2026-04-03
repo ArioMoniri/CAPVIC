@@ -14,6 +14,8 @@ METAKB_SEARCH_URL = "https://search.cancervariants.org"
 GNOMAD_API_URL = "https://gnomad.broadinstitute.org/api"
 PUBMED_ESEARCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 PUBMED_EFETCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+LITVAR2_API_URL = "https://www.ncbi.nlm.nih.gov/research/litvar2-api"
+LITVAR_V1_API_URL = "https://www.ncbi.nlm.nih.gov/research/bionlp/litvar/api/v1"
 
 # === Rate Limits (requests per second) ===
 CIVIC_RATE_LIMIT = 3
@@ -28,6 +30,11 @@ MYVARIANT_RATE_LIMIT = 3
 # === Additional API Endpoints ===
 UNIPROT_API_URL = "https://rest.uniprot.org"
 MYVARIANT_API_URL = "https://myvariant.info/v1"
+CANCER_HOTSPOTS_API_URL = "https://www.cancerhotspots.org/api"
+
+# === Cancer Hotspots Rate Limit ===
+CANCER_HOTSPOTS_RATE_LIMIT = 3
+LITVAR_RATE_LIMIT = 3
 
 # === Timeouts ===
 REQUEST_TIMEOUT = 30
