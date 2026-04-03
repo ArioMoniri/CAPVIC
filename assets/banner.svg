@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400">
+  <defs>
+    <linearGradient id="bannerBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="40%" style="stop-color:#1e1b4b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="bHelixL" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#06b6d4" />
+      <stop offset="50%" style="stop-color:#8b5cf6" />
+      <stop offset="100%" style="stop-color:#06b6d4" />
+    </linearGradient>
+    <linearGradient id="bHelixR" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b" />
+      <stop offset="50%" style="stop-color:#ef4444" />
+      <stop offset="100%" style="stop-color:#f59e0b" />
+    </linearGradient>
+    <linearGradient id="titleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#06b6d4" />
+      <stop offset="50%" style="stop-color:#8b5cf6" />
+      <stop offset="100%" style="stop-color:#06b6d4" />
+    </linearGradient>
+    <linearGradient id="accentLine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:0" />
+      <stop offset="20%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="80%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:0" />
+    </linearGradient>
+    <filter id="bGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="textGlow">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="400" rx="16" fill="url(#bannerBg)"/>
+
+  <!-- Grid pattern -->
+  <g opacity="0.05" stroke="#8b5cf6" stroke-width="0.5">
+    <line x1="0" y1="50" x2="1200" y2="50"/><line x1="0" y1="100" x2="1200" y2="100"/>
+    <line x1="0" y1="150" x2="1200" y2="150"/><line x1="0" y1="200" x2="1200" y2="200"/>
+    <line x1="0" y1="250" x2="1200" y2="250"/><line x1="0" y1="300" x2="1200" y2="300"/>
+    <line x1="0" y1="350" x2="1200" y2="350"/>
+    <line x1="100" y1="0" x2="100" y2="400"/><line x1="200" y1="0" x2="200" y2="400"/>
+    <line x1="300" y1="0" x2="300" y2="400"/><line x1="400" y1="0" x2="400" y2="400"/>
+    <line x1="500" y1="0" x2="500" y2="400"/><line x1="600" y1="0" x2="600" y2="400"/>
+    <line x1="700" y1="0" x2="700" y2="400"/><line x1="800" y1="0" x2="800" y2="400"/>
+    <line x1="900" y1="0" x2="900" y2="400"/><line x1="1000" y1="0" x2="1000" y2="400"/>
+    <line x1="1100" y1="0" x2="1100" y2="400"/>
+  </g>
+
+  <!-- DNA Helix (left side, decorative) -->
+  <g filter="url(#bGlow)" transform="translate(140,200)">
+    <path d="M-30,-150 C-30,-110 30,-90 30,-50 C30,-10 -30,10 -30,50 C-30,90 30,110 30,150"
+          fill="none" stroke="url(#bHelixL)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M30,-150 C30,-110 -30,-90 -30,-50 C-30,-10 30,10 30,50 C30,90 -30,110 -30,150"
+          fill="none" stroke="url(#bHelixR)" stroke-width="4" stroke-linecap="round"/>
+    <!-- Base pairs -->
+    <line x1="-18" y1="-140" x2="18" y2="-140" stroke="#06b6d4" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
+    <line x1="-28" y1="-115" x2="28" y2="-115" stroke="#8b5cf6" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
+    <line x1="-30" y1="-90" x2="30" y2="-90" stroke="#06b6d4" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
+    <line x1="-22" y1="-65" x2="22" y2="-65" stroke="#f59e0b" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
+    <line x1="-8" y1="-40" x2="8" y2="-40" stroke="#8b5cf6" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
+    <line x1="-22" y1="-15" x2="22" y2="-15" stroke="#06b6d4" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
+    <line x1="-30" y1="10" x2="30" y2="10" stroke="#ef4444" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
+    <line x1="-28" y1="35" x2="28" y2="35" stroke="#8b5cf6" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
+    <line x1="-18" y1="60" x2="18" y2="60" stroke="#06b6d4" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
+    <line x1="-8" y1="85" x2="8" y2="85" stroke="#f59e0b" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
+    <line x1="-28" y1="110" x2="28" y2="110" stroke="#8b5cf6" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
+    <line x1="-18" y1="135" x2="18" y2="135" stroke="#06b6d4" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
+    <!-- Variant highlight -->
+    <circle cx="0" cy="-15" r="9" fill="#8b5cf6" opacity="0.8"/>
+    <circle cx="0" cy="-15" r="4.5" fill="#fff" opacity="0.9"/>
+  </g>
+
+  <!-- Data source dots (scattered background) -->
+  <g filter="url(#bGlow)" opacity="0.4">
+    <circle cx="80" cy="80" r="4" fill="#06b6d4"/>
+    <circle cx="50" cy="320" r="3" fill="#22c55e"/>
+    <circle cx="230" cy="60" r="3" fill="#f59e0b"/>
+    <circle cx="250" cy="340" r="4" fill="#ef4444"/>
+    <circle cx="1050" cy="90" r="3" fill="#8b5cf6"/>
+    <circle cx="1120" cy="310" r="4" fill="#ec4899"/>
+    <circle cx="1000" cy="340" r="3" fill="#14b8a6"/>
+    <circle cx="1150" cy="200" r="3" fill="#f97316"/>
+  </g>
+
+  <!-- Main title -->
+  <text x="660" y="155" text-anchor="middle" font-family="'SF Pro Display','Helvetica Neue',Arial,sans-serif" font-size="72" font-weight="800" letter-spacing="6" fill="url(#titleGrad)" filter="url(#textGlow)">CAPVIC</text>
+
+  <!-- Accent line -->
+  <rect x="360" y="175" width="600" height="2" rx="1" fill="url(#accentLine)"/>
+
+  <!-- Subtitle -->
+  <text x="660" y="215" text-anchor="middle" font-family="'SF Pro Display','Helvetica Neue',Arial,sans-serif" font-size="18" font-weight="400" letter-spacing="3" fill="#94a3b8">CLINICAL &amp; ACADEMIC PRECISION VARIANT</text>
+  <text x="660" y="242" text-anchor="middle" font-family="'SF Pro Display','Helvetica Neue',Arial,sans-serif" font-size="18" font-weight="400" letter-spacing="3" fill="#94a3b8">INTERPRETATION CONSOLE</text>
+
+  <!-- Feature pills -->
+  <g font-family="'SF Mono','Fira Code',monospace" font-size="11" font-weight="500">
+    <!-- Row 1 -->
+    <rect x="330" y="268" width="95" height="26" rx="13" fill="#06b6d4" fill-opacity="0.15" stroke="#06b6d4" stroke-width="0.8" stroke-opacity="0.4"/>
+    <text x="377" y="285" text-anchor="middle" fill="#06b6d4">8 Sources</text>
+
+    <rect x="440" y="268" width="95" height="26" rx="13" fill="#8b5cf6" fill-opacity="0.15" stroke="#8b5cf6" stroke-width="0.8" stroke-opacity="0.4"/>
+    <text x="487" y="285" text-anchor="middle" fill="#8b5cf6">26 Tools</text>
+
+    <rect x="550" y="268" width="130" height="26" rx="13" fill="#f59e0b" fill-opacity="0.15" stroke="#f59e0b" stroke-width="0.8" stroke-opacity="0.4"/>
+    <text x="615" y="285" text-anchor="middle" fill="#f59e0b">3 Frameworks</text>
+
+    <rect x="695" y="268" width="170" height="26" rx="13" fill="#22c55e" fill-opacity="0.15" stroke="#22c55e" stroke-width="0.8" stroke-opacity="0.4"/>
+    <text x="780" y="285" text-anchor="middle" fill="#22c55e">MCP Compatible</text>
+  </g>
+
+  <!-- Vivax branding -->
+  <text x="660" y="345" text-anchor="middle" font-family="'SF Pro Display','Helvetica Neue',Arial,sans-serif" font-size="12" font-weight="400" letter-spacing="2" fill="#64748b">A PRODUCT OF</text>
+  <text x="660" y="368" text-anchor="middle" font-family="'SF Pro Display','Helvetica Neue',Arial,sans-serif" font-size="16" font-weight="600" letter-spacing="4" fill="#94a3b8">VIVAX TEKNOLOJI</text>
+</svg>

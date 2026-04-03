@@ -1,12 +1,19 @@
-# 🧬 CAPVIC — Clinical & Academic Precision Variant Interpretation Console
+<p align="center">
+  <img src="assets/banner.svg" alt="CAPVIC Banner" width="100%"/>
+</p>
 
-> **A production-grade MCP server for precision oncology variant classification**
-> Integrating 8 data sources (CIViC, ClinVar, OncoKB, VICC MetaKB, gnomAD, UniProt, PubMed, MyVariant.info) with AMP/ASCO/CAP, ClinGen/CGC/VICC Oncogenicity SOP, and ACMG/AMP classification frameworks.
+<p align="center">
+  <a href="https://github.com/ArioMoniri/CAPVIC/actions/workflows/ci.yml"><img src="https://github.com/ArioMoniri/CAPVIC/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11+-blue.svg" alt="Python 3.11+"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT"/></a>
+  <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-Compatible-purple.svg" alt="MCP"/></a>
+  <a href="https://getvivax.com"><img src="https://img.shields.io/badge/Vivax_Teknoloji-Product-06b6d4.svg" alt="Vivax"/></a>
+</p>
 
-[![CI](https://github.com/ArioMoniri/CAPVIC/actions/workflows/ci.yml/badge.svg)](https://github.com/ArioMoniri/CAPVIC/actions/workflows/ci.yml)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![MCP](https://img.shields.io/badge/MCP-Compatible-purple.svg)](https://modelcontextprotocol.io)
+<p align="center">
+  <strong>A production-grade MCP server for precision oncology variant classification</strong><br/>
+  Integrating 8 data sources with AMP/ASCO/CAP, ClinGen/CGC/VICC Oncogenicity SOP, and ACMG/AMP classification frameworks.
+</p>
 
 ---
 
@@ -70,39 +77,13 @@ CAPVIC turns any AI assistant (Claude, GPT, etc.) into a **virtual molecular tum
 
 ## 🏗️ Architecture
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│                        AI Assistant                             │
-│        (Claude, OpenCode, GPT, or any MCP client)              │
-└─────────────────────────┬──────────────────────────────────────┘
-                          │ MCP (stdio transport)
-┌─────────────────────────▼──────────────────────────────────────┐
-│                    CAPVIC MCP Server                            │
-│                  (FastMCP · Python 3.11+)                       │
-│                                                                │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐ │
-│  │  26 MCP Tools    │  │  Classification   │  │  Formatters  │ │
-│  │                  │  │  Engines          │  │              │ │
-│  │  • Search        │  │  • AMP/ASCO/CAP   │  │  • Reports   │ │
-│  │  • Classify      │  │  • Oncogenicity   │  │  • Tables    │ │
-│  │  • Compare       │  │    SOP            │  │  • Evidence  │ │
-│  │  • Annotate      │  │  • ACMG/AMP       │  │    summaries │ │
-│  │  • Discover      │  │    helper         │  │              │ │
-│  │  • Predict       │  │                   │  │              │ │
-│  │  • Normalize     │  │                   │  │              │ │
-│  └──────┬───────────┘  └──────────────────┘  └──────────────┘ │
-│         │                                                      │
-│  ┌──────▼───────────────────────────────────────────────────┐  │
-│  │              Async API Clients (httpx)                    │  │
-│  │   Rate-limited · Retry with backoff · Graceful fallback  │  │
-│  └──┬───────┬──────────┬───────────┬─────────┬─────────────┘  │
-└─────┼───────┼──────────┼───────────┼─────────┼────────────────┘
-      │       │          │           │         │
-┌─────▼──┐ ┌─▼────────┐ ┌▼────────┐ ┌▼──────┐ ┌▼───────────────┐
-│ CIViC  │ │ ClinVar  │ │ OncoKB │ │MetaKB│ │gnomAD/UniProt/ │
-│GraphQL │ │E-utility │ │REST API│ │ REST │ │PubMed/MyVar   │
-└────────┘ └──────────┘ └────────┘ └──────┘ └───────────────┘
-```
+<p align="center">
+  <img src="assets/architecture.svg" alt="CAPVIC Architecture" width="100%"/>
+</p>
+
+<p align="center">
+  <img src="assets/data-flow.svg" alt="Variant Classification Pipeline" width="100%"/>
+</p>
 
 ### Project Structure
 
@@ -918,8 +899,12 @@ The limitations above represent **advanced features** that typically require ins
 
 MIT License — see [LICENSE](LICENSE) for details.
 
+Copyright (c) 2026 [Vivax Teknoloji A.S.](https://getvivax.com)
+
 ---
 
 <p align="center">
-  Built with 🧬 for the precision oncology research community
+  <img src="assets/logo.svg" alt="CAPVIC Logo" width="80"/><br/>
+  <strong>CAPVIC</strong> — A product of <a href="https://getvivax.com">Vivax Teknoloji A.S.</a><br/>
+  Built for the precision oncology research community
 </p>

@@ -7,6 +7,10 @@ name = "variant-mcp"
 version = "1.0.5"
 description = "Multi-source precision oncology and variant classification MCP server"
 license = {text = "MIT"}
+authors = [
+    {name = "Vivax Teknoloji A.S."},
+    {name = "Ariorad Moniri", email = "ario@getvivax.com"},
+]
 requires-python = ">=3.11"
 dependencies = [
     "mcp[cli]>=1.0.0",
