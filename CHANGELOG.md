@@ -18,6 +18,9 @@ All notable changes to CAPVIC are documented in this file.
 - **Oncogenicity SOP**: Removed arbitrary `len(applied) < 4` limit on OP2 code application
 - **gnomAD AF computation**: Added explicit `an > 0` division-by-zero guards
 - **Constants**: Removed incorrect "2025 update" reference from AMP/ASCO/CAP comment
+- **ClinVar review stars**: Added missing mappings for "criteria provided, conflicting classifications" (★), "no classification provided" (☆), and "no classifications from unflagged records" (☆)
+- **MetaKB endpoint**: Fixed API endpoint from non-existent `api/v2/search` to correct `api/v1/associations` (GA4GH spec)
+- **MetaKB parser**: Updated response parser for v1 format (`hits.hits[].association`) with correct field extraction for phenotypes, environmentalContexts, evidence source, and evidence_label
 
 ### Added
 - `gnomad_frequency` field and `has_gnomad_data` property on EvidenceBundle model

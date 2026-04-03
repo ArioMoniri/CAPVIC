@@ -61,54 +61,76 @@ class MetaKBClient(BaseClient):
             return []
 
     async def _search_api(self, query_parts: list[str]) -> dict[str, Any]:
-        """Attempt MetaKB API search."""
-        # The MetaKB API endpoint structure — try the /search endpoint
+        """Attempt MetaKB API search.
+
+        MetaKB v1 API endpoint: /api/v1/associations?q=<term>&size=<n>
+        Swagger: https://search.cancervariants.org/api/v1/ui/
+        """
         search_term = " ".join(query_parts)
         try:
-            data = await self.get_json("api/v2/search", params={"q": search_term})
+            data = await self.get_json(
+                "api/v1/associations", params={"q": search_term, "size": "25"}
+            )
             return data  # type: ignore[no-any-return]
-        except ClientError:
-            # Try alternative endpoint format
-            try:
-                data = await self.get_json("api/search", params={"term": search_term})
-                return data  # type: ignore[no-any-return]
-            except ClientError as exc:
-                raise ClientError(METAKB_FALLBACK_MSG) from exc
+        except ClientError as exc:
+            raise ClientError(METAKB_FALLBACK_MSG) from exc
 
     @staticmethod
     def _parse_results(data: dict[str, Any]) -> list[MetaKBInterpretation]:
-        """Parse MetaKB search results into MetaKBInterpretation list."""
+        """Parse MetaKB v1 search results into MetaKBInterpretation list.
+
+        MetaKB v1 /associations returns: {"hits": {"hits": [{"association": {...}}]}}
+        Each association has: description, evidence_label, evidence_level,
+        phenotypes, environmentalContexts, response_type, source_link, variant_name.
+        """
         interpretations = []
 
-        # Handle various response formats from MetaKB
-        results = data.get("results", data.get("matches", data.get("data", [])))
-        if not isinstance(results, list):
-            results = []
+        # MetaKB v1 response: {"hits": {"hits": [{"association": {...}}]}}
+        hits_outer = data.get("hits", {})
+        hits = hits_outer.get("hits", []) if isinstance(hits_outer, dict) else []
 
-        for result in results:
-            source = result.get("source", result.get("src", ""))
-            disease = result.get("disease", result.get("condition", ""))
-            if isinstance(disease, dict):
-                disease = disease.get("name", str(disease))
+        for hit in hits:
+            assoc = hit.get("association", hit) if isinstance(hit, dict) else {}
 
-            drugs = result.get("drugs", result.get("therapies", []))
-            if isinstance(drugs, list):
-                drugs = [d.get("name", str(d)) if isinstance(d, dict) else str(d) for d in drugs]
-            else:
-                drugs = []
+            # Extract disease from phenotypes list
+            phenotypes = assoc.get("phenotypes", [])
+            disease = ""
+            if phenotypes and isinstance(phenotypes, list):
+                disease = (
+                    phenotypes[0].get("description", "") if isinstance(phenotypes[0], dict) else ""
+                )
+            if not disease:
+                disease = assoc.get("disease_labels_truncated", "")
+
+            # Extract drugs from environmentalContexts
+            env_contexts = assoc.get("environmentalContexts", [])
+            drugs = []
+            if isinstance(env_contexts, list):
+                drugs = [
+                    ctx.get("description", str(ctx)) if isinstance(ctx, dict) else str(ctx)
+                    for ctx in env_contexts
+                    if ctx
+                ]
+
+            # Extract source from evidence list or source_link
+            source = ""
+            evidence = assoc.get("evidence", [])
+            if evidence and isinstance(evidence, list) and isinstance(evidence[0], dict):
+                ev_type = evidence[0].get("evidenceType", {})
+                source = ev_type.get("sourceName", "") if isinstance(ev_type, dict) else ""
+
+            # Map evidence_label to level (A-E style from CIViC)
+            evidence_label = assoc.get("evidence_label", "")
 
             interpretations.append(
                 MetaKBInterpretation(
                     source=source,
                     disease=disease,
                     drugs=drugs,
-                    evidence_level=result.get("evidence_level", result.get("tier")),
-                    clinical_significance=result.get(
-                        "clinical_significance",
-                        result.get("significance"),
-                    ),
-                    description=result.get("description", result.get("summary")),
-                    url=result.get("url", result.get("link")),
+                    evidence_level=evidence_label or assoc.get("evidence_level"),
+                    clinical_significance=assoc.get("response_type", ""),
+                    description=assoc.get("description", ""),
+                    url=assoc.get("source_link", ""),
                 )
             )
         return interpretations

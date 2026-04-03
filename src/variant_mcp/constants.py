@@ -266,9 +266,12 @@ CLINVAR_REVIEW_STARS = {
     "practice guideline": "★★★★",
     "reviewed by expert panel": "★★★",
     "criteria provided, multiple submitters, no conflicts": "★★",
+    "criteria provided, conflicting classifications": "★",
     "criteria provided, single submitter": "★",
     "no assertion criteria provided": "☆",
     "no assertion provided": "☆",
+    "no classification provided": "☆",
+    "no classifications from unflagged records": "☆",
 }
 
 # CIViC Evidence Level descriptions
