@@ -14,6 +14,9 @@ All notable changes to CAPVIC are documented in this file.
 - **Reports assert**: Replaced bare `assert` statements with proper None checks (safe under Python -O flag)
 - **Null variant types**: Added `stop_gained` (Sequence Ontology term) and `initiator_codon_variant` to null variant detection
 
+### Added
+- **OpenCode integration**: Full configuration guide for [OpenCode](https://opencode.ai/) MCP support with local stdio transport, Docker, and CLI verification commands
+
 ## [1.0.1] — 2026-04-03
 
 ### Fixed

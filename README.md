@@ -17,6 +17,7 @@
 - [Quick Start](#-quick-start)
 - [Docker](#-docker)
 - [Claude Desktop Integration](#-claude-desktop-integration)
+- [OpenCode Integration](#-opencode-integration)
 - [Environment Variables](#-environment-variables)
 - [Tool Reference (26 Tools)](#-tool-reference)
 - [Classification Frameworks](#-classification-frameworks)
@@ -71,7 +72,7 @@ CAPVIC turns any AI assistant (Claude, GPT, etc.) into a **virtual molecular tum
 ```
 ┌────────────────────────────────────────────────────────────────┐
 │                        AI Assistant                             │
-│              (Claude, GPT, or any MCP client)                  │
+│        (Claude, OpenCode, GPT, or any MCP client)              │
 └─────────────────────────┬──────────────────────────────────────┘
                           │ MCP (stdio transport)
 ┌─────────────────────────▼──────────────────────────────────────┐
@@ -282,6 +283,62 @@ Or using the installed entry point:
 ```
 
 > Both configs work out of the box. OncoKB and NCBI API keys are **optional** — see [Environment Variables](#-environment-variables).
+
+---
+
+## 🟢 OpenCode Integration
+
+[OpenCode](https://opencode.ai/) is an open-source AI coding agent (terminal TUI, desktop app, IDE extension) with native MCP support. CAPVIC works with OpenCode out of the box.
+
+Add to your `opencode.json` (project root or `~/.config/opencode/opencode.json`):
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "variant_mcp": {
+      "type": "local",
+      "command": ["python3", "-m", "variant_mcp.server"],
+      "enabled": true,
+      "environment": {
+        "PYTHONPATH": "/path/to/CAPVIC/src"
+      },
+      "timeout": 30000
+    }
+  }
+}
+```
+
+Or using Docker:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "variant_mcp": {
+      "type": "local",
+      "command": ["docker", "run", "--rm", "-i", "capvic:latest"],
+      "enabled": true,
+      "timeout": 30000
+    }
+  }
+}
+```
+
+**Key differences from Claude Desktop config:**
+- Top-level key is `"mcp"` (not `"mcpServers"`)
+- Requires `"type": "local"` for stdio transport
+- Command and args are a **single array** in `"command"`
+- Environment variables go in `"environment"` (not `"env"`)
+- Supports `{env:VAR_NAME}` substitution (e.g., `"ONCOKB_API_TOKEN": "{env:ONCOKB_API_TOKEN}"`)
+
+**Verify with OpenCode CLI:**
+```bash
+opencode mcp list           # List configured MCP servers
+opencode mcp debug variant_mcp  # Debug connection issues
+```
+
+> All 26 CAPVIC tools are available in OpenCode. The same test prompt from the Claude Desktop section works here.
 
 ---
 
