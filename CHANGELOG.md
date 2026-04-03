@@ -5,6 +5,7 @@ All notable changes to CAPVIC are documented in this file.
 ## [1.0.1] — 2026-04-03
 
 ### Fixed
+- **ClinVar esummary parser**: Migrated to new ClinVar API response structure — `clinical_significance` field is now deprecated, data moved to `germline_classification`, `oncogenicity_classification`, and `clinical_impact_classification` fields. Parser now reads all three and combines them.
 - **BaseClient.post()**: Was sending GET instead of POST (critical HTTP method bug)
 - **CIViC gene extraction**: Gene name was parsed from variant name instead of molecularProfile name (returned "V600E" as gene instead of "BRAF")
 - **CIViC GraphQL errors**: Error messages now extract individual message strings instead of dumping raw list

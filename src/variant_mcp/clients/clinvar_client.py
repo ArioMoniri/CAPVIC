@@ -129,19 +129,63 @@ class ClinVarClient(BaseClient):
 
     @staticmethod
     def _parse_esummary_doc(doc: dict[str, Any], uid: str) -> ClinVarVariant:
-        """Parse an esummary document into a ClinVarVariant."""
+        """Parse an esummary document into a ClinVarVariant.
+
+        ClinVar API (2024+) returns three separate classification fields:
+        - germline_classification: germline pathogenicity
+        - oncogenicity_classification: somatic oncogenicity
+        - clinical_impact_classification: somatic clinical impact (AMP tiers)
+        The legacy clinical_significance field is deprecated (returns null).
+        """
         genes_list = doc.get("genes", [])
         gene_names = [g.get("symbol", "") for g in genes_list if g.get("symbol")]
 
-        clin_sig = doc.get("clinical_significance", {})
-        if isinstance(clin_sig, dict):
-            significance = clin_sig.get("description", "")
-            review_status = clin_sig.get("review_status", "")
-            last_eval = clin_sig.get("last_evaluated", "")
-        else:
-            significance = str(clin_sig)
-            review_status = ""
-            last_eval = ""
+        # Try new API fields first, fall back to legacy clinical_significance
+        significance = ""
+        review_status = ""
+        last_eval = ""
+        conditions: list[str] = []
+        classification_parts: list[str] = []
+
+        for field_name in (
+            "germline_classification",
+            "oncogenicity_classification",
+            "clinical_impact_classification",
+        ):
+            cls_data = doc.get(field_name)
+            if isinstance(cls_data, dict) and cls_data.get("description"):
+                desc = cls_data["description"]
+                classification_parts.append(desc)
+                # Use the first non-empty classification for primary fields
+                if not significance:
+                    significance = desc
+                    review_status = cls_data.get("review_status", "")
+                    last_eval = cls_data.get("last_evaluated", "")
+                # Collect conditions from each classification's trait_set
+                for trait in cls_data.get("trait_set", []):
+                    name = trait.get("trait_name", "")
+                    if name and name not in conditions:
+                        conditions.append(name)
+
+        # Fall back to legacy field if new fields are empty
+        if not significance:
+            clin_sig = doc.get("clinical_significance", {})
+            if isinstance(clin_sig, dict):
+                significance = clin_sig.get("description", "")
+                review_status = clin_sig.get("review_status", "")
+                last_eval = clin_sig.get("last_evaluated", "")
+            elif clin_sig:
+                significance = str(clin_sig)
+
+        # If multiple classification types exist, combine them
+        if len(classification_parts) > 1:
+            significance = " | ".join(classification_parts)
+
+        # Fall back to legacy trait_set for conditions if none found
+        if not conditions:
+            conditions = [
+                t.get("trait_name", "") for t in doc.get("trait_set", []) if t.get("trait_name")
+            ]
 
         review_stars = CLINVAR_REVIEW_STARS.get(review_status.lower(), "")
 
@@ -155,9 +199,7 @@ class ClinVarClient(BaseClient):
             genes=gene_names,
             variation_type=doc.get("variation_type", ""),
             protein_change=doc.get("protein_change", ""),
-            conditions=[
-                t.get("trait_name", "") for t in doc.get("trait_set", []) if t.get("trait_name")
-            ],
+            conditions=conditions,
             last_evaluated=last_eval,
             clinvar_url=f"{CLINVAR_BASE_URL}/{variation_id}",
         )
