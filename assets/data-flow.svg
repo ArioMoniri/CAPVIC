@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 480" width="900" height="480">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 540" width="900" height="540">
   <defs>
     <marker id="aCy" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#0ea5e9"/>
@@ -12,109 +12,136 @@
     <marker id="aGr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#22c55e"/>
     </marker>
+    <marker id="aRd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef4444"/>
+    </marker>
     <filter id="fSh">
       <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#94a3b8" flood-opacity="0.12"/>
     </filter>
   </defs>
 
-  <rect width="900" height="480" rx="16" fill="#f8fafc"/>
+  <rect width="900" height="540" rx="16" fill="#f8fafc"/>
   <text x="450" y="35" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="18" font-weight="800" letter-spacing="1" fill="#0f172a">Variant Classification Pipeline</text>
   <rect x="310" y="43" width="280" height="2" rx="1" fill="#0ea5e9" opacity="0.25"/>
 
   <!-- Step 1: Input -->
-  <rect x="40" y="65" width="170" height="80" rx="14" fill="#fff" stroke="#0ea5e9" stroke-width="1.2" filter="url(#fSh)"/>
-  <text x="125" y="92" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="13" font-weight="700" fill="#0ea5e9">1. INPUT</text>
-  <text x="125" y="112" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#475569">BRAF V600E</text>
-  <text x="125" y="128" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">NLP Normalize</text>
+  <rect x="20" y="65" width="155" height="80" rx="14" fill="#fff" stroke="#0ea5e9" stroke-width="1.2" filter="url(#fSh)"/>
+  <text x="97" y="92" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="13" font-weight="700" fill="#0ea5e9">1. INPUT</text>
+  <text x="97" y="112" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#475569">BRAF V600E</text>
+  <text x="97" y="128" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">NLP Normalize</text>
 
   <!-- Step 2: Gather -->
-  <rect x="260" y="65" width="170" height="80" rx="14" fill="#fff" stroke="#8b5cf6" stroke-width="1.2" filter="url(#fSh)"/>
-  <text x="345" y="92" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="13" font-weight="700" fill="#7c3aed">2. GATHER</text>
-  <text x="345" y="112" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#475569">CIViC + ClinVar</text>
-  <text x="345" y="128" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">OncoKB + MetaKB</text>
+  <rect x="200" y="65" width="155" height="80" rx="14" fill="#fff" stroke="#8b5cf6" stroke-width="1.2" filter="url(#fSh)"/>
+  <text x="277" y="92" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="13" font-weight="700" fill="#7c3aed">2. GATHER</text>
+  <text x="277" y="112" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#475569">10 Data Sources</text>
+  <text x="277" y="128" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">Parallel async fetch</text>
 
   <!-- Step 3: Annotate -->
-  <rect x="480" y="65" width="170" height="80" rx="14" fill="#fff" stroke="#f59e0b" stroke-width="1.2" filter="url(#fSh)"/>
-  <text x="565" y="92" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="13" font-weight="700" fill="#d97706">3. ANNOTATE</text>
-  <text x="565" y="112" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#475569">gnomAD + UniProt</text>
-  <text x="565" y="128" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">SIFT / REVEL / CADD</text>
+  <rect x="380" y="65" width="155" height="80" rx="14" fill="#fff" stroke="#f59e0b" stroke-width="1.2" filter="url(#fSh)"/>
+  <text x="457" y="92" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="13" font-weight="700" fill="#d97706">3. ANNOTATE</text>
+  <text x="457" y="112" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#475569">gnomAD + UniProt</text>
+  <text x="457" y="128" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">SIFT/REVEL/Hotspots</text>
 
   <!-- Step 4: Classify -->
-  <rect x="700" y="65" width="170" height="80" rx="14" fill="#fff" stroke="#22c55e" stroke-width="1.2" filter="url(#fSh)"/>
-  <text x="785" y="92" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="13" font-weight="700" fill="#16a34a">4. CLASSIFY</text>
-  <text x="785" y="112" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#475569">AMP Tier I-IV</text>
-  <text x="785" y="128" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">Oncogenicity Score</text>
+  <rect x="560" y="65" width="155" height="80" rx="14" fill="#fff" stroke="#22c55e" stroke-width="1.2" filter="url(#fSh)"/>
+  <text x="637" y="92" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="13" font-weight="700" fill="#16a34a">4. CLASSIFY</text>
+  <text x="637" y="112" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#475569">AMP + Oncogenicity</text>
+  <text x="637" y="128" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">ACMG/AMP Germline</text>
+
+  <!-- Step 5: Driver -->
+  <rect x="740" y="65" width="155" height="80" rx="14" fill="#fff" stroke="#ef4444" stroke-width="1.2" filter="url(#fSh)"/>
+  <text x="817" y="92" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="13" font-weight="700" fill="#dc2626">5. DRIVER</text>
+  <text x="817" y="112" text-anchor="middle" font-family="'SF Mono',monospace" font-size="10" fill="#475569">7-Signal Scoring</text>
+  <text x="817" y="128" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">Driver vs Passenger</text>
 
   <!-- Flow arrows -->
-  <line x1="210" y1="105" x2="258" y2="105" stroke="#0ea5e9" stroke-width="1.5" marker-end="url(#aCy)"/>
-  <line x1="430" y1="105" x2="478" y2="105" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#aVi)"/>
-  <line x1="650" y1="105" x2="698" y2="105" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#aAm)"/>
+  <line x1="175" y1="105" x2="198" y2="105" stroke="#0ea5e9" stroke-width="1.5" marker-end="url(#aCy)"/>
+  <line x1="355" y1="105" x2="378" y2="105" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#aVi)"/>
+  <line x1="535" y1="105" x2="558" y2="105" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#aAm)"/>
+  <line x1="715" y1="105" x2="738" y2="105" stroke="#22c55e" stroke-width="1.5" marker-end="url(#aGr)"/>
 
   <!-- Evidence bundle -->
-  <rect x="40" y="175" width="395" height="275" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#fSh)"/>
-  <text x="237" y="202" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="12" font-weight="700" fill="#0f172a">Evidence Bundle</text>
+  <rect x="20" y="175" width="420" height="330" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#fSh)"/>
+  <text x="230" y="202" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="12" font-weight="700" fill="#0f172a">Evidence Bundle (10 Sources)</text>
 
   <g font-family="'SF Mono',monospace" font-size="10.5">
-    <rect x="60" y="218" width="355" height="28" rx="8" fill="#0ea5e9" fill-opacity="0.05" stroke="#0ea5e9" stroke-width="0.6"/>
-    <circle cx="80" cy="232" r="4" fill="#0ea5e9"/>
-    <text x="95" y="236" fill="#0ea5e9" font-weight="600">CIViC Evidence</text>
-    <text x="395" y="236" text-anchor="end" fill="#94a3b8">Level A-E, Tier I-IV</text>
+    <rect x="40" y="216" width="380" height="26" rx="8" fill="#0ea5e9" fill-opacity="0.05" stroke="#0ea5e9" stroke-width="0.6"/>
+    <circle cx="58" cy="229" r="4" fill="#0ea5e9"/>
+    <text x="73" y="233" fill="#0ea5e9" font-weight="600">CIViC Evidence</text>
+    <text x="400" y="233" text-anchor="end" fill="#94a3b8">Level A-E, Tier I-IV</text>
 
-    <rect x="60" y="254" width="355" height="28" rx="8" fill="#22c55e" fill-opacity="0.05" stroke="#22c55e" stroke-width="0.6"/>
-    <circle cx="80" cy="268" r="4" fill="#22c55e"/>
-    <text x="95" y="272" fill="#16a34a" font-weight="600">ClinVar Classification</text>
-    <text x="395" y="272" text-anchor="end" fill="#94a3b8">Stars, Review Status</text>
+    <rect x="40" y="248" width="380" height="26" rx="8" fill="#22c55e" fill-opacity="0.05" stroke="#22c55e" stroke-width="0.6"/>
+    <circle cx="58" cy="261" r="4" fill="#22c55e"/>
+    <text x="73" y="265" fill="#16a34a" font-weight="600">ClinVar Classification</text>
+    <text x="400" y="265" text-anchor="end" fill="#94a3b8">Stars, Review Status</text>
 
-    <rect x="60" y="290" width="355" height="28" rx="8" fill="#f59e0b" fill-opacity="0.05" stroke="#f59e0b" stroke-width="0.6"/>
-    <circle cx="80" cy="304" r="4" fill="#f59e0b"/>
-    <text x="95" y="308" fill="#d97706" font-weight="600">OncoKB Annotation</text>
-    <text x="395" y="308" text-anchor="end" fill="#94a3b8">Oncogenic, Level 1-4</text>
+    <rect x="40" y="280" width="380" height="26" rx="8" fill="#f59e0b" fill-opacity="0.05" stroke="#f59e0b" stroke-width="0.6"/>
+    <circle cx="58" cy="293" r="4" fill="#f59e0b"/>
+    <text x="73" y="297" fill="#d97706" font-weight="600">OncoKB Annotation</text>
+    <text x="400" y="297" text-anchor="end" fill="#94a3b8">Oncogenic, Level 1-4</text>
 
-    <rect x="60" y="326" width="355" height="28" rx="8" fill="#8b5cf6" fill-opacity="0.05" stroke="#8b5cf6" stroke-width="0.6"/>
-    <circle cx="80" cy="340" r="4" fill="#8b5cf6"/>
-    <text x="95" y="344" fill="#7c3aed" font-weight="600">gnomAD Frequency</text>
-    <text x="395" y="344" text-anchor="end" fill="#94a3b8">AF, BA1/PM2 Criteria</text>
+    <rect x="40" y="312" width="380" height="26" rx="8" fill="#8b5cf6" fill-opacity="0.05" stroke="#8b5cf6" stroke-width="0.6"/>
+    <circle cx="58" cy="325" r="4" fill="#8b5cf6"/>
+    <text x="73" y="329" fill="#7c3aed" font-weight="600">gnomAD Frequency</text>
+    <text x="400" y="329" text-anchor="end" fill="#94a3b8">AF, BA1/PM2 Criteria</text>
 
-    <rect x="60" y="362" width="355" height="28" rx="8" fill="#ec4899" fill-opacity="0.05" stroke="#ec4899" stroke-width="0.6"/>
-    <circle cx="80" cy="376" r="4" fill="#ec4899"/>
-    <text x="95" y="380" fill="#db2777" font-weight="600">In-silico Predictions</text>
-    <text x="395" y="380" text-anchor="end" fill="#94a3b8">PP3/BP4 Calibrated</text>
+    <rect x="40" y="344" width="380" height="26" rx="8" fill="#ec4899" fill-opacity="0.05" stroke="#ec4899" stroke-width="0.6"/>
+    <circle cx="58" cy="357" r="4" fill="#ec4899"/>
+    <text x="73" y="361" fill="#db2777" font-weight="600">In-silico Predictions</text>
+    <text x="400" y="361" text-anchor="end" fill="#94a3b8">PP3/BP4 Calibrated</text>
 
-    <rect x="60" y="398" width="355" height="28" rx="8" fill="#14b8a6" fill-opacity="0.05" stroke="#14b8a6" stroke-width="0.6"/>
-    <circle cx="80" cy="412" r="4" fill="#14b8a6"/>
-    <text x="95" y="416" fill="#0d9488" font-weight="600">Protein Domains</text>
-    <text x="395" y="416" text-anchor="end" fill="#94a3b8">UniProt, OM1 Hotspot</text>
+    <rect x="40" y="376" width="380" height="26" rx="8" fill="#14b8a6" fill-opacity="0.05" stroke="#14b8a6" stroke-width="0.6"/>
+    <circle cx="58" cy="389" r="4" fill="#14b8a6"/>
+    <text x="73" y="393" fill="#0d9488" font-weight="600">Protein Domains</text>
+    <text x="400" y="393" text-anchor="end" fill="#94a3b8">UniProt, OM1</text>
+
+    <rect x="40" y="408" width="380" height="26" rx="8" fill="#dc2626" fill-opacity="0.05" stroke="#dc2626" stroke-width="0.6"/>
+    <circle cx="58" cy="421" r="4" fill="#dc2626"/>
+    <text x="73" y="425" fill="#dc2626" font-weight="600">Cancer Hotspots</text>
+    <text x="400" y="425" text-anchor="end" fill="#94a3b8">Recurrence, q-values</text>
+
+    <rect x="40" y="440" width="380" height="26" rx="8" fill="#6366f1" fill-opacity="0.05" stroke="#6366f1" stroke-width="0.6"/>
+    <circle cx="58" cy="453" r="4" fill="#6366f1"/>
+    <text x="73" y="457" fill="#4f46e5" font-weight="600">LitVar2 Literature</text>
+    <text x="400" y="457" text-anchor="end" fill="#94a3b8">NLP-curated, Diseases</text>
+
+    <text x="230" y="488" text-anchor="middle" fill="#94a3b8" font-size="9">+ MetaKB + PubMed</text>
   </g>
 
   <!-- Classification output -->
-  <rect x="465" y="175" width="405" height="275" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#fSh)"/>
-  <text x="667" y="202" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="12" font-weight="700" fill="#0f172a">Classification Output</text>
+  <rect x="470" y="175" width="410" height="330" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#fSh)"/>
+  <text x="675" y="202" text-anchor="middle" font-family="'SF Pro Display','Inter',sans-serif" font-size="12" font-weight="700" fill="#0f172a">Classification Output</text>
 
   <g font-family="'SF Mono',monospace" font-size="10.5">
     <!-- AMP -->
-    <rect x="485" y="218" width="365" height="54" rx="8" fill="#f59e0b" fill-opacity="0.05" stroke="#f59e0b" stroke-width="0.6"/>
-    <text x="505" y="238" fill="#d97706" font-weight="700" font-size="12" font-family="'SF Pro Display','Inter',sans-serif">AMP/ASCO/CAP</text>
-    <text x="505" y="258" fill="#475569">Tier I (Strong) ... Tier IV (Benign)</text>
+    <rect x="490" y="218" width="370" height="54" rx="8" fill="#f59e0b" fill-opacity="0.05" stroke="#f59e0b" stroke-width="0.6"/>
+    <text x="510" y="238" fill="#d97706" font-weight="700" font-size="12" font-family="'SF Pro Display','Inter',sans-serif">AMP/ASCO/CAP</text>
+    <text x="510" y="258" fill="#475569">Tier I (Strong) ... Tier IV (Benign)</text>
 
     <!-- Oncogenicity -->
-    <rect x="485" y="282" width="365" height="54" rx="8" fill="#8b5cf6" fill-opacity="0.05" stroke="#8b5cf6" stroke-width="0.6"/>
-    <text x="505" y="302" fill="#7c3aed" font-weight="700" font-size="12" font-family="'SF Pro Display','Inter',sans-serif">ClinGen Oncogenicity SOP</text>
-    <text x="505" y="322" fill="#475569">Oncogenic ... Benign (point-based)</text>
+    <rect x="490" y="282" width="370" height="54" rx="8" fill="#8b5cf6" fill-opacity="0.05" stroke="#8b5cf6" stroke-width="0.6"/>
+    <text x="510" y="302" fill="#7c3aed" font-weight="700" font-size="12" font-family="'SF Pro Display','Inter',sans-serif">ClinGen Oncogenicity SOP</text>
+    <text x="510" y="322" fill="#475569">Oncogenic ... Benign (point-based)</text>
 
     <!-- ACMG -->
-    <rect x="485" y="346" width="365" height="54" rx="8" fill="#22c55e" fill-opacity="0.05" stroke="#22c55e" stroke-width="0.6"/>
-    <text x="505" y="366" fill="#16a34a" font-weight="700" font-size="12" font-family="'SF Pro Display','Inter',sans-serif">ACMG/AMP 5-Tier</text>
-    <text x="505" y="386" fill="#475569">Pathogenic ... Benign</text>
+    <rect x="490" y="346" width="370" height="54" rx="8" fill="#22c55e" fill-opacity="0.05" stroke="#22c55e" stroke-width="0.6"/>
+    <text x="510" y="366" fill="#16a34a" font-weight="700" font-size="12" font-family="'SF Pro Display','Inter',sans-serif">ACMG/AMP 5-Tier</text>
+    <text x="510" y="386" fill="#475569">Pathogenic ... Benign</text>
+
+    <!-- Driver -->
+    <rect x="490" y="410" width="370" height="54" rx="8" fill="#ef4444" fill-opacity="0.05" stroke="#ef4444" stroke-width="0.6"/>
+    <text x="510" y="430" fill="#dc2626" font-weight="700" font-size="12" font-family="'SF Pro Display','Inter',sans-serif">Driver Mutation Assessment</text>
+    <text x="510" y="450" fill="#475569">Driver / Likely Driver / VUS / Passenger</text>
 
     <!-- Output formats -->
-    <rect x="485" y="410" width="365" height="28" rx="8" fill="#0ea5e9" fill-opacity="0.05" stroke="#0ea5e9" stroke-width="0.6"/>
-    <text x="505" y="428" fill="#0ea5e9" font-weight="600">Output:</text>
-    <text x="570" y="428" fill="#475569">Markdown | JSON | Plain Text</text>
+    <rect x="490" y="474" width="370" height="22" rx="8" fill="#0ea5e9" fill-opacity="0.05" stroke="#0ea5e9" stroke-width="0.6"/>
+    <text x="510" y="489" fill="#0ea5e9" font-weight="600">Output:</text>
+    <text x="570" y="489" fill="#475569">Markdown | JSON | Plain Text</text>
   </g>
 
   <!-- Arrow between panels -->
-  <line x1="435" y1="312" x2="463" y2="312" stroke="#22c55e" stroke-width="1.5" marker-end="url(#aGr)"/>
+  <line x1="440" y1="340" x2="468" y2="340" stroke="#22c55e" stroke-width="1.5" marker-end="url(#aGr)"/>
 
   <!-- Footer -->
-  <text x="450" y="470" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">CAPVIC v1.0.5 | Vivax Teknoloji A.S.</text>
+  <text x="450" y="530" text-anchor="middle" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">CAPVIC v1.0.6 | 10 sources | 29 tools | 4 frameworks | Vivax Teknoloji A.S.</text>
 </svg>

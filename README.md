@@ -65,7 +65,7 @@ CAPVIC turns any AI assistant (Claude, GPT, etc.) into a **virtual molecular tum
 ### Data Sources
 
 <p align="center">
-  <img src="assets/data-sources.svg" alt="8 Integrated Data Sources" width="100%"/>
+  <img src="assets/data-sources.svg" alt="10 Integrated Data Sources" width="100%"/>
 </p>
 
 | Source | Type | Access | Update Frequency |
@@ -78,6 +78,8 @@ CAPVIC turns any AI assistant (Claude, GPT, etc.) into a **virtual molecular tum
 | 🟢 [UniProt](https://www.uniprot.org) | Protein domains & functional annotation | Free, no auth | Monthly |
 | 🟢 [PubMed](https://pubmed.ncbi.nlm.nih.gov) | Biomedical literature (36M+ articles) | Free, no auth | Daily |
 | 🟢 [MyVariant.info](https://myvariant.info) | Aggregated in-silico predictions (dbNSFP) | Free, no auth | Periodic |
+| 🟢 [Cancer Hotspots](https://www.cancerhotspots.org) | Recurrent somatic mutation hotspots (Chang et al. 2016, 2018) | Free, no auth | Static (v2) |
+| 🟢 [LitVar2](https://www.ncbi.nlm.nih.gov/research/litvar2/) | NLP-curated variant-publication links (Allot et al. 2023) | Free, no auth | Continuous |
 
 ---
 
@@ -96,7 +98,7 @@ CAPVIC turns any AI assistant (Claude, GPT, etc.) into a **virtual molecular tum
 ```
 CAPVIC/
 ├── src/variant_mcp/
-│   ├── server.py                  # FastMCP server + 26 tool registrations
+│   ├── server.py                  # FastMCP server + 29 tool registrations
 │   ├── constants.py               # URLs, enums, evidence codes, disclaimers
 │   ├── clients/
 │   │   ├── base_client.py         # Async HTTP + rate limiting + retry
@@ -107,7 +109,9 @@ CAPVIC/
 │   │   ├── gnomad_client.py       # gnomAD GraphQL (population frequencies)
 │   │   ├── pubmed_client.py       # PubMed E-utilities (literature search)
 │   │   ├── uniprot_client.py      # UniProt REST (protein domains)
-│   │   └── myvariant_client.py    # MyVariant.info (in-silico predictions)
+│   │   ├── myvariant_client.py    # MyVariant.info (in-silico predictions)
+│   │   ├── cancer_hotspots_client.py # Cancer Hotspots (somatic recurrence)
+│   │   └── litvar_client.py       # LitVar2 (NLP literature mining)
 │   ├── utils/
 │   │   └── variant_normalizer.py  # Pure Python HGVS notation parser
 │   ├── classification/
@@ -123,7 +127,7 @@ CAPVIC/
 │   │   └── tables.py            # Framework reference table formatters
 │   └── queries/
 │       └── civic_graphql.py      # CIViC GraphQL query definitions
-├── tests/                        # 180+ unit tests (all clients mock-tested)
+├── tests/                        # 155+ unit tests (all clients mock-tested)
 ├── .github/workflows/ci.yml     # CI: lint, typecheck, test (3.11+3.12), build
 ├── Dockerfile
 ├── docker-compose.yml
@@ -330,7 +334,7 @@ opencode mcp list           # List configured MCP servers
 opencode mcp debug variant_mcp  # Debug connection issues
 ```
 
-> All 26 CAPVIC tools are available in OpenCode. The same natural language prompts from the section below work in OpenCode, Claude Desktop, or any MCP client.
+> All 29 CAPVIC tools are available in OpenCode. The same natural language prompts from the section below work in OpenCode, Claude Desktop, or any MCP client.
 
 ---
 
@@ -947,6 +951,9 @@ GitHub Actions runs on every push:
 | 8 | Ioannidis NM, et al. (2016). "REVEL: An Ensemble Method for Predicting the Pathogenicity of Rare Missense Variants." *Am J Hum Genet*, 99(4):877-885. | [27666373](https://pubmed.ncbi.nlm.nih.gov/27666373/) |
 | 9 | Cheng J, et al. (2023). "Accurate proteome-wide missense variant effect prediction with AlphaMissense." *Science*, 381(6664):eadg7492. | [37733863](https://pubmed.ncbi.nlm.nih.gov/37733863/) |
 | 10 | Pejaver V, et al. (2022). "Calibration of computational tools for missense variant pathogenicity classification." *Am J Hum Genet*, 109(12):2163-2177. | [36413997](https://pubmed.ncbi.nlm.nih.gov/36413997/) |
+| 11 | Chang MT, et al. (2016). "Identifying recurrent mutations in cancer reveals widespread lineage diversity and mutational specificity." *Nat Biotechnol*, 34(2):155-163. | [26619011](https://pubmed.ncbi.nlm.nih.gov/26619011/) |
+| 12 | Chang MT, et al. (2018). "Accelerating Discovery of Functional Mutant Alleles in Cancer." *Cancer Discov*, 8(2):174-183. | [29247016](https://pubmed.ncbi.nlm.nih.gov/29247016/) |
+| 13 | Allot A, et al. (2023). "LitVar 2.0: an updated database of genetic variant/gene associations from the literature." *Nucleic Acids Res*, 51(D1):D1236-D1243. | [36350631](https://pubmed.ncbi.nlm.nih.gov/36350631/) |
 
 ---
 
@@ -973,9 +980,10 @@ From a clinical genomics perspective, the current tool covers the **core evidenc
 3. **Population frequency** ✅ — gnomAD direct lookup handles the most common BA1/PM2 queries
 4. **In-silico predictions** ✅ — 7 predictors via MyVariant.info with ClinGen SVI-calibrated REVEL thresholds for PP3/BP4 evidence strength (Pejaver et al. 2022)
 5. **Protein domain context** ✅ — UniProt provides OM1 evidence
-6. **Literature context** ✅ — PubMed search supports evidence review
-7. **Integrated classification pipeline** ✅ — UniProt domain data (OM1) and in-silico predictions (OP1/SBP1) are **automatically fed** into the oncogenicity scorer when using `variant_classify`, `variant_pathogenicity_summary`, or `score_oncogenicity` with auto-detection — no manual tool chaining required
-8. **End-to-end report visibility** ✅ — Evidence reports, pathogenicity summaries, and source comparisons all display protein domain context and in-silico prediction tables when data is available
+6. **Literature context** ✅ — PubMed co-occurrence + LitVar2 NLP-curated variant literature with disease co-mentions, HGVS nomenclatures, and publication timelines
+7. **Driver mutation assessment** ✅ — 7-signal composite scoring cross-references Cancer Hotspots recurrence, OncoKB oncogenic status, CIViC evidence, oncogenicity SOP, in-silico predictions, gnomAD AF, and gene role for driver vs. passenger classification
+8. **Integrated classification pipeline** ✅ — UniProt domain data (OM1), in-silico predictions (OP1/SBP1), and Cancer Hotspots (OS3) are **automatically fed** into the oncogenicity scorer when using `variant_classify`, `variant_pathogenicity_summary`, or `score_oncogenicity` with auto-detection — no manual tool chaining required
+9. **End-to-end report visibility** ✅ — Evidence reports, pathogenicity summaries, and source comparisons all display protein domain context, in-silico prediction tables, and hotspot data when available
 
 The limitations above represent **advanced features** that typically require institutional infrastructure (reference genomes, local databases, licensed tools) and are beyond the scope of a lightweight MCP server.
 

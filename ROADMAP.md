@@ -12,7 +12,9 @@
 - [x] Cancer Hotspots data wired into evidence bundle pipeline (`_gather_evidence`)
 - [x] Enhanced `_is_hotspot()` in oncogenicity scorer to use real Cancer Hotspots data (sample count ≥ 10 or q-value < 0.05)
 - [x] EvidenceBundle extended with `cancer_hotspots` field and `has_hotspot_data` property
-- [x] 28 MCP tools total (up from 26)
+- [x] **LitVar2 API client** — NLP-curated variant literature mining (autocomplete + variant/get + v1 entity enrichment)
+- [x] `search_variant_literature_litvar` MCP tool — publication counts, disease co-mentions, HGVS nomenclatures, ClinGen IDs
+- [x] 29 MCP tools total (up from 26), 10 data sources (up from 8)
 
 ## Completed (v1.0.5 — 2026-04-03)
 

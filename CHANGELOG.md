@@ -24,6 +24,8 @@ All notable changes to CAPVIC are documented in this file.
 ### Fixed
 - **Cancer Hotspots API method** — corrected from GET to POST (API requires `POST /hotspots/single/byGene` with JSON array body `["GENE"]`)
 - **Cancer Hotspots q-value parsing** — API returns q-values as strings (e.g., `"3.65e-82"`) or `null`; parser now correctly converts to `float | None`
+- **LitVar2 `variant/get` trailing slash** — endpoint returns 404 with trailing `/`; removed from URL path
+- **LitVar2 `##` URL encoding** — LitVar IDs contain `##` which httpx treats as URL fragment separators, silently stripping them; now pre-encoded as `%23%23`
 
 ## [1.0.5] — 2026-04-03
 

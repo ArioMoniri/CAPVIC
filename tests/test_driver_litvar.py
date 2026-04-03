@@ -209,7 +209,7 @@ class TestLitVarClient:
     async def test_get_variant(self):
         client = LitVarClient()
         respx.get(
-            "https://www.ncbi.nlm.nih.gov/research/litvar2-api/variant/get/litvar@rs113488022%23%23/"
+            "https://www.ncbi.nlm.nih.gov/research/litvar2-api/variant/get/litvar@rs113488022%23%23"
         ).mock(
             return_value=httpx.Response(
                 200,
@@ -223,7 +223,7 @@ class TestLitVarClient:
                 },
             )
         )
-        result = await client.get_variant("litvar@rs113488022%23%23")
+        result = await client.get_variant("litvar@rs113488022##")
         assert result is not None
         assert result["rsid"] == "rs113488022"
         assert "CA16602736" in result["clingen_ids"]
@@ -252,9 +252,9 @@ class TestLitVarClient:
             )
         )
 
-        # Mock variant get
+        # Mock variant get (no trailing slash — LitVar2 returns 404 with it)
         respx.get(
-            "https://www.ncbi.nlm.nih.gov/research/litvar2-api/variant/get/litvar@rs113488022%23%23/"
+            "https://www.ncbi.nlm.nih.gov/research/litvar2-api/variant/get/litvar@rs113488022%23%23"
         ).mock(
             return_value=httpx.Response(
                 200,

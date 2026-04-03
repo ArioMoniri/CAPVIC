@@ -56,8 +56,9 @@ class LitVarClient(BaseClient):
         """
         try:
             # URL-encode '#' chars — they are URL fragment separators and httpx strips them
+            # No trailing slash — LitVar2 returns 404 with trailing slash on this endpoint
             safe_id = litvar_id.replace("#", "%23")
-            result = await self.get_json(f"variant/get/{safe_id}/")
+            result = await self.get_json(f"variant/get/{safe_id}")
             return result if isinstance(result, dict) else None
         except Exception as e:
             logger.warning("LitVar2 variant get failed for %s: %s", litvar_id, e)
