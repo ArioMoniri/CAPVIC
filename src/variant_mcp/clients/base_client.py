@@ -24,7 +24,7 @@ class RateLimiter:
 
     async def acquire(self) -> None:
         await self._semaphore.acquire()
-        asyncio.get_event_loop().call_later(self._delay, self._semaphore.release)
+        asyncio.get_running_loop().call_later(self._delay, self._semaphore.release)
 
 
 class BaseClient:

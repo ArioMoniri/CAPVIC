@@ -2,6 +2,17 @@
 
 All notable changes to CAPVIC are documented in this file.
 
+## [1.0.2] — 2026-04-03
+
+### Fixed
+- **CRITICAL — Oncogenicity thresholds**: Corrected Benign from ≤-10 to ≤-7 and Likely Benign from ≤-6 to ≤-1 per Horak et al. 2022 Table 3 (PMID: 35101336). Previous thresholds created a dead zone where scores -7 to -9 were "Likely Benign" instead of "Benign"
+- **REVEL thresholds**: Corrected to exact Pejaver et al. 2022 calibration — PP3_strong ≥0.932 (was ≥0.773), PP3_moderate ≥0.773 (was ≥0.644), PP3_supporting ≥0.644 (was ≥0.5), BP4_strong ≤0.016 (was ≤0.183), BP4_moderate ≤0.183 (was ≤0.290), BP4_supporting ≤0.290 (was ≤0.4)
+- **AMP tier parser**: Fixed prefix collision where "TIERI" matched before "TIERII" — now checks longest tier strings first (IV, III, II, I)
+- **ClinVar Tier IV**: Conflicting "pathogenic/likely benign" classifications no longer incorrectly assigned Tier IV
+- **Rate limiter**: Replaced deprecated `asyncio.get_event_loop()` with `asyncio.get_running_loop()`
+- **Reports assert**: Replaced bare `assert` statements with proper None checks (safe under Python -O flag)
+- **Null variant types**: Added `stop_gained` (Sequence Ontology term) and `initiator_codon_variant` to null variant detection
+
 ## [1.0.1] — 2026-04-03
 
 ### Fixed

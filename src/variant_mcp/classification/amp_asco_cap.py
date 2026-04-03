@@ -106,7 +106,8 @@ class AMPTierClassifier:
             return None, None, []
 
         annotation = bundle.oncokb_annotation
-        assert annotation is not None
+        if annotation is None:
+            return None, None, []
         trail: list[str] = []
         tier: str | None = None
         level: str | None = None
@@ -243,12 +244,15 @@ class AMPTierClassifier:
                 f"ClinVar {cv.variation_id}: {cv.clinical_significance} ({stars} — {status})"
             )
 
-            if "benign" in sig and "likely" not in sig:
-                tier = "IV"
-                trail.append("ClinVar classification supports Tier IV (Benign)")
-            elif "likely benign" in sig:
-                tier = "IV"
-                trail.append("ClinVar classification supports Tier IV (Likely Benign)")
+            # Only assign Tier IV if the classification is clearly benign,
+            # not when pathogenic/benign conflict exists
+            if "pathogenic" not in sig:
+                if "benign" in sig and "likely" not in sig:
+                    tier = "IV"
+                    trail.append("ClinVar classification supports Tier IV (Benign)")
+                elif "likely benign" in sig:
+                    tier = "IV"
+                    trail.append("ClinVar classification supports Tier IV (Likely Benign)")
 
             if cv.conflicting:
                 trail.append("ClinVar: CONFLICTING interpretations among submitters")
@@ -259,7 +263,9 @@ class AMPTierClassifier:
     def _parse_amp_level(amp_str: str) -> tuple[str | None, str | None]:
         """Parse AMP level string like 'TIERI-LEVELA' into (tier, level)."""
         amp_str = amp_str.upper().replace("_", "").replace("-", "").replace(" ", "")
-        for tier_val in ("I", "II", "III", "IV"):
+        # Check longest tier strings first to avoid prefix collision
+        # (e.g., "TIERI" matching before "TIERII")
+        for tier_val in ("IV", "III", "II", "I"):
             for level_val in ("A", "B", "C", "D"):
                 if f"TIER{tier_val}" in amp_str and f"LEVEL{level_val}" in amp_str:
                     return tier_val, level_val

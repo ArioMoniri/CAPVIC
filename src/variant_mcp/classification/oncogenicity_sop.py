@@ -23,13 +23,14 @@ logger = logging.getLogger(__name__)
 class OncogenicityScorer:
     """ClinGen/CGC/VICC SOP for classification of oncogenicity of somatic variants.
 
+    Reference: Horak et al., Genet Med 2022. PMID: 35101336, Table 3.
+
     Uses a point-based system:
         >= 10 points -> Oncogenic
         6-9 points   -> Likely Oncogenic
         0-5 points   -> VUS
-        -1 to -5     -> VUS
-        -6 to -9     -> Likely Benign
-        <= -10       -> Benign
+        -1 to -6     -> Likely Benign
+        <= -7        -> Benign
     """
 
     def score_variant(
@@ -331,9 +332,9 @@ class OncogenicityScorer:
             return "Oncogenic"
         if points >= 6:
             return "Likely Oncogenic"
-        if points <= -10:
+        if points <= -7:
             return "Benign"
-        if points <= -6:
+        if points <= -1:
             return "Likely Benign"
         return "VUS"
 

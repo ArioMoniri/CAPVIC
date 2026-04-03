@@ -294,16 +294,16 @@ class InSilicoPredictions(BaseModel):
         """
         if self.revel_score is None:
             return None
-        if self.revel_score >= 0.773:
+        if self.revel_score >= 0.932:
             return "PP3_strong"
-        if self.revel_score >= 0.644:
+        if self.revel_score >= 0.773:
             return "PP3_moderate"
-        if self.revel_score >= 0.5:
+        if self.revel_score >= 0.644:
             return "PP3_supporting"
-        if self.revel_score <= 0.183:
+        if self.revel_score <= 0.016:
             return "BP4_strong"
-        if self.revel_score <= 0.290:
+        if self.revel_score <= 0.183:
             return "BP4_moderate"
-        if self.revel_score <= 0.4:
+        if self.revel_score <= 0.290:
             return "BP4_supporting"
-        return None  # 0.4 < score < 0.5 — indeterminate
+        return None  # 0.290 < score < 0.644 — indeterminate

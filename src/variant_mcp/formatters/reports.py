@@ -210,9 +210,8 @@ class ReportFormatter:
                 lines.append("")
 
         # OncoKB section
-        if bundle.has_oncokb_data:
+        if bundle.has_oncokb_data and bundle.oncokb_annotation:
             ann = bundle.oncokb_annotation
-            assert ann is not None
             lines.append("## OncoKB (oncokb.org)\n")
             lines.append(f"**Oncogenic**: {ann.oncogenic or 'N/A'}")
             lines.append(f"**Mutation Effect**: {ann.known_effect or 'N/A'}")
@@ -354,9 +353,8 @@ class ReportFormatter:
                 )
                 has_pathogenic = True
 
-        if bundle.has_oncokb_data:
+        if bundle.has_oncokb_data and bundle.oncokb_annotation:
             ann = bundle.oncokb_annotation
-            assert ann is not None
             oncogenic = (ann.oncogenic or "").lower()
             if "oncogenic" in oncogenic:
                 lines.append(f"- **OncoKB**: {ann.oncogenic}, {ann.known_effect or 'N/A'}")

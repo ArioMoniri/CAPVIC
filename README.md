@@ -478,10 +478,10 @@ Consensus: Damaging (3/4 damaging, 0/4 benign)
 |---------------|--------|------------|------------------------------------|
 | SIFT          | 0.0000 | D          | <0.05 = damaging                   |
 | PolyPhen-2    | 0.9990 | D          | >0.85 = prob. damaging             |
-| REVEL         | 0.9220 | → PP3_strong | ClinGen SVI: ≥0.773 PP3_strong  |
-| AlphaMissense | 0.9782 | P          | >0.564 = likely pathogenic         |
+| REVEL         | 0.9310 | → PP3_moderate | ClinGen SVI: ≥0.932 strong, ≥0.773 moderate  |
+| AlphaMissense | 0.9850 | P          | >0.564 = likely pathogenic         |
 
-ClinGen SVI REVEL assessment: PP3_strong (score 0.922, Pejaver et al. 2022)
+ClinGen SVI REVEL assessment: PP3_moderate (score 0.931, Pejaver et al. 2022)
 ```
 
 </details>
@@ -605,7 +605,7 @@ CAPVIC is designed to help teams building ML models that predict variant pathoge
 # For each variant in your dataset, extract features:
 predict_variant_effect(gene="BRAF", variant="V600E")
 #   → SIFT=0.0, PolyPhen2=0.971, REVEL=0.931, AlphaMissense=0.985
-#   → PP3_strong (ClinGen SVI calibrated)
+#   → PP3_moderate (ClinGen SVI calibrated, Pejaver et al. 2022)
 
 lookup_protein_domains(gene="BRAF", variant="V600E")
 #   → in_domain=True, domain="Protein kinase" (457-717)

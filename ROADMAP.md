@@ -1,5 +1,17 @@
 # CAPVIC Roadmap
 
+## Completed (v1.0.2 — 2026-04-03)
+
+### Bug Fixes & Scientific Accuracy (v1.0.1 → v1.0.2)
+- [x] Corrected oncogenicity SOP thresholds to match Horak et al. 2022 Table 3
+- [x] Corrected REVEL PP3/BP4 thresholds to match Pejaver et al. 2022 exact calibration
+- [x] Fixed AMP tier parser prefix collision (TIERI/TIERII)
+- [x] Fixed ClinVar API migration (3 new classification fields)
+- [x] Fixed MetaKB endpoint and response parser for v1 API
+- [x] Fixed CIViC gene extraction from molecularProfile
+- [x] Added gnomAD-based SBVS1/SBS1/OM4/OP4 evidence codes
+- [x] Added missing null variant types (stop_gained, initiator_codon_variant)
+
 ## Completed (v1.0.0 — 2026-04-03)
 
 ### Core Platform

@@ -159,10 +159,16 @@ class TestOncogenicityScorer:
         assert result.classification == "Benign"
 
     def test_explicit_codes_likely_benign(self):
-        """Codes summing -6 to -9 should classify as Likely Benign."""
+        """Codes summing -1 to -6 should classify as Likely Benign (Horak 2022)."""
+        result = self.scorer.score_variant("GENE1", "X123Y", evidence_codes=["SBS1", "SBP1"])
+        assert result.total_points == -5
+        assert result.classification == "Likely Benign"
+
+    def test_explicit_codes_benign_sbvs1(self):
+        """SBVS1 alone (-8 points) should classify as Benign (Horak 2022)."""
         result = self.scorer.score_variant("GENE1", "X123Y", evidence_codes=["SBVS1"])
         assert result.total_points == -8
-        assert result.classification == "Likely Benign"
+        assert result.classification == "Benign"
 
     def test_auto_detect_null_variant_tsg(self):
         """Null variant in TSG should auto-detect OVS1."""

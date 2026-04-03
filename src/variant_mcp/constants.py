@@ -206,11 +206,11 @@ ONCOGENICITY_EVIDENCE_CODES: dict[str, dict[str, str | int]] = {
 
 # Oncogenicity classification thresholds (point-based)
 ONCOGENICITY_THRESHOLDS = {
-    "Oncogenic": 10,
-    "Likely Oncogenic": 6,
-    "VUS": 0,  # between -1 and 5 inclusive
-    "Likely Benign": -6,
-    "Benign": -10,
+    "Oncogenic": 10,  # >= 10 points
+    "Likely Oncogenic": 6,  # 6-9 points
+    "VUS": 0,  # 0-5 points
+    "Likely Benign": -1,  # -1 to -6 points
+    "Benign": -7,  # <= -7 points
 }
 
 # === ACMG/AMP Germline Classification Terms ===
@@ -379,11 +379,13 @@ KNOWN_ONCOGENES = {
 # Null variant types (for OVS1 auto-detection)
 NULL_VARIANT_TYPES = {
     "nonsense",
+    "stop_gained",
     "frameshift",
     "splice_site",
     "splice_donor",
     "splice_acceptor",
     "start_loss",
+    "initiator_codon_variant",
     "exon_deletion",
     "transcript_ablation",
 }

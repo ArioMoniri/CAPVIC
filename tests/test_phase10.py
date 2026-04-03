@@ -252,37 +252,37 @@ class TestInSilicoPredictions:
         assert preds.consensus == "Benign"
 
     def test_revel_acmg_strength_pp3_strong(self) -> None:
-        """REVEL >= 0.773 should yield PP3_strong per ClinGen SVI."""
+        """REVEL >= 0.932 should yield PP3_strong per Pejaver et al. 2022."""
         preds = InSilicoPredictions(revel_score=0.95)
         assert preds.revel_acmg_strength == "PP3_strong"
 
     def test_revel_acmg_strength_pp3_moderate(self) -> None:
-        """REVEL >= 0.644 should yield PP3_moderate."""
-        preds = InSilicoPredictions(revel_score=0.7)
+        """REVEL >= 0.773 should yield PP3_moderate per Pejaver et al. 2022."""
+        preds = InSilicoPredictions(revel_score=0.8)
         assert preds.revel_acmg_strength == "PP3_moderate"
 
     def test_revel_acmg_strength_pp3_supporting(self) -> None:
-        """REVEL >= 0.5 should yield PP3_supporting."""
-        preds = InSilicoPredictions(revel_score=0.55)
+        """REVEL >= 0.644 should yield PP3_supporting per Pejaver et al. 2022."""
+        preds = InSilicoPredictions(revel_score=0.7)
         assert preds.revel_acmg_strength == "PP3_supporting"
 
     def test_revel_acmg_strength_bp4_strong(self) -> None:
-        """REVEL <= 0.183 should yield BP4_strong."""
-        preds = InSilicoPredictions(revel_score=0.1)
+        """REVEL <= 0.016 should yield BP4_strong per Pejaver et al. 2022."""
+        preds = InSilicoPredictions(revel_score=0.01)
         assert preds.revel_acmg_strength == "BP4_strong"
 
     def test_revel_acmg_strength_bp4_moderate(self) -> None:
-        """REVEL <= 0.290 should yield BP4_moderate."""
-        preds = InSilicoPredictions(revel_score=0.25)
+        """REVEL <= 0.183 should yield BP4_moderate per Pejaver et al. 2022."""
+        preds = InSilicoPredictions(revel_score=0.1)
         assert preds.revel_acmg_strength == "BP4_moderate"
 
     def test_revel_acmg_strength_bp4_supporting(self) -> None:
-        """REVEL <= 0.4 should yield BP4_supporting."""
-        preds = InSilicoPredictions(revel_score=0.35)
+        """REVEL <= 0.290 should yield BP4_supporting per Pejaver et al. 2022."""
+        preds = InSilicoPredictions(revel_score=0.25)
         assert preds.revel_acmg_strength == "BP4_supporting"
 
     def test_revel_acmg_strength_indeterminate(self) -> None:
-        """REVEL between 0.4 and 0.5 should be indeterminate."""
+        """REVEL between 0.290 and 0.644 should be indeterminate."""
         preds = InSilicoPredictions(revel_score=0.45)
         assert preds.revel_acmg_strength is None
 
