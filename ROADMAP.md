@@ -22,7 +22,7 @@
 ## Completed (v1.0.3 — 2026-04-03)
 
 ### Natural Language & Discovery UX (v1.0.2 → v1.0.3)
-- [x] Enhanced all 26 tool descriptions for natural language discovery (nexonco-style)
+- [x] Enhanced all 26 tool descriptions for natural language discovery
 - [x] Added "Use for" prompt examples to every tool docstring
 - [x] Added structured markdown output notes for visualization/artifact generation
 - [x] Added API key environment variables to OpenCode config (ONCOKB_API_TOKEN, NCBI_API_KEY)
