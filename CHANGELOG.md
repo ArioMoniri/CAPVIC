@@ -2,6 +2,16 @@
 
 All notable changes to CAPVIC are documented in this file.
 
+## [1.0.3] — 2026-04-03
+
+### Changed
+- **Tool descriptions**: All 26 MCP tool docstrings rewritten for natural language discovery — each now includes a rich description, "Use for" example prompts, and structured output notes. Tools are discoverable via conversational queries like "Find evidences for colorectal cancer therapies involving KRAS mutations"
+- **OpenCode config**: Added `ONCOKB_API_TOKEN` and `NCBI_API_KEY` environment variables with `{env:VAR_NAME}` substitution syntax
+
+### Added
+- **Natural Language Prompts** section in README with 10 example prompts showing how AI clients map questions to tools
+- **Visualization & Artifacts** guide documenting structured markdown outputs (tables, score breakdowns, domain maps) suitable for chart/plot generation by AI clients
+
 ## [1.0.2] — 2026-04-03
 
 ### Fixed

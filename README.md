@@ -18,6 +18,7 @@
 - [Docker](#-docker)
 - [Claude Desktop Integration](#-claude-desktop-integration)
 - [OpenCode Integration](#-opencode-integration)
+- [Natural Language Prompts](#-natural-language-prompts)
 - [Environment Variables](#-environment-variables)
 - [Tool Reference (26 Tools)](#-tool-reference)
 - [Classification Frameworks](#-classification-frameworks)
@@ -301,13 +302,17 @@ Add to your `opencode.json` (project root or `~/.config/opencode/opencode.json`)
       "command": ["python3", "-m", "variant_mcp.server"],
       "enabled": true,
       "environment": {
-        "PYTHONPATH": "/path/to/CAPVIC/src"
+        "PYTHONPATH": "/path/to/CAPVIC/src",
+        "ONCOKB_API_TOKEN": "{env:ONCOKB_API_TOKEN}",
+        "NCBI_API_KEY": "{env:NCBI_API_KEY}"
       },
       "timeout": 30000
     }
   }
 }
 ```
+
+> **API keys**: `ONCOKB_API_TOKEN` enables OncoKB annotation tools ([free academic access](https://www.oncokb.org/apiAccess)). `NCBI_API_KEY` increases ClinVar/PubMed rate limits from 3 to 10 req/sec. Both are optional — tools work without them but with reduced functionality or rate limits. OpenCode's `{env:VAR_NAME}` syntax reads from your shell environment.
 
 Or using Docker:
 
@@ -338,7 +343,40 @@ opencode mcp list           # List configured MCP servers
 opencode mcp debug variant_mcp  # Debug connection issues
 ```
 
-> All 26 CAPVIC tools are available in OpenCode. The same test prompt from the Claude Desktop section works here.
+> All 26 CAPVIC tools are available in OpenCode. The same natural language prompts from the section below work in OpenCode, Claude Desktop, or any MCP client.
+
+---
+
+## 💬 Natural Language Prompts
+
+CAPVIC tools are designed to work with natural language. Ask questions as you would to a bioinformatician — the AI client (Claude, OpenCode, GPT, etc.) maps your question to the right tool(s) automatically.
+
+### Example Prompts
+
+| Prompt | Tools Used |
+|--------|-----------|
+| "Find evidences for colorectal cancer therapies involving KRAS mutations. Create detailed data visualization to compare!" | `variant_search_evidence` + `civic_search_evidence` + `variant_compare_sources` |
+| "What is the clinical significance of BRAF V600E in melanoma?" | `variant_classify` or `variant_search_evidence` |
+| "Are there any FDA-approved therapies targeting EGFR T790M?" | `oncokb_annotate` + `civic_search_assertions` |
+| "Is TP53 R175H oncogenic? Score it." | `score_oncogenicity` + `predict_variant_effect` |
+| "Compare what CIViC, ClinVar, and OncoKB say about NRAS Q61K" | `variant_compare_sources` |
+| "Show me the population frequency and protein domains for BRCA1 C61G" | `lookup_gnomad_frequency` + `lookup_protein_domains` |
+| "Find recent publications about KRAS G12C resistance in lung cancer" | `search_literature` |
+| "Create a pathogenicity report for ALK F1174L" | `variant_pathogenicity_summary` |
+| "What ACMG criteria apply to BRCA2 variants?" | `explain_acmg_criteria` |
+| "Explain the AMP/ASCO/CAP and oncogenicity classification frameworks" | `get_classification_frameworks_reference` |
+
+### Visualization & Artifacts
+
+All tool outputs return structured markdown with tables, headers, and data breakdowns — ready for:
+- **Comparison tables**: `variant_compare_sources` produces side-by-side source concordance
+- **Evidence heatmaps**: `civic_search_evidence` returns structured evidence type/level data
+- **Score charts**: `score_oncogenicity` returns point breakdowns by evidence code
+- **Predictor comparisons**: `predict_variant_effect` returns a 7-predictor score table
+- **Domain maps**: `lookup_protein_domains` returns domain ranges for position mapping
+- **Population plots**: `lookup_gnomad_frequency` returns per-population AF data
+
+AI clients can use these structured outputs to generate plots, charts, and interactive artifacts.
 
 ---
 

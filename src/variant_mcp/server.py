@@ -181,17 +181,24 @@ async def variant_search_evidence(
     sources: list[str] | None = None,
     limit: int = 25,
 ) -> str:
-    """Search ALL available data sources for clinical evidence on a genetic variant.
+    """Perform a comprehensive multi-database search for clinical evidence on genetic variants, therapies, and diseases.
 
-    This is the PRIMARY tool — queries CIViC, ClinVar, OncoKB, and MetaKB simultaneously.
+    This is the PRIMARY search tool — queries CIViC, ClinVar, OncoKB, MetaKB, UniProt, and MyVariant.info simultaneously, then returns a unified evidence report with summary statistics, top evidence listings, clinical interpretations, and citation sources.
+
+    Use this for questions like:
+    - "Find evidence for colorectal cancer therapies involving KRAS mutations"
+    - "What is the clinical significance of BRAF V600E in melanoma?"
+    - "Are there any FDA-approved therapies targeting EGFR T790M?"
+
+    The returned report includes structured markdown tables and evidence breakdowns suitable for data visualization and comparison.
 
     Args:
-        gene: Gene symbol (e.g., BRAF, KRAS, TP53). Required.
-        variant: Variant name (e.g., V600E, G12C). Optional.
-        disease: Disease or cancer type. Optional.
-        therapy: Therapy or drug name filter. Optional.
-        evidence_type: Filter by type (PREDICTIVE, DIAGNOSTIC, PROGNOSTIC, ONCOGENIC). Optional.
-        sources: List of databases to query (civic, clinvar, oncokb, metakb). Default: all.
+        gene: Gene symbol (e.g., BRAF, KRAS, TP53, EGFR). Required.
+        variant: Variant name (e.g., V600E, G12C, T790M). Optional — omit to get all variants for a gene.
+        disease: Disease or cancer type (e.g., "colorectal cancer", "melanoma", "NSCLC"). Optional.
+        therapy: Therapy or drug name filter (e.g., "vemurafenib", "sotorasib"). Optional.
+        evidence_type: Filter by evidence type: PREDICTIVE (therapy response), DIAGNOSTIC, PROGNOSTIC, ONCOGENIC, FUNCTIONAL. Optional.
+        sources: List of databases to query: civic, clinvar, oncokb, metakb, uniprot, myvariant. Default: all.
         limit: Max results per source (1-100, default 25).
     """
     bundle = await _gather_evidence(gene, variant, disease, sources, limit)
@@ -212,15 +219,19 @@ async def variant_classify(
     variant_origin: str,
     disease: str | None = None,
 ) -> str:
-    """Classify a genetic variant using appropriate frameworks (AMP/ASCO/CAP, Oncogenicity SOP, or ACMG/AMP).
+    """Apply formal variant classification frameworks to produce a structured clinical assessment with evidence codes, confidence levels, and tier assignments.
 
-    THE CLASSIFICATION TOOL — applies formal classification frameworks and returns structured assessment.
+    For somatic variants: applies both AMP/ASCO/CAP 4-tier classification (Li et al. 2017) AND ClinGen/CGC/VICC oncogenicity SOP point-based scoring (Horak et al. 2022). Returns tier assignment (I-IV), evidence level (A-D), oncogenicity score, and all applied evidence codes with point values.
+
+    For germline variants: retrieves ACMG/AMP 5-tier interpretation from ClinVar with review status and submitter breakdown.
+
+    The output includes structured markdown tables ideal for reports and visualizations.
 
     Args:
-        gene: Gene symbol (e.g., BRAF, TP53). Required.
-        variant: Variant name (e.g., V600E, R175H). Required.
+        gene: Gene symbol (e.g., BRAF, TP53, KRAS). Required.
+        variant: Variant name (e.g., V600E, R175H, G12C). Required.
         variant_origin: Must be "somatic" or "germline". Required.
-        disease: Disease or cancer type context. Optional.
+        disease: Disease or cancer type context (e.g., "melanoma", "lung adenocarcinoma"). Optional but recommended for somatic variants.
     """
     from variant_mcp.models.classification import VariantClassificationReport
 
@@ -278,11 +289,13 @@ async def variant_compare_sources(
     gene: str,
     variant: str,
 ) -> str:
-    """Cross-reference a variant across all databases and highlight concordance/discordance.
+    """Cross-reference a variant across ALL databases and produce a side-by-side concordance/discordance analysis.
+
+    Returns a structured comparison table showing how CIViC, ClinVar, OncoKB, and MetaKB classify the same variant, highlighting agreements and conflicts. Ideal for generating comparison visualizations and identifying data gaps between sources.
 
     Args:
-        gene: Gene symbol. Required.
-        variant: Variant name. Required.
+        gene: Gene symbol (e.g., BRAF, EGFR). Required.
+        variant: Variant name (e.g., V600E, L858R). Required.
     """
     bundle = await _gather_evidence(gene, variant)
     return report_fmt.format_source_comparison(bundle)
@@ -303,15 +316,19 @@ async def civic_search_evidence(
     significance: str | None = None,
     limit: int = 25,
 ) -> str:
-    """Search CIViC clinical evidence database with detailed filters.
+    """Search the CIViC (Clinical Interpretation of Variants in Cancer) database for curated clinical evidence linking genetic variants to therapies, diagnoses, and prognoses.
+
+    Returns individual evidence items with evidence level (A-E), evidence type, clinical significance, associated therapies, diseases, and PubMed citations. Supports flexible filtering by gene, variant, disease, therapy, and evidence type.
+
+    Use this for questions like "What therapies target KRAS G12C?" or "Find prognostic evidence for TP53 mutations in breast cancer."
 
     Args:
-        gene: Gene symbol filter. Optional.
-        variant: Variant name filter. Optional.
-        disease: Disease name filter. Optional.
-        therapy: Therapy/drug name filter. Optional.
-        evidence_type: PREDICTIVE, DIAGNOSTIC, PROGNOSTIC, PREDISPOSING, ONCOGENIC, FUNCTIONAL. Optional.
-        significance: Significance filter. Optional.
+        gene: Gene symbol (e.g., BRAF, KRAS). Optional.
+        variant: Variant name (e.g., V600E, G12C). Optional.
+        disease: Disease name (e.g., "colorectal cancer", "melanoma"). Optional.
+        therapy: Therapy or drug name (e.g., "sotorasib", "pembrolizumab"). Optional.
+        evidence_type: Filter by type: PREDICTIVE (therapy response), DIAGNOSTIC, PROGNOSTIC, PREDISPOSING, ONCOGENIC, FUNCTIONAL. Optional.
+        significance: Clinical significance filter (e.g., "Sensitivity", "Resistance"). Optional.
         limit: Max results (1-100, default 25).
     """
     try:
@@ -361,13 +378,20 @@ async def civic_search_assertions(
     significance: str | None = None,
     limit: int = 25,
 ) -> str:
-    """Search CIViC curated assertions (higher confidence than raw evidence items).
+    """Search CIViC curated assertions — expert-reviewed, higher-confidence clinical interpretations.
+
+    Assertions represent the highest confidence tier in CIViC: each is reviewed by domain experts and includes AMP/ASCO/CAP tier assignments. Use this to find FDA-guideline-level evidence for specific gene/disease/therapy combinations.
+
+    Use for questions like:
+    - "Are there AMP Tier I assertions for BRAF in melanoma?"
+    - "What therapies have curated assertions for EGFR-mutant NSCLC?"
+    - "Show me predictive assertions for KRAS in colorectal cancer"
 
     Args:
-        gene: Gene symbol. Optional.
-        disease: Disease name. Optional.
-        therapy: Therapy name. Optional.
-        significance: Significance filter. Optional.
+        gene: Gene symbol (e.g., BRAF, KRAS, EGFR). Optional.
+        disease: Disease name (e.g., "melanoma", "lung adenocarcinoma"). Optional.
+        therapy: Therapy name (e.g., "vemurafenib", "pembrolizumab"). Optional.
+        significance: Significance filter (e.g., "sensitivityresponse", "resistance"). Optional.
         limit: Max results (1-100, default 25).
     """
     try:
@@ -398,10 +422,12 @@ async def civic_search_assertions(
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def civic_get_gene(name: str) -> str:
-    """Get gene details and associated variants from CIViC.
+    """Get gene details and all associated variants from the CIViC knowledge base.
+
+    Returns the gene's official name, Entrez ID, description, and a list of all CIViC-curated variants with their IDs. Use this to discover which variants have clinical evidence for a given gene.
 
     Args:
-        name: Gene symbol (e.g., BRAF, KRAS).
+        name: Gene symbol (e.g., BRAF, KRAS, EGFR, TP53).
     """
     try:
         data = await civic_client.get_gene(name)
@@ -433,10 +459,12 @@ async def civic_get_gene(name: str) -> str:
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def civic_get_variant(variant_id: int) -> str:
-    """Get variant details from CIViC by variant ID.
+    """Get detailed variant information from CIViC by variant ID.
+
+    Returns the variant name, gene, variant types, and molecular profile score. Use after civic_search_evidence or civic_get_gene to drill into a specific variant.
 
     Args:
-        variant_id: CIViC variant ID number.
+        variant_id: CIViC variant ID number (from search results or gene lookups).
     """
     try:
         data = await civic_client.get_variant(variant_id)
@@ -462,10 +490,12 @@ async def civic_get_variant(variant_id: int) -> str:
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def civic_get_evidence_item(evidence_id: int) -> str:
-    """Get full details for a single CIViC evidence item.
+    """Get full details for a single CIViC evidence item including clinical interpretation, source citation, and evidence rating.
+
+    Returns evidence type, level, significance, direction, disease, therapies, rating (1-5 stars), description, and source citation with PMID. Use after civic_search_evidence to get the full text and context of a specific evidence item.
 
     Args:
-        evidence_id: CIViC evidence item ID number.
+        evidence_id: CIViC evidence item ID number (from search results).
     """
     try:
         item = await civic_client.get_evidence_item(evidence_id)
@@ -508,13 +538,15 @@ async def clinvar_search(
     disease: str | None = None,
     limit: int = 25,
 ) -> str:
-    """Search ClinVar for variant classifications, review status, and submitter data.
+    """Search NCBI ClinVar for germline and somatic variant classifications, expert review status, star ratings, and submitter consensus data.
+
+    ClinVar aggregates interpretations from clinical laboratories worldwide. Returns classifications (Pathogenic, Likely Pathogenic, VUS, Likely Benign, Benign), review stars (0-4), associated conditions, and protein changes. Now includes germline, oncogenicity, and clinical impact classifications.
 
     Args:
-        gene: Gene symbol. Optional but recommended.
-        variant: Variant name. Optional.
-        clinical_significance: Filter (pathogenic, benign, uncertain significance). Optional.
-        disease: Disease or phenotype filter. Optional.
+        gene: Gene symbol (e.g., BRCA1, TP53). Optional but recommended.
+        variant: Variant name (e.g., C61G). Optional.
+        clinical_significance: Filter by classification: pathogenic, likely pathogenic, uncertain significance, likely benign, benign. Optional.
+        disease: Disease or phenotype filter (e.g., "breast cancer"). Optional.
         limit: Max results (1-100, default 25).
     """
     if not any([gene, variant, clinical_significance, disease]):
@@ -564,14 +596,19 @@ async def clinvar_get_variant(
     rsid: str | None = None,
     hgvs: str | None = None,
 ) -> str:
-    """Get a full ClinVar variant record including all submitter classifications.
+    """Get a full ClinVar variant record with all submitter classifications, HGVS expressions, conditions, and conflict detection.
 
-    Provide exactly one of variation_id, rsid, or hgvs.
+    Returns the aggregate classification, review status with star rating, all submitter interpretations with breakdown, HGVS expressions, associated conditions, and flags conflicting interpretations. Provide exactly one identifier.
+
+    Use for questions like:
+    - "What is the ClinVar classification for variation 65533?"
+    - "Look up rs113488022 in ClinVar"
+    - "Get ClinVar details for NM_004333.6:c.1799T>A"
 
     Args:
-        variation_id: ClinVar variation ID number. Optional.
+        variation_id: ClinVar variation ID number (e.g., 65533). Optional.
         rsid: dbSNP rsID (e.g., rs113488022). Optional.
-        hgvs: HGVS expression. Optional.
+        hgvs: HGVS expression (e.g., NM_004333.6:c.1799T>A). Optional.
     """
     if not any([variation_id, rsid, hgvs]):
         return "Error: Provide variation_id, rsid, or hgvs.\n\n" + DISCLAIMER
@@ -637,14 +674,16 @@ async def oncokb_annotate(
     variant: str,
     tumor_type: str | None = None,
 ) -> str:
-    """Annotate a somatic mutation with OncoKB (requires free academic API token).
+    """Annotate a somatic mutation with OncoKB — the FDA-recognized precision oncology knowledge base.
 
-    Returns oncogenicity, mutation effect, therapeutic levels, and treatment options.
+    Returns oncogenicity classification, mutation effect (gain/loss-of-function), FDA therapeutic levels (1-4, R1-R2), specific drug recommendations, and gene/variant summaries. Requires a free academic API token (ONCOKB_API_TOKEN env var).
+
+    Use for questions like "Is BRAF V600E actionable in melanoma?" or "What drugs target EGFR L858R?"
 
     Args:
-        gene: Gene symbol (e.g., BRAF). Required.
-        variant: Protein change (e.g., V600E). Required.
-        tumor_type: OncoTree tumor type code (e.g., MEL, NSCLC). Optional.
+        gene: Gene symbol (e.g., BRAF, EGFR, ALK). Required.
+        variant: Protein change (e.g., V600E, L858R, T790M). Required.
+        tumor_type: OncoTree tumor type code (e.g., MEL for melanoma, NSCLC, CRC). Optional but recommended — enables tumor-specific therapeutic levels.
     """
     if not oncokb_client.is_available:
         return ONCOKB_NO_TOKEN_MSG + "\n\n" + DISCLAIMER
@@ -687,10 +726,9 @@ async def oncokb_annotate(
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def oncokb_cancer_genes() -> str:
-    """Get the OncoKB cancer gene list with oncogene/TSG classification.
+    """Get the complete OncoKB curated cancer gene list with oncogene/tumor suppressor classification and therapeutic levels.
 
-    Useful for checking if a gene is a known oncogene or tumor suppressor.
-    Requires ONCOKB_API_TOKEN environment variable.
+    Returns a structured table of all cancer genes with oncogene status, tumor suppressor gene (TSG) status, and highest sensitive therapeutic level. Use to check if a gene is a known cancer driver, or to compare multiple genes. Output is a markdown table ideal for visualizations. Requires ONCOKB_API_TOKEN environment variable.
     """
     if not oncokb_client.is_available:
         return ONCOKB_NO_TOKEN_MSG + "\n\n" + DISCLAIMER
@@ -729,14 +767,14 @@ async def classify_amp_tier(
     variant: str,
     disease: str | None = None,
 ) -> str:
-    """Apply AMP/ASCO/CAP 4-tier somatic classification to a variant.
+    """Apply the AMP/ASCO/CAP 4-tier somatic variant classification framework (Li et al. 2017) to assign clinical significance tiers and evidence levels.
 
-    Gathers evidence from CIViC, ClinVar, and OncoKB, then assigns a tier.
+    Gathers evidence from CIViC, ClinVar, and OncoKB, then assigns Tier I (strong significance, FDA-approved), Tier II (potential significance), Tier III (unknown), or Tier IV (benign). Returns the tier, evidence level (A-D), confidence assessment, evidence trail, and sources used.
 
     Args:
-        gene: Gene symbol. Required.
-        variant: Variant name. Required.
-        disease: Disease context. Optional but recommended.
+        gene: Gene symbol (e.g., BRAF, KRAS). Required.
+        variant: Variant name (e.g., V600E, G12C). Required.
+        disease: Disease context (e.g., "melanoma"). Optional but recommended — affects tier assignment.
     """
     bundle = await _gather_evidence(gene, variant, disease)
     result = amp_classifier.classify(bundle)
@@ -749,14 +787,14 @@ async def score_oncogenicity(
     variant: str,
     evidence_codes: list[str] | None = None,
 ) -> str:
-    """Apply ClinGen/CGC/VICC oncogenicity SOP point-based scoring.
+    """Apply the ClinGen/CGC/VICC Oncogenicity SOP (Horak et al. 2022) point-based scoring system with 18 evidence codes.
 
-    If evidence_codes are not provided, auto-detects from CIViC/ClinVar/OncoKB data.
+    Scores a somatic variant on a scale from Benign (≤-7) through VUS (0-5) to Oncogenic (≥10). Auto-detects evidence codes from CIViC, ClinVar, OncoKB, gnomAD frequencies, UniProt domains, and in-silico predictors — or accepts manually specified codes. Returns total points, classification, individual evidence codes with explanations, and confidence level.
 
     Args:
-        gene: Gene symbol. Required.
-        variant: Variant name. Required.
-        evidence_codes: Explicit codes like ['OVS1', 'OS3', 'OM4']. Optional.
+        gene: Gene symbol (e.g., BRAF, TP53). Required.
+        variant: Variant name (e.g., V600E, R175H). Required.
+        evidence_codes: Explicit evidence codes (e.g., ['OVS1', 'OS3', 'OM4']). Optional — if omitted, auto-detects from available data.
     """
     bundle = None
     if not evidence_codes:
@@ -776,13 +814,18 @@ async def explain_acmg_criteria(
     criteria_code: str | None = None,
     query: str | None = None,
 ) -> str:
-    """Reference tool for ACMG/AMP germline pathogenicity classification criteria.
+    """Reference tool for ACMG/AMP germline pathogenicity classification criteria (Richards et al. 2015).
 
-    Provide a specific code (e.g., PVS1, PM2) or 'all' for the complete reference.
+    Look up any of the 28 ACMG/AMP criteria codes with full descriptions and strength levels. Provide a specific code for details, search by keyword, or use 'all' for the complete reference table.
+
+    Use for questions like:
+    - "What does PVS1 mean in ACMG classification?"
+    - "Explain the PM2 criterion"
+    - "Show me all ACMG pathogenicity criteria"
 
     Args:
-        criteria_code: ACMG criteria code (e.g., PVS1, PM2, BS1). Optional.
-        query: General query (use 'all' for complete reference). Optional.
+        criteria_code: ACMG criteria code (e.g., PVS1, PM2, BS1, PP3). Optional.
+        query: Keyword search or 'all' for complete reference. Optional.
     """
     if criteria_code:
         return acmg_helper.get_criteria_reference(criteria_code) + f"\n\n{DISCLAIMER}"
@@ -815,10 +858,12 @@ async def explain_acmg_criteria(
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def lookup_gene(query: str) -> str:
-    """Gene name autocomplete/lookup across CIViC.
+    """Gene name autocomplete and discovery across the CIViC knowledge base.
+
+    Type-ahead search that matches partial gene names. Use this to find the correct gene symbol before running evidence searches, or to explore which genes have clinical evidence in CIViC.
 
     Args:
-        query: Gene name or partial name (e.g., 'BRA' will match BRAF).
+        query: Gene name or partial name (e.g., 'BRA' matches BRAF, 'EGF' matches EGFR).
     """
     try:
         results = await civic_client.search_typeahead("gene", query)
@@ -836,10 +881,12 @@ async def lookup_gene(query: str) -> str:
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def lookup_disease(query: str) -> str:
-    """Disease name autocomplete/lookup across CIViC.
+    """Disease name autocomplete and discovery across the CIViC knowledge base.
+
+    Type-ahead search that matches partial disease names and returns Disease Ontology IDs (DOID). Use to find the correct disease name before running evidence or classification searches.
 
     Args:
-        query: Disease name or partial name (e.g., 'melan' will match Melanoma).
+        query: Disease name or partial name (e.g., 'melan' matches Melanoma, 'colorect' matches Colorectal Cancer).
     """
     try:
         results = await civic_client.search_typeahead("disease", query)
@@ -858,10 +905,12 @@ async def lookup_disease(query: str) -> str:
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def lookup_therapy(query: str) -> str:
-    """Therapy/drug name autocomplete/lookup across CIViC.
+    """Therapy and drug name autocomplete and discovery across the CIViC knowledge base.
+
+    Type-ahead search that matches partial therapy/drug names and returns NCI Thesaurus IDs. Use to find the correct therapy name before searching for treatment evidence, or to explore available targeted therapies.
 
     Args:
-        query: Therapy or drug name or partial (e.g., 'vemur' will match Vemurafenib).
+        query: Drug or therapy name or partial (e.g., 'vemur' matches Vemurafenib, 'pembroli' matches Pembrolizumab).
     """
     try:
         results = await civic_client.search_typeahead("therapy", query)
@@ -885,10 +934,9 @@ async def lookup_therapy(query: str) -> str:
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def get_classification_frameworks_reference() -> str:
-    """Get a comprehensive reference document explaining all classification frameworks.
+    """Get a comprehensive reference document explaining all three variant classification frameworks used in precision oncology and genetics.
 
-    Covers AMP/ASCO/CAP 4-tier, ClinGen/CGC/VICC Oncogenicity SOP, and ACMG/AMP 5-tier.
-    Includes when to use each framework and how they relate.
+    Returns a detailed guide covering AMP/ASCO/CAP 4-tier somatic classification (Li et al. 2017), ClinGen/CGC/VICC Oncogenicity SOP point-based scoring (Horak et al. 2022), and ACMG/AMP 5-tier germline pathogenicity (Richards et al. 2015). Explains when to use each framework, how they relate, and decision criteria. Ideal for understanding the classification methodology before interpreting results.
     """
     return table_fmt.format_frameworks_reference()
 
@@ -899,14 +947,14 @@ async def variant_pathogenicity_summary(
     variant: str,
     disease: str | None = None,
 ) -> str:
-    """Produce a structured pathogenic vs benign evidence summary for a variant.
+    """Generate a structured pathogenic-vs-benign evidence report showing all supporting and opposing evidence for a variant's clinical significance.
 
-    Aggregates evidence from all sources and presents a clear pathogenic/benign breakdown.
+    Aggregates data from CIViC, ClinVar, OncoKB, gnomAD, UniProt domains, and in-silico predictors into a clear two-column breakdown: evidence supporting pathogenicity/oncogenicity vs evidence supporting benign classification. Includes oncogenicity score and clinical interpretation. Output is structured markdown ideal for reports, artifacts, and visualizations.
 
     Args:
-        gene: Gene symbol. Required.
-        variant: Variant name. Required.
-        disease: Disease context. Optional.
+        gene: Gene symbol (e.g., BRAF, KRAS). Required.
+        variant: Variant name (e.g., V600E, G12C). Required.
+        disease: Disease context (e.g., "melanoma"). Optional.
     """
     bundle = await _gather_evidence(gene, variant, disease)
     oncogenicity = oncogenicity_scorer.score_variant(gene, variant, evidence_bundle=bundle)
@@ -923,10 +971,9 @@ async def lookup_gnomad_frequency(
     variant_id: str,
     genome_version: str = "GRCh38",
 ) -> str:
-    """Look up population allele frequencies from gnomAD.
+    """Look up population allele frequencies from the Genome Aggregation Database (gnomAD) — the largest human exome/genome frequency resource (807k exomes, 76k genomes).
 
-    Critical for ACMG BA1 (>5% = benign standalone), PM2 (absent from controls),
-    and oncogenicity SOP codes SBVS1/SBS1/OM4/OP4.
+    Returns global allele frequency, per-population breakdown (African, European, East Asian, South Asian, etc.), homozygote counts, and clinical interpretation. Critical for ACMG BA1 (>5% = benign standalone), PM2 (absent from controls), and oncogenicity SOP codes SBVS1/SBS1/OM4/OP4. Output includes a structured frequency table ideal for visualization.
 
     Args:
         variant_id: gnomAD variant ID in chrom-pos-ref-alt format.
@@ -990,14 +1037,18 @@ async def normalize_variant(
     variant: str,
     gene: str | None = None,
 ) -> str:
-    """Parse and normalize variant notation between formats.
+    """Parse and normalize variant notation between multiple HGVS and protein change formats.
 
-    Converts between shorthand (V600E), 1-letter (p.V600E), 3-letter HGVS (p.Val600Glu),
-    and detects variant type (missense, nonsense, frameshift, splice, etc.).
+    Converts between shorthand (V600E), 1-letter protein (p.V600E), 3-letter HGVS protein (p.Val600Glu), and cDNA notation. Detects variant type (missense, nonsense, frameshift, splice, in-frame deletion, etc.) and extracts position, reference, and alternate amino acids.
+
+    Use for questions like:
+    - "Convert V600E to HGVS notation"
+    - "What type of variant is p.Arg175His?"
+    - "Normalize the notation for c.1799T>A"
 
     Args:
-        variant: Variant notation to parse (e.g., V600E, p.Val600Glu, c.1799T>A).
-        gene: Gene symbol for context (optional).
+        variant: Variant notation to parse (e.g., V600E, p.Val600Glu, c.1799T>A, R175H).
+        gene: Gene symbol for context (optional, helps with gene-specific formatting).
     """
     notation = variant_normalizer.normalize(variant)
 
@@ -1033,10 +1084,9 @@ async def lookup_protein_domains(
     variant: str | None = None,
     position: int | None = None,
 ) -> str:
-    """Look up protein functional domains from UniProt/InterPro.
+    """Look up protein functional domains from UniProt/InterPro and check whether a variant falls within a critical functional region.
 
-    Maps amino acid positions to functional regions (kinase domains, DNA-binding,
-    active sites, etc.). Critical for oncogenicity SOP code OM1.
+    Returns all annotated protein domains (kinase, DNA-binding, active sites, transmembrane, etc.), maps the variant position to overlapping domains, and assesses OM1 evidence (critical domain without benign variation). Output includes a structured domain table ideal for protein domain visualizations.
 
     Args:
         gene: Gene symbol. Required.
@@ -1110,15 +1160,20 @@ async def search_literature(
     disease: str | None = None,
     limit: int = 10,
 ) -> str:
-    """Search PubMed for publications about a gene/variant/disease combination.
+    """Search PubMed for peer-reviewed publications about a gene, variant, or disease combination.
 
-    Returns total publication count and recent papers with titles, authors, and PMIDs.
+    Returns total publication count and recent papers with titles, authors, journals, years, PMIDs, and DOIs. Use to find supporting literature for variant interpretation, review the evidence base for a gene-disease association, or compile a bibliography.
+
+    Use for questions like:
+    - "Find recent publications about BRAF V600E in melanoma"
+    - "How many papers exist on KRAS mutations in colorectal cancer?"
+    - "Search for literature on TP53 and Li-Fraumeni syndrome"
 
     Args:
-        gene: Gene symbol. Required.
-        variant: Variant name (optional — narrows search).
-        disease: Disease context (optional — narrows search).
-        limit: Max publications to return (1–50, default 10).
+        gene: Gene symbol (e.g., BRAF, KRAS, TP53). Required.
+        variant: Variant name to narrow search (e.g., V600E). Optional.
+        disease: Disease context to narrow search (e.g., "melanoma"). Optional.
+        limit: Max publications to return (1-50, default 10).
     """
     try:
         result = await pubmed_client.search_publications(gene, variant, disease, limit)
@@ -1150,12 +1205,16 @@ async def search_literature(
 
 @mcp.tool(annotations={"readOnlyHint": True, "idempotentHint": True})  # type: ignore[arg-type]
 async def get_publication(pmid: str) -> str:
-    """Fetch full publication details by PubMed ID.
+    """Fetch full publication details from PubMed by PMID — title, all authors, abstract, journal, year, DOI, and MeSH terms.
 
-    Returns title, all authors, abstract, journal, year, MeSH terms.
+    Use to retrieve the complete metadata and abstract for a specific paper referenced in evidence items or classification guidelines. Essential for verifying the source behind a clinical assertion.
+
+    Use for questions like:
+    - "Get the abstract for PMID 27993330 (AMP/ASCO/CAP guidelines)"
+    - "What is the paper behind PMID 35101336?"
 
     Args:
-        pmid: PubMed ID (e.g., 27993330).
+        pmid: PubMed ID (e.g., 27993330, 35101336).
     """
     try:
         pub = await pubmed_client.get_publication(pmid)
@@ -1187,15 +1246,19 @@ async def predict_variant_effect(
     variant: str,
     hgvs_id: str | None = None,
 ) -> str:
-    """Aggregate in-silico pathogenicity predictions for a variant.
+    """Aggregate in-silico pathogenicity predictions from 7 computational tools: SIFT, PolyPhen-2, REVEL, CADD, AlphaMissense, GERP++, and phyloP.
 
-    Queries SIFT, PolyPhen-2, REVEL, CADD, AlphaMissense, GERP++, and phyloP
-    via MyVariant.info. Used for ACMG PP3/BP4 and oncogenicity OP1/SBP1.
+    Queries MyVariant.info/dbNSFP and returns individual scores, consensus classification (Damaging/Benign/Mixed), ClinGen SVI-calibrated REVEL strength assessment (Pejaver et al. 2022), and clinical interpretation for ACMG PP3/BP4 and oncogenicity OP1/SBP1 evidence codes. Output includes a structured predictor table ideal for comparison visualizations.
+
+    Use for questions like:
+    - "What do computational predictors say about BRAF V600E?"
+    - "Is TP53 R175H predicted to be damaging?"
+    - "Get REVEL and CADD scores for EGFR L858R"
 
     Args:
-        gene: Gene symbol. Required.
-        variant: Variant name (e.g., V600E). Required.
-        hgvs_id: Optional HGVS genomic ID for direct lookup (e.g., chr7:g.140453136A>T).
+        gene: Gene symbol (e.g., BRAF, TP53, EGFR). Required.
+        variant: Variant name (e.g., V600E, R175H, L858R). Required.
+        hgvs_id: HGVS genomic ID for direct lookup (e.g., chr7:g.140453136A>T). Optional.
             **Must use GRCh37/hg19 coordinates** — MyVariant.info indexes on hg19.
             Without hgvs_id, searches by gene+protein change (build-agnostic).
     """

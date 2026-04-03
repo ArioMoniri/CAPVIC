@@ -1,5 +1,15 @@
 # CAPVIC Roadmap
 
+## Completed (v1.0.3 — 2026-04-03)
+
+### Natural Language & Discovery UX (v1.0.2 → v1.0.3)
+- [x] Enhanced all 26 tool descriptions for natural language discovery (nexonco-style)
+- [x] Added "Use for" prompt examples to every tool docstring
+- [x] Added structured markdown output notes for visualization/artifact generation
+- [x] Added API key environment variables to OpenCode config (ONCOKB_API_TOKEN, NCBI_API_KEY)
+- [x] Added Natural Language Prompts section to README with 10 example prompts
+- [x] Added Visualization & Artifacts guide showing structured output capabilities
+
 ## Completed (v1.0.2 — 2026-04-03)
 
 ### Bug Fixes & Scientific Accuracy (v1.0.1 → v1.0.2)
