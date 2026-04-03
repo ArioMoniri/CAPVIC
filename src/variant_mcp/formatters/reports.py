@@ -410,9 +410,8 @@ class ReportFormatter:
                 )
                 has_benign = True
 
-        if bundle.has_oncokb_data:
+        if bundle.has_oncokb_data and bundle.oncokb_annotation:
             ann = bundle.oncokb_annotation
-            assert ann is not None
             if (ann.oncogenic or "").lower() in ("likely neutral", "inconclusive"):
                 lines.append(f"- **OncoKB**: {ann.oncogenic}")
                 has_benign = True
